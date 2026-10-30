@@ -99,7 +99,7 @@ Kiến trúc thông tin tổ chức phần sau đăng nhập theo nhóm nghiệp
 
 ### 2.1 Information architecture
 
-![OKR360 information architecture](docs/information-architecture.png)
+![OKR360 information architecture](docs/images/information-architecture.png)
 
 Sơ đồ cho biết hệ thống có những màn hình nào, chúng nằm dưới menu nào, mỗi màn hình hiển thị nội dung chính gì, và màn hình nào chỉ một số vai trò được vào (nhãn đỏ).
 
