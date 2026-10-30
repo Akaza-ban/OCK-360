@@ -1,6 +1,6 @@
 # Phạm vi V1 — OKR360
 
-> Trạng thái thiết kế: TARGET V1 — Bước 1 (Phân tích đề tài tìm hiểu, xác định phạm vi đề tài )
+> Trạng thái thiết kế: TARGET V1 — Phân tích đề tài tìm hiểu, xác định phạm vi đề tài.
 
 ## 1. Vấn đề
 
