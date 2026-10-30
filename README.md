@@ -10,7 +10,7 @@ Phần yêu cầu xác định OKR360 phải làm gì, ai dùng, mang lại giá
 
 ![OKR360 mind map](docs/mindmap.png)
 
-Phạm vi và danh mục tính năng chi tiết nằm ở [Scope](docs/01-scope.md) và [Feature catalog](docs/02-features.md).
+Tính năng **in đậm, viền đậm** trong sơ đồ là tính năng lõi của đề tài (Must). Phạm vi và danh mục tính năng chi tiết nằm ở [Scope](docs/01-scope.md) và [Feature catalog](docs/02-features.md).
 
 ### 1.2 INVEST requirements
 
@@ -92,3 +92,69 @@ Sơ đồ use case chi tiết, phạm vi dữ liệu của từng vai trò, quy 
 | Nhật ký hoạt động                         | Có                   | Có                                           | Không                                          | Không            |
 
 Backend bắt buộc kiểm tra quyền theo vai trò, theo quan hệ báo cáo và theo quyền sở hữu dữ liệu; việc ẩn nút trên giao diện chỉ phục vụ trải nghiệm người dùng. Admin không xem được kết quả 360 của người khác theo nguyên tắc quyền tối thiểu.
+
+## 2. Information Architecture, Screen Hierarchy, and UI/UX
+
+Kiến trúc thông tin tổ chức phần sau đăng nhập theo nhóm nghiệp vụ: OKR, Đánh giá 360, Kết quả và báo cáo, Quản trị. Quyền vào trang và menu tuân theo ma trận phân quyền ở mục 1.4; các trạng thái đang tải, rỗng, lỗi dữ liệu, lỗi API, đang lưu, thành công và chu kỳ đã đóng được quy ước thống nhất.
+
+### 2.1 Information architecture
+
+![OKR360 information architecture](docs/information-architecture.png)
+
+Sơ đồ cho biết hệ thống có những màn hình nào, chúng nằm dưới menu nào, mỗi màn hình hiển thị nội dung chính gì, và màn hình nào chỉ một số vai trò được vào (nhãn đỏ).
+
+### 2.2 Screen hierarchy
+
+Đăng nhập dẫn vào khung sau đăng nhập (sidebar + topbar). Khung này điều hướng tới các trang theo nhóm; tạo/sửa Objective và check-in mở dạng modal ngay trên trang đang đứng để người dùng không rời khỏi ngữ cảnh. Bộ chọn chu kỳ trên topbar quyết định dữ liệu của mọi trang OKR, dashboard và báo cáo. Truy cập không có quyền dẫn tới trang 403.
+
+Hệ thống có 24 màn hình. Mã màn hình, nội dung chi tiết của từng màn hình, quyền vào trang, luồng thao tác chính, quy ước trạng thái giao diện, quy tắc trợ năng và bảng nối màn hình với API nằm ở [Information Architecture](docs/04-information-architecture.md).
+
+### 2.3 UI prototype
+
+Bản giao diện mẫu viết bằng React + Vite, chạy bằng dữ liệu giả của một công ty mẫu (11 người, 5 phòng ban, chu kỳ Q3/2026 đã đóng và Q4/2026 đang chạy). Mã nguồn và cách chạy nằm ở [src/frontend](src/frontend/README.md). Ảnh chụp đầy đủ theo từng vai trò nằm trong [docs/images](docs/images).
+
+Giao diện lấy cảm hứng từ phong cách của Linear: nền tối mặc định (có chế độ nền sáng), font Inter cỡ nhỏ, danh sách dày ngăn bằng đường kẻ mảnh, biểu tượng trạng thái Đúng hướng / Có rủi ro / Chệch hướng, và bảng lệnh `Ctrl K` để nhảy nhanh tới trang hoặc Objective (tìm được cả khi gõ không dấu).
+
+Thanh tiến độ có một vạch dọc là mức **kỳ vọng hôm nay** theo thời gian của chu kỳ; thanh chuyển màu vàng khi tiến độ chậm hơn kỳ vọng.
+
+#### Dashboard nhân viên
+
+![Dashboard nhân viên](docs/images/nhan-vien/01-dashboard.png)
+
+#### Cây OKR công ty
+
+![Cây OKR công ty](docs/images/nhan-vien/05-cay-okr.png)
+
+#### Tìm kiếm nhanh (Ctrl K)
+
+![Tìm kiếm nhanh](docs/images/chung/02-tim-kiem-nhanh.png)
+
+#### Chi tiết Objective và lịch sử check-in
+
+![Chi tiết Objective](docs/images/nhan-vien/06-chi-tiet-objective.png)
+
+#### Check-in Key Result
+
+![Check-in Key Result](docs/images/nhan-vien/03-check-in.png)
+
+#### Chế độ nền sáng
+
+![Chế độ nền sáng](docs/images/chung/03-nen-sang.png)
+
+#### Dashboard đội nhóm (Quản lý)
+
+![Dashboard đội nhóm](docs/images/quan-ly/01-dashboard-doi-nhom.png)
+
+#### Điền phiếu đánh giá 360
+
+![Điền phiếu đánh giá](docs/images/nhan-vien/08-dien-phieu.png)
+
+#### Kết quả 360 có ngưỡng ẩn danh
+
+Nhóm đồng nghiệp và cấp dưới của chị Hà đều dưới 3 phiếu, nên hai nhóm được gộp lại trước khi hiển thị.
+
+![Kết quả 360 gộp nhóm](docs/images/quan-ly/04-ket-qua-360-gop-nhom.png)
+
+#### Kết quả cuối kỳ (Nhân sự)
+
+![Kết quả cuối kỳ](docs/images/nhan-su/04-ket-qua-cuoi-ky.png)
