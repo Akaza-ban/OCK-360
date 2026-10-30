@@ -1,4 +1,4 @@
-# Phân rã chức năng top-down
+# Phân rã chức năng 
 
 > Trạng thái thiết kế: TARGET V1 — Phân rã chức năng hệ thống
 
