@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useStore } from '../../../lib/store.jsx';
 import { PageHeader, Avatar, Empty, Score } from '../../../components/ui.jsx';
+import { dateTime } from '../../../lib/format.js';
 import { aggregate360, GROUP_LABEL, ANON_THRESHOLD } from '../../../lib/review.js';
 import { canViewResult, isHR } from '../../../lib/auth.js';
 import { score } from '../../../lib/format.js';
@@ -59,6 +60,18 @@ export default function ReviewResult({ user, revieweeId }) {
           </div>
         </section>
       </div>
+
+      {(() => {
+        const sent = state.oneOnOneDrafts.find((d) => d.campaignId === campaign.id && d.revieweeId === target.id && d.status === 'SENT');
+        if (!sent) return null;
+        const by = state.users.find((u) => u.id === sent.sentBy);
+        return (
+          <section className="panel" style={{ marginBottom: 18 }}>
+            <header><h2>Tóm tắt từ quản lý</h2><span className="muted small">{by?.name} · {dateTime(sent.sentAt)}</span></header>
+            <div className="panel-body"><p style={{ whiteSpace: 'pre-line', margin: '6px 0' }}>{sent.editedText}</p></div>
+          </section>
+        );
+      })()}
 
       {r.groups.some((g) => g.merged) && <div className="notice info" style={{ marginBottom: 16 }}>Nhóm Đồng nghiệp hoặc Cấp dưới có dưới {ANON_THRESHOLD} phiếu, nên hai nhóm được gộp lại để bảo vệ ẩn danh.</div>}
       {r.hidden.length > 0 && <div className="notice" style={{ marginBottom: 16 }}>Một nhóm người đánh giá chưa đủ {ANON_THRESHOLD} phiếu nên không hiển thị và không tính vào điểm 360, để bảo vệ ẩn danh.</div>}

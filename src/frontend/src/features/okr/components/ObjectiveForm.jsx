@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useStore, useCycleData } from '../../../lib/store.jsx';
 import { Modal, LEVEL_LABEL } from '../../../components/ui.jsx';
 import { ALLOWED_PARENT, wouldCreateCycle } from '../../../lib/okr.js';
-import { creatableLevels, headOfDept } from '../../../lib/auth.js';
+import { creatableLevels, unitsForLevel } from '../../../lib/auth.js';
 
 const TYPE_LABEL = { NUMBER: 'Số', PERCENT: 'Phần trăm', BOOLEAN: 'Hoàn thành' };
 const blankKr = (assigneeId) => ({ title: '', type: 'NUMBER', start: 0, target: '', unit: '', assigneeId });
@@ -23,7 +23,9 @@ export default function ObjectiveForm({ user, objective, onClose }) {
   const parents = data.objectives.filter(
     (o) => ALLOWED_PARENT[level].includes(o.level) && o.id !== objective?.id && !(objective && wouldCreateCycle(objective.id, o.id, data.objectives)),
   );
-  const myDept = headOfDept(user, data.departments);
+  const units = level === 'DEPARTMENT' || level === 'TEAM' ? unitsForLevel(user, level, data) : [];
+  const [unitId, setUnitId] = useState(objective?.deptId || '');
+  const unit = units.find((d) => d.id === unitId) || units[0];
   const mineCount = data.objectives.filter((o) => o.ownerId === user.id && o.level === 'INDIVIDUAL').length;
 
   const setKr = (i, patch) => setKrs((xs) => xs.map((k, j) => (j === i ? { ...k, ...patch } : k)));
@@ -49,7 +51,7 @@ export default function ObjectiveForm({ user, objective, onClose }) {
         description,
         parentId: parentId || null,
         ownerId: objective?.ownerId || user.id,
-        deptId: level === 'DEPARTMENT' ? myDept?.id || user.deptId : objective?.deptId || user.deptId,
+        deptId: units.length ? unit.id : objective?.deptId || user.deptId,
       },
       keyResults: krs.map((k) => (k.type === 'BOOLEAN' ? { ...k, start: 0, target: 1, unit: '' } : { ...k, start: Number(k.start), target: Number(k.target) })),
     });
@@ -71,10 +73,18 @@ export default function ObjectiveForm({ user, objective, onClose }) {
       <div className="form-grid">
         <div className="field">
           <label htmlFor="of-level">Cấp</label>
-          <select id="of-level" value={level} onChange={(e) => { setLevel(e.target.value); setParentId(''); }} disabled={levels.length === 1}>
+          <select id="of-level" value={level} onChange={(e) => { setLevel(e.target.value); setParentId(''); setUnitId(''); }} disabled={levels.length === 1}>
             {levels.map((l) => <option key={l} value={l}>{LEVEL_LABEL[l]}</option>)}
           </select>
         </div>
+        {units.length > 0 && (
+          <div className="field">
+            <label htmlFor="of-unit">{level === 'TEAM' ? 'Team' : 'Phòng ban'}</label>
+            <select id="of-unit" value={unit?.id} onChange={(e) => setUnitId(e.target.value)} disabled={units.length === 1 || !!objective}>
+              {units.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
+            </select>
+          </div>
+        )}
         <div className="field">
           <label htmlFor="of-parent">Liên kết lên mục tiêu cấp trên</label>
           <select id="of-parent" value={parentId} onChange={(e) => setParentId(e.target.value)} disabled={level === 'COMPANY'}>

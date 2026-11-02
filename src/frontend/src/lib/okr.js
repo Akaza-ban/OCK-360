@@ -91,12 +91,17 @@ export function wouldCreateCycle(objId, newParentId, objectives) {
   return false;
 }
 
-// Cấp cha hợp lệ: phòng ban → công ty; cá nhân → phòng ban hoặc công ty.
+// Cấp cha hợp lệ (4 cấp). Được nối vượt cấp, vì phòng ban chưa chia team thì cá nhân nối thẳng lên phòng ban.
+// Phòng ban → công ty; team → phòng ban hoặc công ty; cá nhân → team, phòng ban hoặc công ty.
 export const ALLOWED_PARENT = {
   COMPANY: [],
   DEPARTMENT: ['COMPANY'],
-  INDIVIDUAL: ['DEPARTMENT', 'COMPANY'],
+  TEAM: ['DEPARTMENT', 'COMPANY'],
+  INDIVIDUAL: ['TEAM', 'DEPARTMENT', 'COMPANY'],
 };
+
+// Thứ tự cấp, dùng để sắp xếp và tô màu nhãn.
+export const LEVEL_ORDER = ['COMPANY', 'DEPARTMENT', 'TEAM', 'INDIVIDUAL'];
 
 // Điểm OKR (thang 1–5) và điểm cuối kỳ.
 export const okrScore = (progress) => 1 + 4 * progress;

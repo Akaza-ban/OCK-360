@@ -1,7 +1,9 @@
 import { useMemo, useState } from 'react';
 import { useStore } from '../../../lib/store.jsx';
 import { progressMap, expectedProgress, objectiveConfidence, ancestry, krProgress } from '../../../lib/okr.js';
-import { Progress, Confidence, PageHeader, LEVEL_LABEL, Modal, Avatar, Empty } from '../../../components/ui.jsx';
+import { Progress, Confidence, PageHeader, LEVEL_LABEL, LevelTag, Modal, Avatar, Empty, Pill } from '../../../components/ui.jsx';
+import { CATEGORY, SEVERITY, ROUTING, ISSUE } from '../../../lib/ai.js';
+import { AiExplainBadge } from '../../../components/AiExplain.jsx';
 import { canEditObjective, canDeleteObjective } from '../../../lib/auth.js';
 import KrRow from '../components/KrRow.jsx';
 import CheckinModal from '../components/CheckinModal.jsx';
@@ -43,8 +45,8 @@ export default function ObjectiveDetail({ user, id }) {
         title={obj.title}
         sub={
           <span style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
-            <span className={`tag ${obj.level === 'COMPANY' ? 'company' : obj.level === 'DEPARTMENT' ? 'dept' : 'person'}`}>{LEVEL_LABEL[obj.level]}</span>
-            {obj.level === 'DEPARTMENT' ? deptName : owner?.name} · {cycle.name}
+            <LevelTag level={obj.level} />
+            {['DEPARTMENT', 'TEAM'].includes(obj.level) ? deptName : owner?.name} · {cycle.name}
             {!chain.length && obj.level !== 'COMPANY' && <span className="conf warn">Chưa liên kết cấp trên</span>}
           </span>
         }
@@ -76,6 +78,8 @@ export default function ObjectiveDetail({ user, id }) {
         </div>
       </section>
 
+      <ReviewNotes obj={obj} user={user} />
+
       {children.length > 0 && (
         <section className="panel" style={{ marginBottom: 18 }}>
           <header><h2>Objective con đã liên kết</h2></header>
@@ -84,7 +88,7 @@ export default function ObjectiveDetail({ user, id }) {
               <div key={c.id} className="kr-row" style={{ gridTemplateColumns: '1fr 230px 130px' }}>
                 <div>
                   <a href={`#/okr/${c.id}`} className="kr-title">{c.title}</a>
-                  <div className="kr-meta">{c.level === 'DEPARTMENT' ? state.departments.find((d) => d.id === c.deptId)?.name : state.users.find((u) => u.id === c.ownerId)?.name}</div>
+                  <div className="kr-meta">{['DEPARTMENT', 'TEAM'].includes(c.level) ? state.departments.find((d) => d.id === c.deptId)?.name : state.users.find((u) => u.id === c.ownerId)?.name}</div>
                 </div>
                 <Progress value={pm.get(c.id)} expected={expected} />
                 <Confidence value={objectiveConfidence(c.id, state)} />
@@ -156,6 +160,7 @@ function History({ kr, cycle, user, closed }) {
                 </div>
                 {c.note && <p style={{ marginTop: 4 }}>{c.note}</p>}
                 {c.blocker && <p className="small" style={{ marginTop: 4, color: 'var(--warn)' }}>Vướng mắc: {c.blocker}</p>}
+                <InsightLine checkinId={c.id} />
                 {comments.map((m) => {
                   const a = state.users.find((u) => u.id === m.userId);
                   return (
@@ -177,6 +182,73 @@ function History({ kr, cycle, user, closed }) {
         })}
       </ul>
     </div>
+  );
+}
+
+// Nhãn AI trên một check-in. Trong lúc AI worker còn xử lý thì hiện "AI đang đọc…";
+// xong thì hiện nhãn, bấm nhãn để mở ngăn "AI đã làm gì?".
+function InsightLine({ checkinId }) {
+  const { state } = useStore();
+  const pending = state.aiQueue.filter((j) => j.checkinId === checkinId);
+  const failed = state.automationRuns.filter((r) => r.ref?.checkinId === checkinId && r.status === 'FAILED');
+  const i = state.checkinInsights.find((x) => x.checkinId === checkinId);
+  const dept = i && state.departments.find((d) => d.id === i.targetDeptId);
+  const head = dept && state.users.find((u) => u.id === dept.headId);
+  return (
+    <>
+      {pending.map((j) => (
+        <div key={j.id} className="ai-line"><span className="ai-pending">✦ {j.flow === 'BLOCKER_ROUTING' ? 'AI đang đọc vướng mắc để chuyển đến đúng người…' : 'AI đang so ghi chú với mức tự tin…'}</span></div>
+      ))}
+      {failed.map((r) => (
+        <div key={r.id} className="ai-line">
+          <AiExplainBadge target={{ kind: 'insight', checkinId, flow: r.flow, runId: r.id }} text="AI lỗi" />
+          <span className="muted">AI chưa phân tích được (dịch vụ AI lỗi). Check-in vẫn được lưu; Admin có thể chạy lại.</span>
+        </div>
+      ))}
+      {i?.category && (
+        <div className="ai-line">
+          <AiExplainBadge target={{ kind: 'insight', checkinId, flow: 'BLOCKER_ROUTING' }} />
+          <span>{CATEGORY[i.category]}</span>
+          <Pill value={SEVERITY[i.severity]} />
+          {dept ? <span className="muted">Đã chuyển tới {dept.name} ({head?.name})</span> : <span className="muted">Không chuyển cho ai</span>}
+          {i.routing && <Pill value={ROUTING[i.routing]} />}
+          {i.routing === 'ACKNOWLEDGED' && i.handlerNote && <span className="muted">"{i.handlerNote}"</span>}
+        </div>
+      )}
+      {i?.mismatch && (
+        <div className="ai-line">
+          <AiExplainBadge target={{ kind: 'insight', checkinId, flow: 'CHECKIN_MISMATCH' }} />
+          <span style={{ color: 'var(--warn)' }}>Mức tự tin chưa khớp ghi chú</span>
+        </div>
+      )}
+    </>
+  );
+}
+
+// Gợi ý rà soát OKR mới tạo (luồng OKR_REVIEW). Người sở hữu tự quyết định sửa hay bỏ qua.
+function ReviewNotes({ obj, user }) {
+  const { state, dispatch } = useStore();
+  const notes = state.objectiveReviewNotes.filter((n) => n.objectiveId === obj.id && !n.dismissed);
+  if (!notes.length) return null;
+  const isOwner = obj.ownerId === user.id;
+  return (
+    <section className="ai-box" style={{ marginBottom: 18 }}>
+      <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 6 }}>
+        <b>Gợi ý rà soát OKR</b>
+        <AiExplainBadge target={{ kind: 'note', id: notes[0].id }} />
+      </div>
+      {notes.map((n) => {
+        const kr = state.keyResults.find((k) => k.id === n.krId);
+        return (
+          <div key={n.id} style={{ display: 'flex', gap: 10, alignItems: 'flex-start', padding: '6px 0' }}>
+            <span className="tag plain">{ISSUE[n.issue]}</span>
+            <span style={{ flex: 1 }}>{kr && <b>{kr.title}: </b>}{n.message}</span>
+            {isOwner && <button className="btn small" onClick={() => dispatch({ type: 'dismissNote', id: n.id })}>Bỏ qua</button>}
+          </div>
+        );
+      })}
+      <p className="muted small" style={{ margin: '4px 0 0' }}>Gợi ý không thay đổi OKR. Bạn sửa Objective nếu thấy hợp lý.</p>
+    </section>
   );
 }
 

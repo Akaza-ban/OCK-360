@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useCycleData } from '../../../lib/store.jsx';
 import { progressMap, expectedProgress, objectiveConfidence, ancestry } from '../../../lib/okr.js';
-import { Progress, Confidence, PageHeader, Empty, LEVEL_LABEL } from '../../../components/ui.jsx';
+import { Progress, Confidence, PageHeader, Empty, LEVEL_LABEL, LevelTag } from '../../../components/ui.jsx';
 import KrRow from '../components/KrRow.jsx';
 import CheckinModal from '../components/CheckinModal.jsx';
 import ObjectiveForm from '../components/ObjectiveForm.jsx';
@@ -36,7 +36,7 @@ export default function MyOkr({ user }) {
               <div className="obj-head">
                 <div>
                   <div className="breadcrumb" style={{ marginBottom: 4 }}>
-                    <span className={`tag ${o.level === 'COMPANY' ? 'company' : o.level === 'DEPARTMENT' ? 'dept' : 'person'}`}>{LEVEL_LABEL[o.level]}</span>
+                    <LevelTag level={o.level} />
                     {chain.length ? chain.map((p) => <span key={p.id}>› <a href={`#/okr/${p.id}`}>{p.title}</a></span>) : o.level !== 'COMPANY' && <span className="conf warn">Chưa liên kết cấp trên</span>}
                   </div>
                   <a href={`#/okr/${o.id}`}><h3 style={{ fontSize: 17 }}>{o.title}</h3></a>

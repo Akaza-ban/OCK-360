@@ -9,21 +9,28 @@ export const ROLE_LABEL = {
   EMPLOYEE: 'Nhân viên',
 };
 
+// Cây tổ chức 2 loại đơn vị: phòng ban (DEPARTMENT) và team (TEAM, chỉ nằm ngay dưới một phòng ban).
+// Phòng Dev chia 2 team; Phòng QA và Kinh doanh còn nhỏ nên chưa chia team.
+export const UNIT_TYPE_LABEL = { DEPARTMENT: 'Phòng ban', TEAM: 'Team' };
 export const departments = [
-  { id: 'd-bgd', name: 'Ban Giám đốc', parentId: null, headId: 'u1' },
-  { id: 'd-hr', name: 'Phòng Nhân sự', parentId: 'd-bgd', headId: 'u2' },
-  { id: 'd-dev', name: 'Phòng Dev', parentId: 'd-bgd', headId: 'u3' },
-  { id: 'd-qa', name: 'Phòng QA', parentId: 'd-bgd', headId: 'u6' },
-  { id: 'd-sales', name: 'Phòng Kinh doanh', parentId: 'd-bgd', headId: 'u8' },
+  { id: 'd-bgd', name: 'Ban Giám đốc', parentId: null, headId: 'u1', type: 'DEPARTMENT' },
+  { id: 'd-hr', name: 'Phòng Nhân sự', parentId: 'd-bgd', headId: 'u2', type: 'DEPARTMENT' },
+  { id: 'd-dev', name: 'Phòng Dev', parentId: 'd-bgd', headId: 'u12', type: 'DEPARTMENT' },
+  { id: 'd-qa', name: 'Phòng QA', parentId: 'd-bgd', headId: 'u6', type: 'DEPARTMENT' },
+  { id: 'd-sales', name: 'Phòng Kinh doanh', parentId: 'd-bgd', headId: 'u8', type: 'DEPARTMENT' },
+  { id: 't-pay', name: 'Team Thanh toán', parentId: 'd-dev', headId: 'u3', type: 'TEAM' },
+  { id: 't-core', name: 'Team Nền tảng', parentId: 'd-dev', headId: 'u13', type: 'TEAM' },
 ];
 
 export const users = [
   { id: 'u1', name: 'Lê Văn Hùng', email: 'hung@okr360.vn', role: 'ADMIN', deptId: 'd-bgd', managerId: null, title: 'Quản trị hệ thống', active: true },
   { id: 'u2', name: 'Phạm Thu Mai', email: 'mai@okr360.vn', role: 'HR', deptId: 'd-hr', managerId: null, title: 'Trưởng phòng Nhân sự', active: true },
-  { id: 'u3', name: 'Trần Hoài Nam', email: 'nam@okr360.vn', role: 'MANAGER', deptId: 'd-dev', managerId: null, title: 'Trưởng phòng Dev', active: true },
-  { id: 'u4', name: 'Nguyễn Thị Lan', email: 'lan@okr360.vn', role: 'EMPLOYEE', deptId: 'd-dev', managerId: 'u3', title: 'Lập trình viên', active: true },
-  { id: 'u5', name: 'Võ Anh Tú', email: 'tu@okr360.vn', role: 'EMPLOYEE', deptId: 'd-dev', managerId: 'u3', title: 'Lập trình viên', active: true },
-  { id: 'u10', name: 'Đỗ Minh An', email: 'an@okr360.vn', role: 'EMPLOYEE', deptId: 'd-dev', managerId: 'u3', title: 'Lập trình viên', active: true },
+  { id: 'u12', name: 'Đinh Công Sơn', email: 'son@okr360.vn', role: 'MANAGER', deptId: 'd-dev', managerId: null, title: 'Trưởng phòng Dev', active: true },
+  { id: 'u13', name: 'Trịnh Gia Huy', email: 'huy@okr360.vn', role: 'MANAGER', deptId: 't-core', managerId: 'u12', title: 'Team lead Nền tảng', active: true },
+  { id: 'u3', name: 'Trần Hoài Nam', email: 'nam@okr360.vn', role: 'MANAGER', deptId: 't-pay', managerId: 'u12', title: 'Team lead Thanh toán', active: true },
+  { id: 'u4', name: 'Nguyễn Thị Lan', email: 'lan@okr360.vn', role: 'EMPLOYEE', deptId: 't-pay', managerId: 'u3', title: 'Lập trình viên', active: true },
+  { id: 'u5', name: 'Võ Anh Tú', email: 'tu@okr360.vn', role: 'EMPLOYEE', deptId: 't-pay', managerId: 'u3', title: 'Lập trình viên', active: true },
+  { id: 'u10', name: 'Đỗ Minh An', email: 'an@okr360.vn', role: 'EMPLOYEE', deptId: 't-pay', managerId: 'u3', title: 'Lập trình viên', active: true },
   { id: 'u6', name: 'Hoàng Thu Hà', email: 'ha@okr360.vn', role: 'MANAGER', deptId: 'd-qa', managerId: null, title: 'Trưởng phòng QA', active: true },
   { id: 'u7', name: 'Bùi Đức Minh', email: 'minh@okr360.vn', role: 'EMPLOYEE', deptId: 'd-qa', managerId: 'u6', title: 'Kỹ sư kiểm thử', active: true },
   { id: 'u11', name: 'Ngô Thanh Bình', email: 'binh@okr360.vn', role: 'EMPLOYEE', deptId: 'd-qa', managerId: 'u6', title: 'Kỹ sư kiểm thử', active: true },
@@ -32,28 +39,30 @@ export const users = [
 ];
 
 // Tài khoản hiển thị ở trang đăng nhập để chuyển vai trò nhanh.
-export const demoAccounts = ['u4', 'u3', 'u6', 'u2', 'u1'];
+export const demoAccounts = ['u4', 'u3', 'u12', 'u6', 'u2', 'u1'];
 
 export const cycles = [
   { id: 'q3-2026', name: 'Q3/2026', start: '2026-07-01', end: '2026-09-30', planningDeadline: '2026-07-14', status: 'CLOSED', maxObjectives: 5, okrWeight: 0.6 },
   { id: 'q4-2026', name: 'Q4/2026', start: '2026-10-01', end: '2026-12-31', planningDeadline: '2026-10-14', status: 'ACTIVE', maxObjectives: 5, okrWeight: 0.6 },
 ];
 
-// level: COMPANY | DEPARTMENT | INDIVIDUAL
+// level: COMPANY | DEPARTMENT | TEAM | INDIVIDUAL
 export const objectives = [
   // ---------- Q4/2026 ----------
   { id: 'o1', cycleId: 'q4-2026', level: 'COMPANY', ownerId: 'u1', deptId: 'd-bgd', parentId: null, title: 'Nâng cao chất lượng sản phẩm', description: 'Khách hàng gặp ít lỗi hơn và hài lòng hơn với sản phẩm.' },
   { id: 'o2', cycleId: 'q4-2026', level: 'COMPANY', ownerId: 'u1', deptId: 'd-bgd', parentId: null, title: 'Tăng trưởng khách hàng doanh nghiệp', description: 'Mở rộng tệp khách hàng doanh nghiệp vừa và nhỏ.' },
-  { id: 'o3', cycleId: 'q4-2026', level: 'DEPARTMENT', ownerId: 'u3', deptId: 'd-dev', parentId: 'o1', title: 'Cải thiện quy trình kiểm thử', description: 'Bắt lỗi sớm hơn ngay trong quá trình phát triển.' },
+  { id: 'o3', cycleId: 'q4-2026', level: 'DEPARTMENT', ownerId: 'u12', deptId: 'd-dev', parentId: 'o1', title: 'Cải thiện quy trình kiểm thử', description: 'Bắt lỗi sớm hơn ngay trong quá trình phát triển.' },
+  { id: 'o13', cycleId: 'q4-2026', level: 'TEAM', ownerId: 'u3', deptId: 't-pay', parentId: 'o3', title: 'Ổn định module thanh toán', description: 'Team Thanh toán giảm lỗi production bằng cách phủ test cho các luồng chính.' },
+  { id: 'o14', cycleId: 'q4-2026', level: 'TEAM', ownerId: 'u13', deptId: 't-core', parentId: 'o3', title: 'Rút ngắn thời gian chạy CI', description: '' },
   { id: 'o4', cycleId: 'q4-2026', level: 'DEPARTMENT', ownerId: 'u6', deptId: 'd-qa', parentId: 'o1', title: 'Rút ngắn chu kỳ kiểm thử hồi quy', description: '' },
   { id: 'o5', cycleId: 'q4-2026', level: 'DEPARTMENT', ownerId: 'u8', deptId: 'd-sales', parentId: 'o2', title: 'Mở rộng tệp khách hàng miền Nam', description: '' },
-  { id: 'o6', cycleId: 'q4-2026', level: 'INDIVIDUAL', ownerId: 'u4', deptId: 'd-dev', parentId: 'o3', title: 'Viết test cho module thanh toán', description: 'Module thanh toán là nơi khách báo lỗi nhiều nhất quý trước.' },
-  { id: 'o7', cycleId: 'q4-2026', level: 'INDIVIDUAL', ownerId: 'u5', deptId: 'd-dev', parentId: 'o3', title: 'Tối ưu hiệu năng API thanh toán', description: '' },
+  { id: 'o6', cycleId: 'q4-2026', level: 'INDIVIDUAL', ownerId: 'u4', deptId: 't-pay', parentId: 'o13', title: 'Viết test cho module thanh toán', description: 'Module thanh toán là nơi khách báo lỗi nhiều nhất quý trước.' },
+  { id: 'o7', cycleId: 'q4-2026', level: 'INDIVIDUAL', ownerId: 'u5', deptId: 't-pay', parentId: 'o13', title: 'Tối ưu hiệu năng API thanh toán', description: '' },
   { id: 'o8', cycleId: 'q4-2026', level: 'INDIVIDUAL', ownerId: 'u7', deptId: 'd-qa', parentId: 'o4', title: 'Tự động hóa bộ test hồi quy', description: '' },
-  { id: 'o9', cycleId: 'q4-2026', level: 'INDIVIDUAL', ownerId: 'u3', deptId: 'd-dev', parentId: 'o3', title: 'Nâng cao năng lực kiểm thử của đội Dev', description: '' },
+  { id: 'o9', cycleId: 'q4-2026', level: 'INDIVIDUAL', ownerId: 'u3', deptId: 't-pay', parentId: 'o13', title: 'Nâng cao năng lực kiểm thử của đội Dev', description: '' },
   { id: 'o10', cycleId: 'q4-2026', level: 'INDIVIDUAL', ownerId: 'u9', deptId: 'd-sales', parentId: 'o5', title: 'Tìm khách hàng mới tại TP.HCM', description: '' },
   { id: 'o11', cycleId: 'q4-2026', level: 'INDIVIDUAL', ownerId: 'u2', deptId: 'd-hr', parentId: null, title: 'Triển khai OKR cho toàn công ty', description: '' },
-  { id: 'o12', cycleId: 'q4-2026', level: 'INDIVIDUAL', ownerId: 'u10', deptId: 'd-dev', parentId: null, title: 'Học và áp dụng kiểm thử tích hợp', description: '' },
+  { id: 'o12', cycleId: 'q4-2026', level: 'INDIVIDUAL', ownerId: 'u10', deptId: 't-pay', parentId: null, title: 'Học và áp dụng kiểm thử tích hợp', description: '' },
   // ---------- Q3/2026 (đã đóng) ----------
   { id: 'p1', cycleId: 'q3-2026', level: 'COMPANY', ownerId: 'u1', deptId: 'd-bgd', parentId: null, title: 'Ra mắt cổng thanh toán mới', description: '' },
   { id: 'p2', cycleId: 'q3-2026', level: 'DEPARTMENT', ownerId: 'u3', deptId: 'd-dev', parentId: 'p1', title: 'Hoàn thành tích hợp cổng thanh toán', description: '' },
@@ -79,6 +88,8 @@ export const keyResults = [
   { id: 'k12', objectiveId: 'o9', title: 'Tổ chức buổi chia sẻ kiến thức kiểm thử', type: 'NUMBER', start: 0, target: 4, unit: 'buổi', assigneeId: 'u3' },
   { id: 'k13', objectiveId: 'o10', title: 'Gặp trực tiếp khách hàng tiềm năng', type: 'NUMBER', start: 0, target: 30, unit: 'buổi gặp', assigneeId: 'u9' },
   { id: 'k14', objectiveId: 'o11', title: 'Nhân viên có OKR cá nhân đã liên kết', type: 'PERCENT', start: 0, target: 80, unit: '%', assigneeId: 'u2' },
+  { id: 'k16', objectiveId: 'o13', title: 'Giảm lỗi production của module thanh toán', type: 'NUMBER', start: 12, target: 3, unit: 'lỗi/tháng', assigneeId: 'u3' },
+  { id: 'k17', objectiveId: 'o14', title: 'Giảm thời gian chạy pipeline CI', type: 'NUMBER', start: 25, target: 10, unit: 'phút', assigneeId: 'u13' },
   { id: 'k15', objectiveId: 'o12', title: 'Viết test tích hợp cho API đơn hàng', type: 'NUMBER', start: 0, target: 20, unit: 'test', assigneeId: 'u10' },
   // Q3
   { id: 'q1', objectiveId: 'p1', title: 'Số giao dịch qua cổng mới', type: 'NUMBER', start: 0, target: 10000, unit: 'giao dịch', assigneeId: 'u1' },
@@ -104,7 +115,7 @@ export const checkins = [
   { id: 'c9', krId: 'k4', value: 52, confidence: 'ON_TRACK', note: 'Module thanh toán tăng độ phủ nhanh.', blocker: '', userId: 'u3', at: '2026-10-27T08:30' },
   { id: 'c10', krId: 'k5', value: 85, confidence: 'ON_TRACK', note: 'Đã bật quy tắc bắt buộc review trên GitLab.', blocker: '', userId: 'u3', at: '2026-10-27T08:35' },
   { id: 'c11', krId: 'k6', value: 4, confidence: 'AT_RISK', note: '', blocker: 'Thiếu người viết test tự động.', userId: 'u6', at: '2026-10-20T14:00' },
-  { id: 'c12', krId: 'k11', value: 45, confidence: 'ON_TRACK', note: '', blocker: '', userId: 'u7', at: '2026-10-28T16:00' },
+  { id: 'c12', krId: 'k11', value: 45, confidence: 'ON_TRACK', note: 'Tuần này chưa viết thêm được test nào, đang trễ khoảng 2 tuần so với kế hoạch.', blocker: '', userId: 'u7', at: '2026-10-28T16:00' },
   { id: 'c13', krId: 'k1', value: 38, confidence: 'ON_TRACK', note: 'Số lỗi tháng 10 giảm còn 38.', blocker: '', userId: 'u1', at: '2026-10-28T17:00' },
   { id: 'c14', krId: 'k2', value: 7.4, confidence: 'AT_RISK', note: 'Khảo sát tháng 10 tăng chậm.', blocker: '', userId: 'u1', at: '2026-10-28T17:05' },
   { id: 'c15', krId: 'k3', value: 14, confidence: 'ON_TRACK', note: '', blocker: '', userId: 'u1', at: '2026-10-28T17:10' },
@@ -113,6 +124,10 @@ export const checkins = [
   { id: 'c18', krId: 'k12', value: 1, confidence: 'ON_TRACK', note: 'Buổi đầu về viết unit test.', blocker: '', userId: 'u3', at: '2026-10-16T16:00' },
   { id: 'c19', krId: 'k14', value: 64, confidence: 'ON_TRACK', note: '', blocker: '', userId: 'u2', at: '2026-10-29T09:00' },
   { id: 'c20', krId: 'k15', value: 3, confidence: 'AT_RISK', note: 'Đang học cách dựng dữ liệu test.', blocker: '', userId: 'u10', at: '2026-10-12T09:00' },
+  { id: 'c23', krId: 'k16', value: 8, confidence: 'ON_TRACK', note: 'Tháng 10 còn 8 lỗi production, giảm từ 12.', blocker: '', userId: 'u3', at: '2026-10-27T08:40' },
+  { id: 'c24', krId: 'k17', value: 19, confidence: 'AT_RISK', note: 'Đã bật cache dependency; bước test tích hợp vẫn chậm.', blocker: '', userId: 'u13', at: '2026-10-27T11:00' },
+  { id: 'c21', krId: 'k9', value: 0, confidence: 'AT_RISK', note: 'Pipeline CI đã chạy được, còn thiếu bộ test smoke.', blocker: 'Chờ team QA chốt danh sách test smoke để đưa vào CI, đã trễ 1 tuần.', userId: 'u4', at: '2026-10-28T09:30' },
+  { id: 'c22', krId: 'k13', value: 6, confidence: 'AT_RISK', note: 'Hai khách hàng muốn xem demo trước khi hẹn gặp tiếp.', blocker: 'Cần phòng Dev demo tính năng thanh toán định kỳ cho khách hàng trước khi chốt.', userId: 'u9', at: '2026-10-28T15:00' },
   // Q3 (giá trị cuối kỳ)
   { id: 'c30', krId: 'q1', value: 8200, confidence: 'ON_TRACK', note: '', blocker: '', userId: 'u1', at: '2026-09-29T17:00' },
   { id: 'c31', krId: 'q2', value: 11, confidence: 'ON_TRACK', note: '', blocker: '', userId: 'u3', at: '2026-09-29T17:00' },
@@ -148,7 +163,9 @@ export const templates = [
 
 // status: DRAFT | NOMINATION | COLLECTING | CLOSED | PUBLISHED
 export const campaigns = [
-  { id: 'cp-q3', name: 'Đánh giá 360 – Q3/2026', cycleId: 'q3-2026', templateId: 't1', nominationDeadline: '2026-09-10', submitDeadline: '2026-09-28', status: 'PUBLISHED' },
+  // managerSnapshot: quan hệ báo cáo lúc mở thu phiếu nếu khác hiện tại. Q3 diễn ra trước khi Phòng Dev chia team,
+  // khi đó Nam là trưởng phòng và chưa có quản lý trực tiếp.
+  { id: 'cp-q3', name: 'Đánh giá 360 – Q3/2026', cycleId: 'q3-2026', templateId: 't1', nominationDeadline: '2026-09-10', submitDeadline: '2026-09-28', status: 'PUBLISHED', managerSnapshot: { u3: null } },
   { id: 'cp-q4', name: 'Đánh giá 360 – Q4/2026', cycleId: 'q4-2026', templateId: 't1', nominationDeadline: '2026-10-24', submitDeadline: '2026-11-06', status: 'COLLECTING' },
 ];
 
@@ -205,13 +222,20 @@ export const nominations = [
 ];
 
 export const notifications = [
-  { id: 'nt1', userId: 'u4', text: 'Bạn có 3 phiếu đánh giá 360 cần điền trước 06/11.', link: '#/reviews/todo', at: '2026-10-28T08:00', read: false },
-  { id: 'nt2', userId: 'u4', text: 'Anh Trần Hoài Nam đã bình luận vào check-in của bạn.', link: '#/okr/o6', at: '2026-10-26T14:00', read: false },
-  { id: 'nt3', userId: 'u4', text: 'Kết quả đánh giá 360 Q3/2026 đã được công bố.', link: '#/reviews/results', at: '2026-10-05T09:00', read: true },
-  { id: 'nt4', userId: 'u3', text: 'Bạn có 2 danh sách đề cử chờ duyệt.', link: '#/reviews/approvals', at: '2026-10-24T09:00', read: false },
-  { id: 'nt5', userId: 'u3', text: 'Đỗ Minh An chưa check-in 18 ngày.', link: '#/dashboard', at: '2026-10-30T09:00', read: false },
-  { id: 'nt6', userId: 'u2', text: 'Đợt Đánh giá 360 – Q4/2026 đang có 41% phiếu đã nộp.', link: '#/admin/campaigns/cp-q4', at: '2026-10-30T08:00', read: false },
-  { id: 'nt7', userId: 'u6', text: 'Bạn có 1 phiếu đánh giá 360 đã nộp, không còn phiếu nào cần điền.', link: '#/reviews/todo', at: '2026-10-29T08:00', read: true },
+  { id: 'nt1', type: 'REVIEW_REMINDER', userId: 'u4', text: 'Bạn có 3 phiếu đánh giá 360 cần điền trước 06/11.', link: '#/reviews/todo', at: '2026-10-28T08:00', read: false },
+  { id: 'nt2', type: 'CHECKIN_COMMENT', userId: 'u4', text: 'Anh Trần Hoài Nam đã bình luận vào check-in của bạn.', link: '#/okr/o6', at: '2026-10-26T14:00', read: false },
+  { id: 'nt3', type: 'RESULT_PUBLISHED', userId: 'u4', text: 'Kết quả đánh giá 360 Q3/2026 đã được công bố.', link: '#/reviews/results', at: '2026-10-05T09:00', read: true },
+  { id: 'nt4', type: 'NOMINATION_PENDING', userId: 'u3', text: 'Bạn có 2 danh sách đề cử chờ duyệt.', link: '#/reviews/approvals', at: '2026-10-24T09:00', read: false },
+  { id: 'nt5', type: 'CHECKIN_REMINDER', userId: 'u3', text: 'Đỗ Minh An chưa check-in 18 ngày.', link: '#/dashboard', at: '2026-10-30T09:00', read: false },
+  { id: 'nt6', type: 'REVIEW_REMINDER', userId: 'u2', text: 'Đợt Đánh giá 360 – Q4/2026 đang có 41% phiếu đã nộp.', link: '#/admin/campaigns/cp-q4', at: '2026-10-30T08:00', read: false },
+  { id: 'nt7', type: 'REVIEW_REMINDER', userId: 'u6', text: 'Bạn có 1 phiếu đánh giá 360 đã nộp, không còn phiếu nào cần điền.', link: '#/reviews/todo', at: '2026-10-29T08:00', read: true },
+  { id: 'nt8', type: 'BLOCKER_ROUTED', userId: 'u6', text: 'Phòng Dev đang chờ Phòng QA: Nguyễn Thị Lan cần danh sách test smoke để đưa vào CI.', link: '#/ai/blockers', at: '2026-10-28T09:32', read: false },
+  { id: 'nt9', type: 'WEEKLY_DIGEST', userId: 'u3', text: 'Bản tin tuần 19/10–25/10 của đội bạn đã sẵn sàng.', link: '#/ai/digest', at: '2026-10-26T08:01', read: true },
+  { id: 'nt10', type: 'CHECKIN_MISMATCH', userId: 'u7', text: 'Check-in ngày 28/10 của bạn chọn "Đúng hướng" nhưng ghi chú cho biết đang trễ. Bạn xem lại nhé.', link: '#/okr/o8', at: '2026-10-28T16:01', read: false },
+  { id: 'nt11', type: 'AI_DRAFT_READY', userId: 'u2', text: 'Có 2 bản nháp tóm tắt 1-1 đang chờ bạn duyệt.', link: '#/ai/drafts', at: '2026-09-30T18:12', read: false },
+  { id: 'nt12', type: 'BLOCKER_UPDATED', userId: 'u9', text: 'Team Thanh toán đã nhận xử lý vướng mắc của bạn: "Tú sẽ demo cho khách vào thứ Ba tuần sau."', link: '#/okr/o10', at: '2026-10-29T10:15', read: false },
+  { id: 'nt13', type: 'ONE_ON_ONE_SENT', userId: 'u4', text: 'Anh Trần Hoài Nam đã gửi tóm tắt nhận xét 360 Q3/2026 cho bạn.', link: '#/reviews/results', at: '2026-10-06T10:00', read: true },
+  { id: 'nt14', type: 'AUTOMATION_ALERT', userId: 'u1', text: 'Luồng "Bản tin tuần" lỗi 1 lần ngày 26/10 (dịch vụ AI quá thời gian chờ).', link: '#/ai/automation', at: '2026-10-26T08:46', read: false },
 ];
 
 export const auditLogs = [
@@ -220,7 +244,112 @@ export const auditLogs = [
   { id: 'a3', userId: 'u2', action: 'Mở thu phiếu', module: 'Đánh giá 360', target: 'Đánh giá 360 – Q4/2026', at: '2026-10-25T08:00' },
   { id: 'a4', userId: 'u4', action: 'Nộp phiếu', module: 'Đánh giá 360', target: 'Một phiếu trong đợt Đánh giá 360 – Q4/2026', at: '2026-10-27T15:20' },
   { id: 'a5', userId: 'u1', action: 'Cập nhật người dùng', module: 'Tổ chức', target: 'Đỗ Minh An: gán quản lý trực tiếp', at: '2026-10-02T10:00' },
+  { id: 'a12', userId: 'u2', action: 'Cập nhật phòng ban', module: 'Tổ chức', target: 'Phòng Dev: tách Team Thanh toán và Team Nền tảng', at: '2026-10-01T09:00' },
   { id: 'a6', userId: 'u2', action: 'Kích hoạt chu kỳ', module: 'Chu kỳ', target: 'Q4/2026', at: '2026-10-01T08:00' },
   { id: 'a7', userId: 'u2', action: 'Đóng chu kỳ', module: 'Chu kỳ', target: 'Q3/2026', at: '2026-09-30T18:00' },
   { id: 'a8', userId: 'u4', action: 'Đăng nhập', module: 'Xác thực', target: '', at: '2026-10-30T08:55' },
+  { id: 'a9', userId: 'u1', action: 'Cập nhật luồng tự động', module: 'Tự động hóa', target: 'Bản tin tuần: hạn mức 30 → 50 lần/ngày', at: '2026-10-20T09:00' },
+  { id: 'a10', userId: 'u3', action: 'Gửi tóm tắt 1-1', module: 'Tự động hóa', target: 'Tóm tắt nhận xét 360 Q3/2026 cho Nguyễn Thị Lan', at: '2026-10-06T10:00' },
+  { id: 'a11', userId: 'u3', action: 'Nhận xử lý vướng mắc', module: 'Tự động hóa', target: 'Vướng mắc của Lý Hoàng Quân', at: '2026-10-29T10:15' },
 ];
+
+// ================= Tự động hóa bằng AI (F13) =================
+// Mọi nội dung dưới đây là kết quả mẫu của các luồng AI. Trên giao diện luôn kèm nhãn "Do AI tạo".
+
+// trigger: EVENT | SCHEDULE | ON_SUBMIT
+export const automationFlows = [
+  { id: 'BLOCKER_ROUTING', name: 'Chuyển vướng mắc đến đúng người', description: 'Phân loại vướng mắc trong check-in; vướng mắc phụ thuộc phòng khác được báo cho trưởng phòng đó.', trigger: 'EVENT', when: 'Khi có check-in ghi vướng mắc', schedule: null, enabled: true, quota: 500, priority: 'Must' },
+  { id: 'WEEKLY_DIGEST', name: 'Bản tin tuần cho quản lý', description: 'Tóm tắt check-in và vướng mắc tuần trước của đội, chọn tối đa 3 việc cần chú ý.', trigger: 'SCHEDULE', when: '8h sáng thứ Hai', schedule: '0 8 * * 1', enabled: true, quota: 50, priority: 'Must' },
+  { id: 'ONE_ON_ONE_DRAFT', name: 'Bản nháp buổi 1-1 sau đợt 360', description: 'Tóm tắt nhận xét mở của các nhóm đủ ngưỡng ẩn danh thành bản nháp cho quản lý duyệt.', trigger: 'EVENT', when: 'Khi HR đóng đợt đánh giá', schedule: null, enabled: true, quota: 300, priority: 'Must' },
+  { id: 'CHECKIN_MISMATCH', name: 'Phát hiện check-in không khớp', description: 'So mức tự tin với ghi chú; mâu thuẫn thì nhắc người check-in xem lại.', trigger: 'EVENT', when: 'Khi có check-in có ghi chú', schedule: null, enabled: true, quota: 500, priority: 'Should' },
+  { id: 'OKR_REVIEW', name: 'Rà soát OKR mới tạo', description: 'Kiểm tra KR có đo được không, có trùng lặp không, có khớp mục tiêu cấp trên không.', trigger: 'EVENT', when: 'Khi lưu Objective mới', schedule: null, enabled: true, quota: 300, priority: 'Should' },
+  { id: 'REVIEW_COMMENT_GUARD', name: 'Cảnh báo nhận xét 360 dễ lộ danh tính', description: 'Nhắc riêng người viết khi nhận xét có thể làm lộ danh tính hoặc có lời lẽ xúc phạm. Không lưu lịch sử từng lần.', trigger: 'ON_SUBMIT', when: 'Khi bấm Nộp phiếu', schedule: null, enabled: true, quota: 1000, priority: 'Should' },
+];
+
+// Số lần gọi AI hôm nay của từng luồng (để so với hạn mức).
+export const automationUsage = [
+  { flow: 'REVIEW_COMMENT_GUARD', date: TODAY, calls: 7 },
+  { flow: 'CHECKIN_MISMATCH', date: TODAY, calls: 0 },
+];
+
+// Lịch sử chạy: chỉ trạng thái và số liệu kỹ thuật, không có nội dung gửi cho AI.
+// ref: đối tượng đã kích hoạt (check-in, Objective) hoặc người nhận bản tin / người được đánh giá.
+export const automationRuns = [
+  { id: 'r1', flow: 'ONE_ON_ONE_DRAFT', event: 'CAMPAIGN_CLOSED', ref: { campaignId: 'cp-q3', revieweeId: 'u4' }, status: 'SUCCEEDED', attempts: 1, at: '2026-09-30T18:10', durationMs: 4210, inTokens: 980, outTokens: 210, error: null },
+  { id: 'r2', flow: 'ONE_ON_ONE_DRAFT', event: 'CAMPAIGN_CLOSED', ref: { campaignId: 'cp-q3', revieweeId: 'u6' }, status: 'SUCCEEDED', attempts: 1, at: '2026-09-30T18:10', durationMs: 3550, inTokens: 610, outTokens: 150, error: null },
+  { id: 'r3', flow: 'ONE_ON_ONE_DRAFT', event: 'CAMPAIGN_CLOSED', ref: { campaignId: 'cp-q3', revieweeId: 'u3' }, status: 'SUCCEEDED', attempts: 2, at: '2026-09-30T18:11', durationMs: 3920, inTokens: 540, outTokens: 120, error: null },
+  { id: 'r4', flow: 'OKR_REVIEW', event: 'OBJECTIVE_CREATED', ref: { objectiveId: 'o9' }, status: 'SUCCEEDED', attempts: 1, at: '2026-10-05T10:02', durationMs: 2100, inTokens: 450, outTokens: 90, error: null },
+  { id: 'r5', flow: 'OKR_REVIEW', event: 'OBJECTIVE_CREATED', ref: { objectiveId: 'o12' }, status: 'SUCCEEDED', attempts: 1, at: '2026-10-06T14:20', durationMs: 1980, inTokens: 430, outTokens: 85, error: null },
+  { id: 'r6', flow: 'BLOCKER_ROUTING', event: 'CHECKIN_CREATED', ref: { checkinId: 'c3' }, status: 'SUCCEEDED', attempts: 1, at: '2026-10-19T09:21', durationMs: 1650, inTokens: 380, outTokens: 70, error: null },
+  { id: 'r7', flow: 'BLOCKER_ROUTING', event: 'CHECKIN_CREATED', ref: { checkinId: 'c5' }, status: 'SUCCEEDED', attempts: 1, at: '2026-10-19T09:25', durationMs: 1710, inTokens: 375, outTokens: 72, error: null },
+  { id: 'r8', flow: 'BLOCKER_ROUTING', event: 'CHECKIN_CREATED', ref: { checkinId: 'c11' }, status: 'SUCCEEDED', attempts: 1, at: '2026-10-20T14:01', durationMs: 1590, inTokens: 360, outTokens: 66, error: null },
+  { id: 'r9', flow: 'BLOCKER_ROUTING', event: 'CHECKIN_CREATED', ref: { checkinId: 'c16' }, status: 'SUCCEEDED', attempts: 1, at: '2026-10-22T11:01', durationMs: 1880, inTokens: 395, outTokens: 74, error: null },
+  { id: 'r10', flow: 'WEEKLY_DIGEST', event: null, ref: { managerId: 'u3', weekStart: '2026-10-26' }, status: 'SUCCEEDED', attempts: 1, at: '2026-10-26T08:00', durationMs: 5120, inTokens: 1240, outTokens: 260, error: null },
+  { id: 'r11', flow: 'WEEKLY_DIGEST', event: null, ref: { managerId: 'u6', weekStart: '2026-10-26' }, status: 'SUCCEEDED', attempts: 1, at: '2026-10-26T08:00', durationMs: 140, inTokens: null, outTokens: null, error: null },
+  { id: 'r12', flow: 'WEEKLY_DIGEST', event: null, ref: { managerId: 'u8', weekStart: '2026-10-26' }, status: 'FAILED', attempts: 4, at: '2026-10-26T08:00', durationMs: 30000, inTokens: null, outTokens: null, error: 'Dịch vụ AI quá thời gian chờ (30 giây) sau 4 lần thử.' },
+  { id: 'r13', flow: 'BLOCKER_ROUTING', event: 'CHECKIN_CREATED', ref: { checkinId: 'c21' }, status: 'SUCCEEDED', attempts: 1, at: '2026-10-28T09:31', durationMs: 1820, inTokens: 412, outTokens: 96, error: null },
+  { id: 'r14', flow: 'CHECKIN_MISMATCH', event: 'CHECKIN_CREATED', ref: { checkinId: 'c21' }, status: 'SUCCEEDED', attempts: 1, at: '2026-10-28T09:31', durationMs: 1430, inTokens: 300, outTokens: 40, error: null },
+  { id: 'r15', flow: 'BLOCKER_ROUTING', event: 'CHECKIN_CREATED', ref: { checkinId: 'c22' }, status: 'SUCCEEDED', attempts: 1, at: '2026-10-28T15:01', durationMs: 1760, inTokens: 405, outTokens: 92, error: null },
+  { id: 'r16', flow: 'CHECKIN_MISMATCH', event: 'CHECKIN_CREATED', ref: { checkinId: 'c12' }, status: 'SUCCEEDED', attempts: 1, at: '2026-10-28T16:01', durationMs: 1390, inTokens: 310, outTokens: 44, error: null },
+  { id: 'r17', flow: 'CHECKIN_MISMATCH', event: 'CHECKIN_CREATED', ref: { checkinId: 'c19' }, status: 'SKIPPED', attempts: 0, at: '2026-10-29T09:00', durationMs: 0, inTokens: null, outTokens: null, error: null, skipReason: 'Check-in không có ghi chú' },
+];
+
+// Kết quả AI trên check-in. category: DEPENDENCY | RESOURCE | TECHNICAL | PRIORITY_CHANGE | OTHER
+// routing: OPEN | ACKNOWLEDGED | REJECTED (chỉ có khi vướng mắc phụ thuộc một phòng ban khác)
+export const checkinInsights = [
+  { checkinId: 'c3', blockerRunId: 'r6', category: 'TECHNICAL', severity: 'MEDIUM', targetDeptId: null, mismatchRunId: null, mismatch: null, routing: null },
+  { checkinId: 'c5', blockerRunId: 'r7', category: 'DEPENDENCY', severity: 'MEDIUM', targetDeptId: null, mismatchRunId: null, mismatch: null, routing: null, aiNote: 'Đội hạ tầng chưa có trong danh sách phòng ban nên không chuyển tự động.' },
+  { checkinId: 'c11', blockerRunId: 'r8', category: 'RESOURCE', severity: 'MEDIUM', targetDeptId: null, mismatchRunId: null, mismatch: null, routing: null },
+  { checkinId: 'c16', blockerRunId: 'r9', category: 'RESOURCE', severity: 'HIGH', targetDeptId: null, mismatchRunId: null, mismatch: null, routing: null },
+  { checkinId: 'c21', blockerRunId: 'r13', category: 'DEPENDENCY', severity: 'HIGH', targetDeptId: 'd-qa', mismatchRunId: 'r14', mismatch: false, routing: 'OPEN' },
+  { checkinId: 'c22', blockerRunId: 'r15', category: 'DEPENDENCY', severity: 'HIGH', targetDeptId: 't-pay', mismatchRunId: null, mismatch: null, routing: 'ACKNOWLEDGED', handledBy: 'u3', handledAt: '2026-10-29T10:15', handlerNote: 'Tú sẽ demo cho khách vào thứ Ba tuần sau.' },
+  { checkinId: 'c12', blockerRunId: null, category: null, severity: null, targetDeptId: null, mismatchRunId: 'r16', mismatch: true, routing: null, aiNote: 'Mức tự tin là "Đúng hướng" nhưng ghi chú nói đang trễ khoảng 2 tuần.' },
+];
+
+// issue: NOT_MEASURABLE | OUTPUT_ONLY | DUPLICATE | NOT_ALIGNED
+export const objectiveReviewNotes = [
+  { id: 'rn1', objectiveId: 'o9', krId: 'k12', runId: 'r4', issue: 'OUTPUT_ONLY', message: 'KR đếm số buổi chia sẻ, chưa đo kết quả. Có thể thêm KR như "Số thành viên tự viết được unit test tăng từ 1 lên 3".', dismissed: false },
+  { id: 'rn2', objectiveId: 'o12', krId: null, runId: 'r5', issue: 'NOT_ALIGNED', message: 'Objective chưa liên kết lên mục tiêu cấp trên. Có thể gắn vào "Ổn định module thanh toán" của Team Thanh toán.', dismissed: false },
+];
+
+// Bản tin tuần: stats tính từ dữ liệu, highlights do AI viết.
+export const weeklyDigests = [
+  {
+    id: 'wd1', managerId: 'u3', weekStart: '2026-10-26', from: '2026-10-19', to: '2026-10-25', runId: 'r10', read: true,
+    stats: { memberCount: 3, checkedInCount: 1, notCheckedIn: ['u5', 'u10'], atRiskKrIds: ['k8', 'k9'], offTrackKrIds: [] },
+    highlights: [
+      { text: 'Lan có 2 KR cùng chờ đội hạ tầng: môi trường test cổng thanh toán và quyền runner CI. Trao đổi một lần với đội hạ tầng có thể gỡ được cả hai.', krId: 'k8' },
+      { text: 'An chưa check-in từ 12/10; lần gần nhất ghi đang học cách dựng dữ liệu test, có thể cần người kèm.', krId: 'k15' },
+      { text: 'Tú không check-in tuần này, nhưng lần cập nhật trước KR giảm thời gian phản hồi API vẫn đúng hướng.', krId: 'k10' },
+    ],
+  },
+  {
+    id: 'wd2', managerId: 'u6', weekStart: '2026-10-26', from: '2026-10-19', to: '2026-10-25', runId: 'r11', read: false,
+    stats: { memberCount: 2, checkedInCount: 0, notCheckedIn: ['u7', 'u11'], atRiskKrIds: [], offTrackKrIds: [] },
+    highlights: [],
+  },
+];
+
+// Bản nháp 1-1: strengths / improvements là đề xuất gốc của AI (không đổi), editedText là bản người duyệt sửa.
+// reviewerId null = người không có quản lý trực tiếp, do HR duyệt.
+export const oneOnOneDrafts = [
+  {
+    id: 'oo1', campaignId: 'cp-q3', revieweeId: 'u4', reviewerId: 'u3', runId: 'r1', status: 'SENT', sentBy: 'u3', sentAt: '2026-10-06T10:00',
+    strengths: ['Chất lượng code ổn định, ít phải làm lại', 'Sẵn lòng review code và hướng dẫn đồng nghiệp', 'Phản hồi lỗi nhanh khi QA báo'],
+    improvements: ['Chủ động chia sẻ nhiều hơn trong họp đội', 'Mô tả pull request và tài liệu kỹ hơn để QA kiểm thử nhanh hơn', 'Báo trước cho các bên liên quan khi thay đổi luồng nghiệp vụ'],
+    editedText: 'Quý này em làm tốt nhất ở chất lượng code và việc hỗ trợ đồng đội; QA cũng ghi nhận em sửa lỗi rất nhanh. Quý tới anh muốn em tập trung hai việc: viết mô tả pull request đầy đủ hơn để QA đỡ phải hỏi lại, và báo sớm cho QA khi đổi luồng thanh toán. Mình sẽ nói kỹ trong buổi 1-1 thứ Năm.',
+  },
+  {
+    id: 'oo2', campaignId: 'cp-q3', revieweeId: 'u6', reviewerId: null, runId: 'r2', status: 'PENDING_REVIEW',
+    strengths: ['Phối hợp release tốt với các phòng', 'Bảo vệ và hỗ trợ đội khi khối lượng việc lớn'],
+    improvements: ['Duy trì lịch họp 1-1 đều đặn với thành viên trong đội'],
+    editedText: null,
+  },
+  {
+    id: 'oo3', campaignId: 'cp-q3', revieweeId: 'u3', reviewerId: null, runId: 'r3', status: 'PENDING_REVIEW',
+    strengths: ['Gỡ vướng mắc cho đội nhanh'],
+    improvements: ['Giao việc kèm bối cảnh rõ hơn'],
+    editedText: null,
+  },
+];
+

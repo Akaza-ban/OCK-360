@@ -4,7 +4,7 @@
 
 ## Các cấp phân rã
 
-Hệ thống được phân rã theo 4 cấp, mỗi cấp chi tiết hơn cấp trên:
+Hệ thống được phân rã theo 4 cấp, mỗi cấp chi tiết hơn cấp trên. Ví dụ dưới đây là cây OKR 4 cấp: công ty → phòng ban → team → cá nhân. Phòng ban chưa chia team thì OKR cá nhân nối thẳng lên OKR phòng ban.
 
 ```text
 [Công ty]    Nâng cao chất lượng sản phẩm
@@ -13,8 +13,10 @@ Hệ thống được phân rã theo 4 cấp, mỗi cấp chi tiết hơn cấp 
   └ [Phòng Dev]  Cải thiện quy trình kiểm thử
                    KR: Tăng độ phủ test từ 40% lên 70%
                    KR: 100% pull request được review trước khi merge
-      └ [Cá nhân]  Viết test cho module thanh toán
-                     KR: Viết 50 test case
+      └ [Team Thanh toán]  Ổn định module thanh toán
+                             KR: Giảm lỗi production từ 12 xuống 3 lỗi/tháng
+          └ [Cá nhân]  Viết test cho module thanh toán
+                         KR: Viết 50 test case
 ```
 
 ## F05 Check-in và tiến độ
@@ -102,8 +104,40 @@ Bản ghi nhật ký: người thực hiện, hành động, phân hệ, đối 
 
 Email, vai trò, phòng ban và quản lý trực tiếp chỉ được xem, không tự sửa.
 
+## F13 Tự động hóa bằng AI
+
+Hệ thống tự đọc phần **văn bản** mà luật thông thường không hiểu được (ghi chú, vướng mắc, nhận xét), rồi tự chuyển việc đến đúng người, tóm tắt và cảnh báo. Mỗi luồng chạy khi có sự kiện hoặc tới lịch, không cần ai bấm nút.
+
+AI chỉ **đọc, phân loại, tóm tắt, cảnh báo và tạo bản nháp**. AI không chấm điểm, không xếp loại, không sửa số liệu OKR hay 360.
+
+- **F13.1 Chuyển vướng mắc đến đúng người**
+- **F13.2 Bản tin tuần cho quản lý**
+- **F13.3 Bản nháp buổi 1-1 sau đợt 360**
+- F13.4 Phát hiện check-in không khớp
+- F13.5 Rà soát OKR mới tạo
+- F13.6 Cảnh báo nhận xét 360 dễ lộ danh tính
+- **F13.7 Cấu hình luồng tự động**
+- F13.8 Lịch sử chạy
+
+| Luồng | Khi nào chạy | AI làm gì | Hệ thống tự làm gì |
+| --- | --- | --- | --- |
+| F13.1 | Check-in có ghi vướng mắc | Phân loại vướng mắc (phụ thuộc phòng khác, thiếu nguồn lực, kỹ thuật, ưu tiên thay đổi, khác), phòng liên quan, mức nghiêm trọng | Gắn nhãn vào check-in; báo trưởng phòng liên quan nếu là phụ thuộc phòng khác |
+| F13.2 | 8h sáng thứ Hai | Gom vướng mắc giống nhau trong check-in tuần trước của đội, chọn tối đa 3 việc cần chú ý | Gửi bản tin cho quản lý trong ứng dụng và qua email |
+| F13.3 | HR đóng đợt 360 | Tóm tắt nhận xét mở của các nhóm đủ ngưỡng ẩn danh thành điểm mạnh và điểm cần cải thiện | Lưu **bản nháp** cho quản lý trực tiếp; quản lý sửa rồi gửi cho nhân viên, hoặc bỏ |
+| F13.4 | Có check-in mới | So mức tự tin với ghi chú, ví dụ chọn "Đúng hướng" nhưng ghi "trễ 2 tuần" | Nhắc người check-in xem lại; mâu thuẫn 3 lần liên tiếp thì báo quản lý trực tiếp |
+| F13.5 | Lưu Objective mới | Kiểm tra KR có đo được không, có trùng KR của người cùng phòng không, có khớp Objective cấp trên không | Gắn ghi chú rà soát vào Objective để người tạo và quản lý cùng xem |
+| F13.6 | Bấm Nộp phiếu 360 | Phát hiện câu có thể làm lộ người viết hoặc lời lẽ xúc phạm | Hiện cảnh báo **chỉ cho người viết**; người viết sửa hoặc vẫn nộp |
+
+Cấu hình mỗi luồng: bật/tắt, lịch chạy (với luồng theo lịch), hạn mức số lần gọi AI mỗi ngày.
+
+Lịch sử chạy: luồng, sự kiện kích hoạt, trạng thái (Đang chờ / Thành công / Lỗi / Bỏ qua), số lần thử, thời gian chạy, số token, lỗi. Lịch sử không lưu nội dung gửi cho AI.
+
+Bản nháp AI: loại, người nhận, nội dung AI đề xuất, nội dung sau khi người duyệt sửa, trạng thái (Chờ duyệt / Đã gửi / Đã bỏ). Mọi nội dung do AI tạo đều có nhãn "Do AI tạo" trên giao diện.
+
+Mẫu: Lan check-in KR "Tăng độ phủ test" và ghi vướng mắc "Chờ team QA dựng môi trường test, đã trễ 1 tuần". AI phân loại: phụ thuộc phòng khác, phòng QA, mức cao. Trưởng phòng QA nhận thông báo kèm link tới KR của Lan.
+
 ## Ngoài phạm vi V1
 
-Tích hợp Jira / GitLab / Slack, các phương pháp KPI / BSC / MBO, tính lương, đăng nhập một lần (SSO), ứng dụng di động riêng, AI gợi ý OKR. Chi tiết ở [01-scope.md](01-scope.md).
+Tích hợp Jira / GitLab / Slack, các phương pháp KPI / BSC / MBO, tính lương, đăng nhập một lần (SSO), ứng dụng di động riêng, AI chấm điểm hay xếp loại nhân viên, chatbot viết hộ OKR, trình tự tạo luồng tự động kéo-thả. Chi tiết ở [01-scope.md](01-scope.md).
 
 **Liên quan:** [Phạm vi](01-scope.md) · [Use case](03-use-cases.md)

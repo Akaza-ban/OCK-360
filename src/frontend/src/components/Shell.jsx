@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import AiWorker from './AiWorker.jsx';
+import AiExplainDrawer from './AiExplain.jsx';
 import { useStore } from '../lib/store.jsx';
 import { ROLE_LABEL } from '../lib/data.js';
 import { canAccess } from '../lib/auth.js';
@@ -32,10 +34,19 @@ const NAV = [
     ],
   },
   {
+    group: 'Tự động hóa AI',
+    items: [
+      { to: '/ai/blockers', label: 'Vướng mắc chuyển đến', icon: I.IconRoute, count: 'blockers' },
+      { to: '/ai/digest', label: 'Bản tin tuần', icon: I.IconNews },
+      { to: '/ai/drafts', label: 'Bản nháp 1-1', icon: I.IconDraft, count: 'drafts' },
+      { to: '/ai/automation', label: 'Luồng tự động', icon: I.IconBolt },
+    ],
+  },
+  {
     group: 'Quản trị',
     items: [
       { to: '/admin/cycles', label: 'Chu kỳ OKR', icon: I.IconCalendar },
-      { to: '/admin/departments', label: 'Phòng ban', icon: I.IconBuilding },
+      { to: '/admin/departments', label: 'Phòng ban và team', icon: I.IconBuilding },
       { to: '/admin/users', label: 'Người dùng', icon: I.IconUsers },
       { to: '/admin/campaigns', label: 'Đợt đánh giá 360', icon: I.IconSpark },
       { to: '/admin/templates', label: 'Bộ tiêu chí', icon: I.IconList },
@@ -84,6 +95,8 @@ export default function Shell({ user, route, onLogout, children }) {
     unread: state.notifications.filter((n) => n.userId === user.id && !n.read).length,
     todo: state.reviewForms.filter((f) => f.reviewerId === user.id && f.status !== 'SUBMITTED' && state.campaigns.find((c) => c.id === f.campaignId)?.status === 'COLLECTING').length,
     approvals: state.nominations.filter((n) => n.status === 'PENDING' && state.users.find((u) => u.id === n.revieweeId)?.managerId === user.id).length,
+    blockers: state.checkinInsights.filter((i) => i.routing === 'OPEN' && state.departments.find((d) => d.id === i.targetDeptId)?.headId === user.id).length,
+    drafts: state.oneOnOneDrafts.filter((d) => d.status === 'PENDING_REVIEW' && (d.reviewerId ? d.reviewerId === user.id : user.role === 'HR')).length,
   };
 
   const groups = NAV.map((g) => ({ ...g, items: g.items.filter((i) => canAccess(i.to, user)) })).filter((g) => g.items.length);
@@ -159,6 +172,8 @@ export default function Shell({ user, route, onLogout, children }) {
       </div>
 
       {palette && <CommandPalette groups={groups} state={state} onClose={() => setPalette(false)} />}
+      <AiWorker />
+      <AiExplainDrawer />
       {state.toast && <Toast text={state.toast} onDone={() => dispatch({ type: 'toast', text: null })} />}
     </div>
   );
@@ -218,9 +233,12 @@ function CommandPalette({ groups, state, onClose }) {
 }
 
 function Toast({ text, onDone }) {
+  // Giữ hàm onDone mới nhất trong ref để bộ đếm không bị khởi động lại mỗi lần giao diện vẽ lại.
+  const done = useRef(onDone);
+  done.current = onDone;
   useEffect(() => {
-    const t = setTimeout(onDone, 3200);
+    const t = setTimeout(() => done.current(), 3200);
     return () => clearTimeout(t);
-  }, [text, onDone]);
+  }, [text]);
   return <div className="toast" role="status">{text}</div>;
 }

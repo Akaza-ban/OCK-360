@@ -1,8 +1,9 @@
 import { useMemo, useState } from 'react';
 import { useCycleData } from '../../../lib/store.jsx';
 import { progressMap, expectedProgress, objectiveConfidence } from '../../../lib/okr.js';
-import { Progress, Confidence, PageHeader, LEVEL_LABEL, Empty } from '../../../components/ui.jsx';
+import { Progress, Confidence, PageHeader, LEVEL_LABEL, LevelTag, Empty } from '../../../components/ui.jsx';
 import ObjectiveForm from '../components/ObjectiveForm.jsx';
+import { unitWithChildren } from '../../../lib/auth.js';
 import { pct } from '../../../lib/format.js';
 
 export default function OkrTree({ user }) {
@@ -15,7 +16,8 @@ export default function OkrTree({ user }) {
   const [creating, setCreating] = useState(false);
 
   // Một Objective được giữ lại nếu nó hoặc một Objective con cháu khớp bộ lọc.
-  const matches = (o) => (!dept || o.deptId === dept) && (!conf || objectiveConfidence(o.id, data) === conf);
+  const scope = dept ? unitWithChildren(dept, data.departments) : null;
+  const matches = (o) => (!scope || scope.includes(o.deptId)) && (!conf || objectiveConfidence(o.id, data) === conf);
   const keep = useMemo(() => {
     const memo = new Map();
     const visit = (o) => {
@@ -45,9 +47,9 @@ export default function OkrTree({ user }) {
             <button className="toggle" aria-expanded={isOpen} aria-label={isOpen ? 'Thu gọn' : 'Mở rộng'} onClick={() => setCollapsed((c) => ({ ...c, [o.id]: isOpen }))}>{isOpen ? '▾' : '▸'}</button>
           ) : <span />}
           <div>
-            <span className={`tag ${o.level === 'COMPANY' ? 'company' : o.level === 'DEPARTMENT' ? 'dept' : 'person'}`} style={{ marginRight: 8 }}>{LEVEL_LABEL[o.level]}</span>
+            <LevelTag level={o.level} style={{ marginRight: 8 }} />
             <a href={`#/okr/${o.id}`}>{o.title}</a>
-            <div className="owner">{o.level === 'DEPARTMENT' ? deptName : owner?.name}{kids.length ? ` · ${kids.length} Objective con` : ''}</div>
+            <div className="owner">{['DEPARTMENT', 'TEAM'].includes(o.level) ? deptName : owner?.name}{kids.length ? ` · ${kids.length} Objective con` : ''}</div>
           </div>
           <Progress value={pm.get(o.id)} expected={expected} />
           <Confidence value={objectiveConfidence(o.id, data)} />
@@ -66,10 +68,13 @@ export default function OkrTree({ user }) {
       />
       <div style={{ display: 'flex', gap: 12, alignItems: 'end', marginBottom: 14, flexWrap: 'wrap' }}>
         <div className="field">
-          <label htmlFor="f-dept">Phòng ban</label>
+          <label htmlFor="f-dept">Phòng ban / Team</label>
           <select id="f-dept" value={dept} onChange={(e) => setDept(e.target.value)}>
             <option value="">Tất cả</option>
-            {data.departments.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
+            {data.departments.filter((d) => d.type !== 'TEAM').flatMap((d) => [
+              <option key={d.id} value={d.id}>{d.name}</option>,
+              ...data.departments.filter((t) => t.parentId === d.id && t.type === 'TEAM').map((t) => <option key={t.id} value={t.id}>{'\u00a0\u00a0\u00a0'}{t.name}</option>),
+            ])}
           </select>
         </div>
         <div className="field">

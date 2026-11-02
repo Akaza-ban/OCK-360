@@ -1,10 +1,10 @@
 import { useMemo, useState } from 'react';
 import { useCycleData } from '../../../lib/store.jsx';
 import { progressMap, expectedProgress, objectiveConfidence, latestCheckin, currentValue, daysSince } from '../../../lib/okr.js';
-import { Progress, Confidence, PageHeader, Avatar, Empty } from '../../../components/ui.jsx';
+import { Progress, Confidence, PageHeader, Avatar, Empty, LevelTag } from '../../../components/ui.jsx';
 import CheckinModal from '../../okr/components/CheckinModal.jsx';
 import { pct, num, date, shortName } from '../../../lib/format.js';
-import { isAdmin, isHR, isManager, directReports, headOfDept } from '../../../lib/auth.js';
+import { isAdmin, isHR, isManager, directReports, headOfDept, unitsInScope, unitWithChildren } from '../../../lib/auth.js';
 
 export default function Dashboard({ user }) {
   const data = useCycleData();
@@ -178,7 +178,11 @@ function Team({ user, data }) {
   const pm = useMemo(() => progressMap(data), [data]);
   const expected = expectedProgress(data.cycle);
   const dept = headOfDept(user, data.departments);
-  const deptObjs = data.objectives.filter((o) => o.level === 'DEPARTMENT' && o.deptId === dept?.id);
+  // Trưởng phòng thấy OKR phòng ban và OKR các team bên dưới; team lead thấy OKR team mình.
+  const scope = unitsInScope(user, data.departments).map((d) => d.id);
+  const deptObjs = data.objectives
+    .filter((o) => ['DEPARTMENT', 'TEAM'].includes(o.level) && scope.includes(o.deptId))
+    .sort((a, b) => (a.level === b.level ? 0 : a.level === 'DEPARTMENT' ? -1 : 1));
   const reports = directReports(user, data.users);
   const rows = reports.map((r) => {
     const objs = data.objectives.filter((o) => o.ownerId === r.id && o.level === 'INDIVIDUAL');
@@ -191,7 +195,7 @@ function Team({ user, data }) {
       days: lastAt ? daysSince(lastAt) : null,
     };
   });
-  const risky = data.objectives.filter((o) => (o.deptId === dept?.id) && ['AT_RISK', 'OFF_TRACK'].includes(objectiveConfidence(o.id, data)));
+  const risky = data.objectives.filter((o) => scope.includes(o.deptId) && ['AT_RISK', 'OFF_TRACK'].includes(objectiveConfidence(o.id, data)));
 
   return (
     <div className="stack">
@@ -203,7 +207,11 @@ function Team({ user, data }) {
         <div className="panel-body">
           {deptObjs.map((o) => (
             <div key={o.id} className="kr-row" style={{ gridTemplateColumns: '1fr 260px 120px' }}>
-              <a href={`#/okr/${o.id}`} className="kr-title" style={{ textDecoration: 'none' }}>{o.title}</a>
+              <span style={{ display: 'flex', gap: 8, alignItems: 'center', minWidth: 0 }}>
+                <LevelTag level={o.level} />
+                <a href={`#/okr/${o.id}`} className="kr-title" style={{ textDecoration: 'none' }}>{o.title}</a>
+                {o.level === 'TEAM' && <span className="muted small">{data.departments.find((d) => d.id === o.deptId)?.name}</span>}
+              </span>
               <Progress value={pm.get(o.id)} expected={expected} />
               <Confidence value={objectiveConfidence(o.id, data)} />
             </div>
@@ -256,7 +264,7 @@ function Company({ data }) {
   const pm = useMemo(() => progressMap(data), [data]);
   const expected = expectedProgress(data.cycle);
   const company = data.objectives.filter((o) => o.level === 'COMPANY');
-  const depts = data.departments.filter((d) => d.parentId);
+  const depts = data.departments.filter((d) => d.parentId && d.type !== 'TEAM');
   const activeKrs = data.keyResults;
   const checkedThisWeek = activeKrs.filter((k) => {
     const l = latestCheckin(data.checkins, k.id);
@@ -292,14 +300,15 @@ function Company({ data }) {
             <thead><tr><th>Phòng ban</th><th>Tiến độ OKR phòng ban</th><th className="num">Số Objective</th><th className="num">Check-in 7 ngày qua</th></tr></thead>
             <tbody>
               {depts.map((d) => {
+                const units = unitWithChildren(d.id, data.departments);
                 const objs = data.objectives.filter((o) => o.deptId === d.id && o.level === 'DEPARTMENT');
-                const krs = data.keyResults.filter((k) => data.objectives.find((o) => o.id === k.objectiveId)?.deptId === d.id);
+                const krs = data.keyResults.filter((k) => units.includes(data.objectives.find((o) => o.id === k.objectiveId)?.deptId));
                 const ok = krs.filter((k) => { const l = latestCheckin(data.checkins, k.id); return l && daysSince(l.at) < 7; }).length;
                 return (
                   <tr key={d.id}>
                     <td>{d.name}</td>
                     <td style={{ minWidth: 220 }}>{objs.length ? <Progress value={objs.reduce((s, o) => s + pm.get(o.id), 0) / objs.length} expected={expected} /> : <span className="muted">Chưa có OKR phòng ban</span>}</td>
-                    <td className="num">{data.objectives.filter((o) => o.deptId === d.id).length}</td>
+                    <td className="num">{data.objectives.filter((o) => units.includes(o.deptId)).length}</td>
                     <td className="num">{krs.length ? pct(ok / krs.length) : '—'}</td>
                   </tr>
                 );

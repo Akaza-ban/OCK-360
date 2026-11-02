@@ -19,6 +19,18 @@ const initial = {
   nominations: seed.nominations,
   notifications: seed.notifications,
   auditLogs: seed.auditLogs,
+  automationFlows: seed.automationFlows,
+  automationRuns: seed.automationRuns,
+  automationUsage: seed.automationUsage,
+  checkinInsights: seed.checkinInsights,
+  objectiveReviewNotes: seed.objectiveReviewNotes,
+  weeklyDigests: seed.weeklyDigests,
+  oneOnOneDrafts: seed.oneOnOneDrafts,
+  // Giả lập AI worker (chỉ có trong bản mẫu): hàng đợi việc, các lần chạy đang hiển thị, công tắc giả lập lỗi.
+  aiQueue: [],
+  aiTraces: [],
+  aiFail: false,
+  aiExplain: null,
   cycleId: 'q4-2026',
   toast: null,
 };
@@ -35,7 +47,38 @@ function reducer(state, a) {
       return { ...state, toast: a.text };
     case 'checkin': {
       const c = { id: nextId('c'), at: now(), ...a.checkin };
-      return { ...state, checkins: [...state.checkins, c], toast: 'Đã lưu check-in. Tiến độ các cấp đã được cập nhật.' };
+      // Cùng lúc lưu check-in, hệ thống ghi sự kiện cho AI worker. AI chạy sau, không làm chậm việc lưu.
+      const jobs = [];
+      if (c.blocker?.trim()) jobs.push({ id: nextId('job'), flow: 'BLOCKER_ROUTING', checkinId: c.id });
+      if (c.note?.trim()) jobs.push({ id: nextId('job'), flow: 'CHECKIN_MISMATCH', checkinId: c.id });
+      return { ...state, checkins: [...state.checkins, c], aiQueue: [...state.aiQueue, ...jobs], toast: c.blocker?.trim() ? 'Đã lưu check-in. AI đang đọc vướng mắc để chuyển đến đúng người.' : 'Đã lưu check-in. Tiến độ các cấp đã được cập nhật.' };
+    }
+    case 'aiEnqueue':
+      return { ...state, aiQueue: [...state.aiQueue, { id: nextId('job'), ...a.job }] };
+    case 'aiDequeue':
+      return { ...state, aiQueue: state.aiQueue.filter((j) => j.id !== a.id) };
+    case 'aiTrace': {
+      const others = state.aiTraces.filter((t) => t.id !== a.trace.id);
+      return { ...state, aiTraces: [a.trace, ...others].slice(0, 50) };
+    }
+    case 'setAiFail':
+      return { ...state, aiFail: a.value, toast: a.value ? 'Đã bật giả lập dịch vụ AI lỗi. Check-in tiếp theo sẽ thấy AI thử lại rồi ghi Lỗi.' : 'Đã tắt giả lập lỗi.' };
+    case 'aiExplain':
+      return { ...state, aiExplain: a.target };
+    case 'aiApply': {
+      const ins = a.insight;
+      const insights = ins
+        ? state.checkinInsights.some((i) => i.checkinId === ins.checkinId)
+          ? state.checkinInsights.map((i) => (i.checkinId === ins.checkinId ? { ...i, ...ins } : i))
+          : [...state.checkinInsights, ins]
+        : state.checkinInsights;
+      return {
+        ...state,
+        automationRuns: [...state.automationRuns, { id: nextId('r'), at: now(), ...a.run }],
+        checkinInsights: insights,
+        notifications: [...(a.notifications || []).map((n) => ({ id: nextId('nt'), at: now(), read: false, ...n })), ...state.notifications],
+        weeklyDigests: a.digest ? [{ id: nextId('wd'), ...a.digest }, ...state.weeklyDigests] : state.weeklyDigests,
+      };
     }
     case 'comment':
       return {
@@ -85,6 +128,53 @@ function reducer(state, a) {
         ...state,
         campaigns: state.campaigns.map((c) => (c.id === a.id ? { ...c, status: 'PUBLISHED' } : c)),
         toast: 'Đã công bố kết quả. Mỗi nhân viên đã nhận thông báo.',
+      };
+    // ---------- Tự động hóa bằng AI ----------
+    case 'updateFlow':
+      return {
+        ...state,
+        automationFlows: state.automationFlows.map((f) => (f.id === a.id ? { ...f, ...a.changes } : f)),
+        toast: a.toastText || 'Đã lưu cấu hình luồng.',
+      };
+    case 'retryRun':
+      return {
+        ...state,
+        automationRuns: state.automationRuns.map((r) => (r.id === a.id ? { ...r, status: 'PENDING', error: null } : r)),
+        toast: 'Đã đưa lần chạy vào hàng đợi để chạy lại.',
+      };
+    case 'handleBlocker': {
+      // Báo lại cho người báo vướng mắc (nhận xử lý) hoặc cho quản lý trực tiếp của họ (AI chuyển nhầm).
+      const ins = state.checkinInsights.find((i) => i.checkinId === a.checkinId);
+      const c = state.checkins.find((x) => x.id === a.checkinId);
+      const reporter = state.users.find((u) => u.id === c.userId);
+      const unit = state.departments.find((d) => d.id === ins.targetDeptId);
+      const kr = state.keyResults.find((k) => k.id === c.krId);
+      const note = a.note?.trim() ? `: "${a.note.trim()}"` : '.';
+      const n = a.routing === 'ACKNOWLEDGED'
+        ? { type: 'BLOCKER_UPDATED', userId: reporter.id, text: `${unit.name} đã nhận xử lý vướng mắc của bạn ở KR "${kr.title}"${note}`, link: `#/okr/${kr.objectiveId}` }
+        : reporter.managerId && { type: 'BLOCKER_ROUTED', userId: reporter.managerId, text: `${unit.name} cho biết vướng mắc của ${reporter.name} không liên quan tới họ; vướng mắc được chuyển về bạn.`, link: `#/okr/${kr.objectiveId}` };
+      return {
+        ...state,
+        notifications: n ? [{ id: nextId('nt'), at: now(), read: false, ...n }, ...state.notifications] : state.notifications,
+        checkinInsights: state.checkinInsights.map((i) =>
+          i.checkinId === a.checkinId ? { ...i, routing: a.routing, handledBy: a.userId, handledAt: now(), handlerNote: a.note } : i,
+        ),
+        toast: a.routing === 'ACKNOWLEDGED' ? 'Đã nhận xử lý. Người báo vướng mắc đã nhận thông báo.' : 'Đã chuyển vướng mắc về quản lý trực tiếp của người báo.',
+      };
+    }
+    case 'readDigest':
+      return { ...state, weeklyDigests: state.weeklyDigests.map((d) => (d.id === a.id ? { ...d, read: true } : d)) };
+    case 'dismissNote':
+      return {
+        ...state,
+        objectiveReviewNotes: state.objectiveReviewNotes.map((n) => (n.id === a.id ? { ...n, dismissed: true } : n)),
+        toast: 'Đã ẩn gợi ý này.',
+      };
+    case 'saveDraft':
+      return {
+        ...state,
+        oneOnOneDrafts: state.oneOnOneDrafts.map((d) => (d.id === a.id ? { ...d, ...a.changes } : d)),
+        toast: a.toastText,
       };
     default:
       return state;

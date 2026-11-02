@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useStore } from '../../../lib/store.jsx';
-import { PageHeader, Avatar, Empty } from '../../../components/ui.jsx';
+import { PageHeader, Avatar, Empty, Modal, AiBadge } from '../../../components/ui.jsx';
+import { checkComment } from '../../../lib/ai.js';
 import { GROUP_LABEL } from '../../../lib/review.js';
 import { date } from '../../../lib/format.js';
 
@@ -10,6 +11,7 @@ export default function ReviewForm({ user, id }) {
   const [scores, setScores] = useState(form?.scores || {});
   const [answers, setAnswers] = useState(form?.answers || {});
   const [missing, setMissing] = useState([]);
+  const [flags, setFlags] = useState(null);
 
   if (!form || form.reviewerId !== user.id) return <Empty title="Không tìm thấy phiếu." action={<a className="btn" href="#/reviews/todo">Về danh sách phiếu</a>}>Phiếu này không được giao cho bạn.</Empty>;
 
@@ -20,7 +22,7 @@ export default function ReviewForm({ user, id }) {
   const anonymous = ['PEER', 'DIRECT_REPORT'].includes(form.group);
   const done = template.criteria.filter((c) => scores[c.id] !== undefined).length;
 
-  const save = (status) => {
+  const save = (status, skipCheck = false) => {
     if (status === 'SUBMITTED') {
       const miss = template.criteria.filter((c) => c.required && scores[c.id] === undefined).map((c) => c.id);
       setMissing(miss);
@@ -28,7 +30,13 @@ export default function ReviewForm({ user, id }) {
         document.getElementById(`cr-${miss[0]}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
         return;
       }
+      // Luồng "Cảnh báo nhận xét 360": chỉ người viết thấy, không lưu lại; AI lỗi thì vẫn cho nộp.
+      if (!skipCheck && state.automationFlows.find((f) => f.id === 'REVIEW_COMMENT_GUARD')?.enabled) {
+        const found = template.questions.flatMap((q) => checkComment(answers[q.id] || '').map((f) => ({ ...f, question: q.text })));
+        if (found.length) return setFlags(found);
+      }
     }
+    setFlags(null);
     dispatch({ type: 'saveForm', form: { id: form.id, scores, answers, status } });
     if (status === 'SUBMITTED') window.location.hash = '#/reviews/todo';
   };
@@ -83,6 +91,22 @@ export default function ReviewForm({ user, id }) {
           <button className="btn" onClick={() => save(form.status === 'SUBMITTED' ? 'SUBMITTED' : 'DRAFT')}>Lưu nháp</button>
           <button className="btn primary" onClick={() => save('SUBMITTED')}>{form.status === 'SUBMITTED' ? 'Cập nhật phiếu' : 'Nộp phiếu'}</button>
         </div>
+      )}
+      {flags && (
+        <Modal
+          title="Xem lại nhận xét trước khi nộp"
+          onClose={() => setFlags(null)}
+          footer={<><button className="btn" onClick={() => save('SUBMITTED', true)}>Vẫn nộp</button><button className="btn primary" onClick={() => setFlags(null)}>Sửa lại</button></>}
+        >
+          <p style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 0 }}><AiBadge /> Chỉ bạn thấy cảnh báo này. Nó không được lưu và không gửi cho ai.</p>
+          {flags.map((f, i) => (
+            <div key={i} className="flag">
+              <div className="small muted">{f.question}</div>
+              <p className="quote" style={{ margin: '4px 0' }}>{f.sentence}</p>
+              <div className="small">{f.reason}</div>
+            </div>
+          ))}
+        </Modal>
       )}
     </>
   );

@@ -21,6 +21,10 @@ import Campaigns from './features/admin/pages/Campaigns.jsx';
 import CampaignDetail from './features/admin/pages/CampaignDetail.jsx';
 import Templates from './features/admin/pages/Templates.jsx';
 import Audit from './features/admin/pages/Audit.jsx';
+import Blockers from './features/ai/pages/Blockers.jsx';
+import Digest from './features/ai/pages/Digest.jsx';
+import Drafts from './features/ai/pages/Drafts.jsx';
+import Automation from './features/ai/pages/Automation.jsx';
 import Notifications from './pages/Notifications.jsx';
 import Profile from './pages/Profile.jsx';
 import Forbidden from './pages/Forbidden.jsx';
@@ -69,6 +73,12 @@ function page(route, user) {
       break;
     case 'audit':
       return <Audit />;
+    case 'ai':
+      if (p[1] === 'blockers') return <Blockers user={user} />;
+      if (p[1] === 'digest') return <Digest user={user} />;
+      if (p[1] === 'drafts') return <Drafts user={user} />;
+      if (p[1] === 'automation') return <Automation user={user} />;
+      break;
     case 'notifications':
       return <Notifications user={user} />;
     case 'profile':

@@ -8,7 +8,13 @@ export const CONFIDENCE = {
   OFF_TRACK: { label: 'Chệch hướng', cls: 'bad' },
 };
 
-export const LEVEL_LABEL = { COMPANY: 'Công ty', DEPARTMENT: 'Phòng ban', INDIVIDUAL: 'Cá nhân' };
+export const LEVEL_LABEL = { COMPANY: 'Công ty', DEPARTMENT: 'Phòng ban', TEAM: 'Team', INDIVIDUAL: 'Cá nhân' };
+export const LEVEL_TAG = { COMPANY: 'company', DEPARTMENT: 'dept', TEAM: 'team', INDIVIDUAL: 'person' };
+
+// Nhãn cấp OKR có chấm màu.
+export function LevelTag({ level, style }) {
+  return <span className={`tag ${LEVEL_TAG[level]}`} style={style}>{LEVEL_LABEL[level]}</span>;
+}
 
 export function Confidence({ value }) {
   if (!value)
@@ -114,4 +120,30 @@ export function Score({ value, max = 5 }) {
       {value.toLocaleString('vi-VN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
     </span>
   );
+}
+
+// Nhãn bắt buộc cạnh mọi nội dung do AI tạo.
+// Có onClick thì nhãn thành nút mở ngăn "AI đã làm gì?".
+export function AiBadge({ text = 'Do AI tạo', onClick }) {
+  const icon = <svg width="11" height="11" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.5 9.6 6.4 14.5 8 9.6 9.6 8 14.5 6.4 9.6 1.5 8 6.4 6.4Z" fill="currentColor" /></svg>;
+  if (onClick)
+    return (
+      <button type="button" className="ai-badge clickable" onClick={onClick} title="Xem AI đã làm gì">
+        {icon}
+        {text}
+        <span aria-hidden="true">›</span>
+      </button>
+    );
+  return (
+    <span className="ai-badge" title="Nội dung do AI tạo. AI chỉ gợi ý, không thay đổi điểm số hay tiến độ.">
+      {icon}
+      {text}
+    </span>
+  );
+}
+
+export function Pill({ value }) {
+  if (!value) return null;
+  const [label, cls] = value;
+  return <span className={`conf pill ${cls}`}>{label}</span>;
 }

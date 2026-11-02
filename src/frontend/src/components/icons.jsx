@@ -26,6 +26,10 @@ export const IconSun = (p) => <S {...p}><circle cx="8" cy="8" r="2.8" /><path d=
 export const IconMoon = (p) => <S {...p}><path d="M13.2 9.6A5.5 5.5 0 0 1 6.4 2.8a5.5 5.5 0 1 0 6.8 6.8Z" /></S>;
 export const IconLogout = (p) => <S {...p}><path d="M6 2.5H3.5a1 1 0 0 0-1 1v9a1 1 0 0 0 1 1H6M10 11l3-3-3-3M13 8H6" /></S>;
 export const IconUser = (p) => <S {...p}><circle cx="8" cy="5.5" r="2.7" /><path d="M2.8 13.6c.6-2.4 2.6-3.8 5.2-3.8s4.6 1.4 5.2 3.8" /></S>;
+export const IconBolt = (p) => <S {...p}><path d="M9 1.8 3.5 9h4l-1 5.2L12.5 7h-4Z" /></S>;
+export const IconRoute = (p) => <S {...p}><circle cx="3.5" cy="12.5" r="1.6" /><circle cx="12.5" cy="3.5" r="1.6" /><path d="M5.1 12.5h4.4a2.5 2.5 0 0 0 0-5h-3a2.5 2.5 0 0 1 0-5h4.4" /></S>;
+export const IconNews = (p) => <S {...p}><rect x="2" y="2.5" width="12" height="11" rx="1.5" /><path d="M4.5 5.5h7M4.5 8h7M4.5 10.5h4" /></S>;
+export const IconDraft = (p) => <S {...p}><path d="M10.8 2.2 13.8 5.2 6 13H3v-3Z" /><path d="m9.2 3.8 3 3" /></S>;
 export const IconPlus = (p) => <S {...p}><path d="M8 3v10M3 8h10" /></S>;
 
 // Biểu tượng trạng thái kiểu "project health": vòng tròn có phần lõi khác nhau.

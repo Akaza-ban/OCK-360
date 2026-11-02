@@ -10,7 +10,7 @@ export default function CampaignDetail({ id }) {
   const c = state.campaigns.find((x) => x.id === id);
   if (!c) return <Empty title="Không tìm thấy đợt đánh giá." />;
   const forms = state.reviewForms.filter((f) => f.campaignId === c.id);
-  const depts = state.departments;
+  const depts = state.departments.filter((d) => d.type !== 'TEAM');
   // Chỉ đếm số phiếu còn thiếu theo người đánh giá, không hiển thị họ còn thiếu phiếu cho ai.
   const reviewers = state.users
     .map((u) => ({ user: u, total: forms.filter((f) => f.reviewerId === u.id).length, left: forms.filter((f) => f.reviewerId === u.id && f.status !== 'SUBMITTED').length }))
@@ -46,7 +46,8 @@ export default function CampaignDetail({ id }) {
           <header><h2>Tỷ lệ nộp phiếu theo phòng ban</h2></header>
           <div className="panel-body">
             {depts.map((d) => {
-              const fs = forms.filter((f) => state.users.find((u) => u.id === f.reviewerId)?.deptId === d.id);
+              const units = [d.id, ...state.departments.filter((t) => t.parentId === d.id && t.type === 'TEAM').map((t) => t.id)];
+              const fs = forms.filter((f) => units.includes(state.users.find((u) => u.id === f.reviewerId)?.deptId));
               if (!fs.length) return null;
               const done = fs.filter((f) => f.status === 'SUBMITTED').length;
               return (

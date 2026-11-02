@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { useStore, useCycleData } from '../../../lib/store.jsx';
 import { PageHeader, Progress, Score } from '../../../components/ui.jsx';
 import { progressMap, expectedProgress, latestCheckin, daysSince } from '../../../lib/okr.js';
-import { isManager, isAdmin, headOfDept } from '../../../lib/auth.js';
+import { isManager, isAdmin, headOfDept, unitWithChildren } from '../../../lib/auth.js';
 import { computeFinal } from './FinalResults.jsx';
 import { pct } from '../../../lib/format.js';
 
@@ -16,7 +16,8 @@ export default function Reports({ user }) {
   if (!isAdmin(user)) types.push({ key: 'final', label: 'Kết quả cuối kỳ' });
   const [type, setType] = useState('okr');
   const myDept = isManager(user) ? headOfDept(user, data.departments) : null;
-  const depts = data.departments.filter((d) => (myDept ? d.id === myDept.id : d.parentId));
+  // Quản lý chỉ xem đơn vị mình phụ trách (kể cả các team bên dưới nếu là trưởng phòng).
+  const depts = myDept ? data.departments.filter((d) => unitWithChildren(myDept.id, data.departments).includes(d.id)) : data.departments.filter((d) => d.parentId);
   const pm = useMemo(() => progressMap(data), [data]);
   const expected = expectedProgress(data.cycle);
   const campaign = data.campaigns.find((c) => c.cycleId === data.cycle.id);

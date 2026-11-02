@@ -25,6 +25,7 @@ US12–US14   Check-in và tiến độ             (F05)
 US15–US21   Đánh giá 360 độ                 (F06)
 US22        Kết quả cuối kỳ                 (F07)
 US23–US26   Dashboard, báo cáo, thông báo, nhật ký   (F08–F11)
+US27–US34   Tự động hóa bằng AI             (F13)
 ```
 
 ## Product backlog
@@ -34,7 +35,7 @@ US23–US26   Dashboard, báo cáo, thông báo, nhật ký   (F08–F11)
 | US01 | Là người dùng đang hoạt động, tôi muốn đăng nhập để truy cập an toàn vào phần việc mình được phép. | Bảo vệ truy cập | Tài khoản khởi tạo sẵn | AC-UC01 | Must |
 | US02 | Là người dùng đã đăng nhập, tôi muốn đăng xuất để thiết bị này xóa phiên làm việc của tôi. | An toàn phiên | US01 | AC-UC02 | Must |
 | US03 | Là người dùng, tôi muốn cập nhật hồ sơ và đổi mật khẩu mà không tự đổi được vai trò, để tài khoản luôn đúng và an toàn. | Tự phục vụ | US01 | AC-UC03 | Should |
-| US04 | Là Admin hoặc HR, tôi muốn quản lý phòng ban và trưởng phòng để cây OKR phản ánh đúng cơ cấu công ty. | Nền cho cây mục tiêu | US01 | AC-UC04 | Must |
+| US04 | Là Admin hoặc HR, tôi muốn quản lý phòng ban, team bên trong phòng ban, trưởng phòng và team lead để cây OKR phản ánh đúng cơ cấu công ty. | Nền cho cây mục tiêu | US01 | AC-UC04 | Must |
 | US05 | Là Admin hoặc HR, tôi muốn quản lý người dùng, vai trò và quản lý trực tiếp để hệ thống biết ai báo cáo cho ai. | Nền cho phân quyền và 360 | US04 | AC-UC05 | Must |
 | US06 | Là Admin hoặc HR, tôi muốn tạo, kích hoạt và đóng chu kỳ OKR để cả công ty cùng làm việc trên một mốc thời gian. | Nhịp vận hành chung | US01 | AC-UC06 | Must |
 | US07 | Là nhân viên, tôi muốn xem cây OKR toàn công ty để biết mục tiêu của mình đóng góp vào đâu. | Minh bạch, liên kết | US06 | AC-UC07 | Must |
@@ -57,6 +58,14 @@ US23–US26   Dashboard, báo cáo, thông báo, nhật ký   (F08–F11)
 | US24 | Là Admin, HR hoặc Manager, tôi muốn xem và xuất báo cáo theo bộ lọc để phân tích và chia sẻ. | Phân tích, chia sẻ | US12, US22 | AC-UC24 | Should |
 | US25 | Là người dùng, tôi muốn nhận thông báo và nhắc nhở đúng lúc để không quên check-in hay nộp phiếu. | Tăng tỷ lệ tham gia | US12, US16 | AC-UC25 | Should |
 | US26 | Là Admin hoặc HR, tôi muốn xem nhật ký hoạt động để truy vết các thay đổi quan trọng. | Trách nhiệm giải trình | US01 | AC-UC26 | Should |
+| US27 | Là Admin, tôi muốn bật/tắt từng luồng tự động, đặt lịch chạy và hạn mức gọi AI, để kiểm soát chi phí và tắt ngay luồng chạy sai. | Kiểm soát vận hành | US01 | AC-UC27 | Must |
+| US28 | Là Admin hoặc HR, tôi muốn xem lịch sử chạy của các luồng (trạng thái, lỗi, số lần thử) và chạy lại lần bị lỗi, để biết luồng nào đang hỏng. | Theo dõi, sửa lỗi | US32 | AC-UC28 | Should |
+| US29 | Là trưởng phòng, tôi muốn nhận ngay các vướng mắc mà phòng khác đang chờ phòng mình xử lý, để gỡ việc trước khi KR của họ bị trễ. | Gỡ vướng mắc liên phòng sớm | US12, US32 | AC-UC29 | Must |
+| US30 | Là Manager, tôi muốn nhận bản tin tuần tóm tắt check-in và vướng mắc của đội vào sáng thứ Hai, để không phải đọc từng check-in trước buổi họp. | Tiết kiệm thời gian quản lý | US12, US32 | AC-UC30 | Must |
+| US31 | Là Manager, tôi muốn có sẵn bản nháp tóm tắt nhận xét 360 của từng nhân viên để sửa rồi gửi, để chuẩn bị buổi 1-1 nhanh hơn. | Phản hồi phát triển kịp thời | US20, US32 | AC-UC31 | Must |
+| US32 | Là Admin, tôi muốn mọi luồng AI chạy nền, đổi tên người thành mã, kiểm tra kết quả và không bao giờ sửa điểm, để tự động hóa mà vẫn an toàn và giữ ẩn danh. | Tự động hóa an toàn | US27 | AC-UC32 | Must |
+| US33 | Là nhân viên, tôi muốn được nhắc khi check-in mâu thuẫn với ghi chú và khi OKR mới tạo có KR khó đo, để OKR của tôi phản ánh đúng thực tế. | OKR chất lượng hơn | US08, US12, US32 | AC-UC32 | Should |
+| US34 | Là người đánh giá, tôi muốn được cảnh báo khi nhận xét có thể làm lộ danh tính của tôi, để tôi góp ý thẳng thắn mà vẫn an toàn. | Bảo vệ người góp ý | US19 | AC-UC19 | Should |
 
 ## Đánh giá INVEST từng story
 
@@ -67,13 +76,13 @@ US23–US26   Dashboard, báo cáo, thông báo, nhật ký   (F08–F11)
 | US01 | PASS | PASS | PASS | PASS | PASS | PASS | JWT 30 phút, không refresh token. |
 | US02 | PASS | PASS | PASS | PASS | PASS | PASS | Đăng xuất phía client. |
 | US03 | PASS | PASS | PASS | PASS | PASS | PASS | Các trường được sửa đã ghi rõ. |
-| US04 | PASS | PASS | PASS | PASS | PASS | PASS | Cây phòng ban chống vòng lặp. |
+| US04 | PASS | PASS | PASS | PASS | PASS | PASS | Cây phòng ban, team chống vòng lặp; team chỉ nằm dưới phòng ban. |
 | US05 | PASS | PASS | PASS | PASS | PASS | PASS | Quan hệ báo cáo chống vòng lặp. |
 | US06 | PASS | PASS | PASS | PASS | PASS | PASS | Máy trạng thái chu kỳ. |
 | US07 | PASS | PASS | PASS | PASS | PASS | PASS | Chỉ đọc; hiệu năng cây ở NFR-PERF-003. |
-| US08 | PASS | PASS | PASS | PASS | PASS | PASS | Quyền theo cấp OKR. |
+| US08 | PASS | PASS | PASS | PASS | PASS | PASS | Quyền theo 4 cấp OKR; OKR team do team lead hoặc trưởng phòng tạo. |
 | US09 | PASS | PASS | PASS | PASS | PASS | PASS | Công thức tiến độ từng kiểu KR. |
-| US10 | PASS | PASS | PASS | PASS | PASS | PASS | Quy tắc liên kết. |
+| US10 | PASS | PASS | PASS | PASS | PASS | PASS | Quy tắc liên kết 4 cấp, cho phép nối vượt cấp. |
 | US11 | PASS | PASS | PASS | PASS | PASS | PASS | Không xóa khi còn OKR con liên kết. |
 | US12 | PASS | PASS | PASS | PASS | PASS | PASS | Story quan trọng nhất về kỹ thuật: cộng dồn tiến độ. |
 | US13 | PASS | PASS | PASS | PASS | PASS | PASS | Đường kỳ vọng tuyến tính theo thời gian. |
@@ -90,6 +99,14 @@ US23–US26   Dashboard, báo cáo, thông báo, nhật ký   (F08–F11)
 | US24 | PASS | PASS | PASS | PASS | PASS | PASS | Báo cáo 360 tuân thủ ngưỡng ẩn danh. |
 | US25 | PASS | PASS | PASS | PASS | PASS | PASS | Lịch nhắc mô tả ở UC25. |
 | US26 | PASS | PASS | PASS | PASS | PASS | PASS | Nhật ký không chứa cặp người đánh giá–người được đánh giá ẩn danh. |
+| US27 | PASS | PASS | PASS | PASS | PASS | PASS | Chỉ luồng dựng sẵn, không có trình tạo luồng tự do. |
+| US28 | PASS | PASS | PASS | PASS | PASS | PASS | Lịch sử không lưu nội dung gửi cho AI. |
+| US29 | PASS | PASS | PASS | PASS | PASS | PASS | Có nút "Không liên quan phòng tôi" để đo độ chính xác. |
+| US30 | PASS | PASS | PASS | PASS | PASS | PASS | Con số lấy từ database, AI chỉ viết phần tóm tắt. |
+| US31 | PASS | PASS | PASS | PASS | PASS | PASS | Chỉ gửi được sau khi đợt `PUBLISHED`; chỉ dùng nhóm đủ ngưỡng ẩn danh. |
+| US32 | PASS | PASS | PASS | PASS | **REVIEW** | PASS | Nền tảng của F13; nên tách thành "ghi sự kiện và hàng đợi", "gọi AI và kiểm tra kết quả", "thử lại và chống chạy trùng". Cần mentor chốt dịch vụ AI được dùng với dữ liệu công ty. |
+| US33 | PASS | PASS | PASS | PASS | PASS | PASS | Gộp hai luồng nhỏ cùng kiểu "nhắc người viết". |
+| US34 | PASS | PASS | PASS | PASS | PASS | PASS | Chạy đồng bộ, tối đa 5 giây; AI lỗi thì vẫn cho nộp. |
 
 ## Ràng buộc chấp nhận xuyên suốt
 
@@ -99,5 +116,6 @@ US23–US26   Dashboard, báo cáo, thông báo, nhật ký   (F08–F11)
 - Truy vấn mặc định loại bỏ bản ghi có `deleted_at`.
 - Danh tính người đánh giá ẩn danh không xuất hiện ở bất kỳ API, báo cáo, file xuất hay nhật ký nào dành cho người dùng.
 - Lỗi API dùng định dạng `ProblemDetails` (`400`, `401`, `403`, `404`, `409`).
+- AI không chấm điểm, không xếp loại, không sửa số liệu OKR hay 360; tên người được đổi thành mã trước khi gửi cho dịch vụ AI; nội dung gửi cho người khác luôn qua bước người duyệt.
 
 **Liên quan:** [Use case](03-use-cases.md) · [Tiêu chí chấp nhận](06-acceptance-criteria.md)
