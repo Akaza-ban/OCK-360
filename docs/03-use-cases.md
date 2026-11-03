@@ -225,7 +225,7 @@ Quy tắc riêng cho tự động hóa bằng AI:
 
 - AI **không chấm điểm, không xếp loại, không sửa** số liệu OKR hay 360. Kết quả của AI chỉ là nhãn, cảnh báo, thông báo hoặc bản nháp; mọi nội dung do AI tạo đều có nhãn "Do AI tạo".
 - Nội dung gửi tới ai khác ngoài chính người viết (bản tóm tắt 1-1) luôn là **bản nháp**, có người duyệt rồi mới gửi.
-- Trước khi gửi cho dịch vụ AI, tên người và tên phòng ban được đổi thành mã (ví dụ `NV-01`, `PB-QA`), rồi đổi lại khi nhận kết quả.
+- Trước khi gửi cho dịch vụ AI, tên người và tên phòng ban được đổi thành mã (ví dụ `NV-01`, `DV-01`), rồi đổi lại khi nhận kết quả.
 - Nhận xét 360 chỉ được gửi cho AI trong hai trường hợp. Luồng "Bản nháp 1-1": khi đợt đã `CLOSED`, chỉ của nhóm đủ ngưỡng ẩn danh (sau khi gộp), không kèm điểm từng phiếu hay bất kỳ thông tin nào nối được tới người viết. Luồng "Cảnh báo nhận xét 360" (UC19): khi đợt đang `COLLECTING`, chỉ phần nhận xét của chính phiếu đang nộp, đã đổi tên thành mã.
 - Văn bản người dùng gõ chỉ là **dữ liệu**, không phải lệnh cho AI. Kết quả AI phải đúng khuôn JSON đã định; sai khuôn thì không hành động và ghi lỗi.
 - Luồng AI chạy nền sau khi thao tác gốc đã lưu xong; AI chậm hoặc lỗi không làm hỏng check-in hay nộp phiếu. Lỗi thì thử lại tối đa 3 lần, sau đó đánh dấu Lỗi.
@@ -296,7 +296,7 @@ Bảng này chỉ liệt kê use case có bước Tự động hoặc AI. Các u
 ### UC03 Quản lý hồ sơ cá nhân
 
 - **Tác nhân:** mọi vai trò
-- **Luồng chính:** tab Tài khoản sửa họ tên, số điện thoại, ảnh đại diện; tab Bảo mật nhập mật khẩu cũ rồi đặt mật khẩu mới (tối thiểu 8 ký tự); tab Quyền xem ma trận quyền của mình
+- **Luồng chính:** tab Tài khoản sửa họ tên, số điện thoại, ảnh đại diện (V1 lưu đường dẫn ảnh, chưa có tải file lên); tab Bảo mật nhập mật khẩu cũ rồi đặt mật khẩu mới (tối thiểu 8 ký tự); tab Quyền xem ma trận quyền của mình
 - **Quyền:** đã xác thực
 - **Kết quả:** email, vai trò, phòng ban, quản lý trực tiếp chỉ được xem, không tự sửa được
 
@@ -344,7 +344,7 @@ Bảng này chỉ liệt kê use case có bước Tự động hoặc AI. Các u
 ### UC09 Quản lý Key Result
 
 - **Tác nhân:** người sở hữu Objective
-- **Luồng chính:** thêm/sửa Key Result: tiêu đề, kiểu đo (Số / Phần trăm / Hoàn thành), giá trị ban đầu, giá trị đích, đơn vị, người phụ trách check-in, trọng số
+- **Luồng chính:** thêm/sửa Key Result: tiêu đề, kiểu đo (Số / Phần trăm / Hoàn thành), giá trị ban đầu, giá trị đích, đơn vị, người phụ trách check-in
 - **Luồng thay thế:** thêm KR thứ 6 → từ chối; giá trị ban đầu bằng giá trị đích → báo lỗi
 - **Quyền:** `okrWrite`
 - **Kết quả:** sửa giá trị đầu/đích của KR đã có check-in thì **[Tự động]** tiến độ được tính lại, lịch sử check-in giữ nguyên
@@ -429,7 +429,7 @@ Bảng này chỉ liệt kê use case có bước Tự động hoặc AI. Các u
 - **Tác nhân:** người đánh giá được phân công (mọi vai trò)
 - **Tiền điều kiện:** đợt ở `COLLECTING`
 - **Luồng chính:** mở "Phiếu cần điền" → chọn một phiếu (thấy tên người được đánh giá và vai trò của mình trong phiếu) → chấm 1–5 hoặc "Không đủ thông tin" cho từng tiêu chí → trả lời câu hỏi mở → lưu nháp hoặc nộp
-- **Luồng thay thế:** còn tiêu chí bắt buộc chưa chấm → không cho nộp; đợt đã `CLOSED` → phiếu chỉ xem
+- **Luồng thay thế:** còn tiêu chí bắt buộc chưa chấm → không cho nộp; đợt đã `CLOSED` → người chấm chỉ thấy phiếu đã nộp hay chưa, không xem lại được nội dung vì câu trả lời đã tách khỏi người chấm
 - **Luồng phụ (AI), chạy ngay khi bấm nộp, không qua UC32:** **[AI]** kiểm tra nhận xét mở, chờ tối đa 5 giây; có câu dễ làm lộ người viết hoặc lời lẽ xúc phạm → **[Tự động]** hiện cảnh báo chỉ cho người viết, kèm câu bị đánh dấu → **[Người]** người viết sửa hoặc chọn "Vẫn nộp". Không có gì cần cảnh báo, AI lỗi hoặc quá giờ → **[Tự động]** phiếu được nộp bình thường
 - **Quyền:** `reviewSubmit` (chỉ phiếu được giao cho mình)
 - **Kết quả:** phiếu của nhóm Đồng nghiệp và Cấp dưới được giữ ẩn danh
@@ -454,9 +454,9 @@ Bảng này chỉ liệt kê use case có bước Tự động hoặc AI. Các u
 - **Tác nhân:** HR
 - **Tiền điều kiện:** chu kỳ và đợt đánh giá đều đã `CLOSED`
 - **Luồng chính:** mở màn hình kết quả → **[Tự động]** hệ thống tính điểm OKR, điểm 360, điểm cuối kỳ theo tỷ trọng, không dùng AI → **[Người]** HR xem trước, xuất file nếu cần → **[Người]** HR bấm "Công bố" → **[Tự động]** đợt chuyển `PUBLISHED`, gửi thông báo từng người
-- **Luồng thay thế:** người thiếu điểm OKR hoặc điểm 360 → **[Tự động]** ghi "Thiếu dữ liệu", không cho 0 điểm
+- **Luồng thay thế:** người thiếu điểm OKR hoặc điểm 360 → **[Tự động]** ghi "Thiếu dữ liệu", không cho 0 điểm; dữ liệu thay đổi trước khi công bố → **[Người]** HR tổng hợp lại → **[Tự động]** hệ thống ghi đè kết quả cũ
 - **Quyền:** `finalResultManage`
-- **Kết quả:** mỗi nhân viên chỉ thấy kết quả của chính mình
+- **Kết quả:** mỗi nhân viên chỉ thấy kết quả của chính mình; sau khi công bố, kết quả không đổi
 
 ### UC23 Xem dashboard
 
@@ -469,7 +469,7 @@ Bảng này chỉ liệt kê use case có bước Tự động hoặc AI. Các u
 
 - **Tác nhân:** Admin, HR, Manager
 - **Luồng chính:** chọn loại báo cáo (tiến độ OKR, tỷ lệ check-in, kết quả cuối kỳ) → chọn chu kỳ, phòng ban → xem → xuất Excel hoặc PDF theo đúng bộ lọc
-- **Quyền:** `reportRead` (Manager chỉ xem báo cáo của đơn vị mình phụ trách; Admin không xem báo cáo kết quả 360)
+- **Quyền:** `reportRead` (Manager chỉ xem báo cáo của đơn vị mình phụ trách, riêng báo cáo kết quả cuối kỳ chỉ gồm nhân viên dưới quyền trực tiếp vì có điểm 360; Admin không xem báo cáo kết quả 360)
 - **Kết quả:** báo cáo 360 tổng hợp cũng áp ngưỡng ẩn danh
 
 ### UC25 Nhận thông báo và nhắc nhở
@@ -514,7 +514,7 @@ Bảng này chỉ liệt kê use case có bước Tự động hoặc AI. Các u
 
 - **Tác nhân:** Manager
 - **Luồng chính:** **[Tự động]** 8h sáng thứ Hai Bộ lập lịch kích hoạt luồng, hệ thống đếm số liệu từ database → **[AI]** gom vướng mắc giống nhau, chọn tối đa 3 việc cần chú ý → **[Tự động]** tạo bản tin, gửi thông báo và email → **[Người]** Manager mở bản tin → xem tối đa 3 việc cần chú ý, vướng mắc lặp lại trong đội, nhân viên chưa check-in, KR chuyển sang Có rủi ro hoặc Chệch hướng → bấm vào từng mục để mở KR
-- **Luồng thay thế:** tuần không có check-in nào → **[Tự động]** bản tin chỉ có danh sách người chưa check-in, không gọi AI
+- **Luồng thay thế:** tuần không có ghi chú hay vướng mắc nào → **[Tự động]** bản tin chỉ có số liệu, không gọi AI
 - **Quyền:** `digestRead` + chỉ nhân viên dưới quyền trực tiếp
 - **Kết quả:** các con số trong bản tin lấy từ database, AI chỉ viết phần tóm tắt vướng mắc
 

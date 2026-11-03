@@ -62,7 +62,6 @@ Các tiêu chí mô tả hành vi mục tiêu của sản phẩm, viết sao cho
 
 - Mỗi Objective có từ 1 đến 5 KR; thêm KR thứ 6 → `400`.
 - KR kiểu số/phần trăm bắt buộc có giá trị đầu, giá trị đích khác nhau và đơn vị; KR kiểu hoàn thành không cần.
-- Tổng trọng số các thành phần của Objective khác 100% → `400`.
 - Sửa giá trị đầu/đích của KR đã có check-in → tiến độ được tính lại theo công thức mới, lịch sử check-in giữ nguyên.
 
 ## AC-UC10 — Liên kết lên mục tiêu cấp trên
@@ -123,7 +122,7 @@ Các tiêu chí mô tả hành vi mục tiêu của sản phẩm, viết sao cho
 
 - Người dùng chỉ thấy và điền được phiếu được giao cho mình.
 - Lưu nháp không bắt buộc đủ tiêu chí; nộp phiếu bắt buộc mọi tiêu chí có điểm 1–5 hoặc "Không đủ thông tin".
-- Có thể sửa phiếu đã nộp khi đợt còn `COLLECTING`; sau `CLOSED` → `409`.
+- Có thể sửa phiếu đã nộp khi đợt còn `COLLECTING`; sau `CLOSED` → `409`, và người chấm không xem lại được nội dung phiếu.
 - Khi bấm nộp, nhận xét có câu dễ làm lộ người viết (ví dụ "hôm tôi ngồi cạnh bạn ở dự án thanh toán") → hiện cảnh báo chỉ cho người viết; chọn "Vẫn nộp" thì phiếu được nộp bình thường.
 - Cảnh báo không được lưu, không gửi cho HR hay người được đánh giá; AI lỗi hoặc quá 5 giây → phiếu được nộp, không cảnh báo.
 
@@ -146,6 +145,7 @@ Các tiêu chí mô tả hành vi mục tiêu của sản phẩm, viết sao cho
 - Điểm OKR, điểm 360, điểm tổng hợp được tính đúng công thức: điểm OKR = 1 + 4 × tiến độ OKR; điểm cuối kỳ = 0,6 × điểm OKR + 0,4 × điểm 360 (kiểm thử bằng bộ dữ liệu mẫu có kết quả tính tay).
 - Người thiếu dữ liệu được đánh dấu "Thiếu dữ liệu", không bị gán điểm 0.
 - Công bố gửi thông báo cho từng nhân viên; mỗi người chỉ thấy kết quả của chính mình.
+- Trước khi công bố, HR tổng hợp lại được và kết quả cũ bị ghi đè; sau khi công bố, tổng hợp lại → `409`.
 
 ## AC-UC23 — Dashboard
 
@@ -157,6 +157,7 @@ Các tiêu chí mô tả hành vi mục tiêu của sản phẩm, viết sao cho
 ## AC-UC24 — Báo cáo
 
 - Báo cáo chỉ chứa dữ liệu trong phạm vi quyền của người xem (trưởng phòng thấy phòng ban và các team bên trong; team lead chỉ thấy team của mình).
+- Báo cáo kết quả cuối kỳ của Manager chỉ gồm nhân viên dưới quyền trực tiếp, vì có điểm 360 (AC-UC21).
 - File XLSX/PDF xuất ra khớp số liệu đang hiển thị với cùng bộ lọc.
 - Báo cáo 360 tổng hợp theo phòng ban áp dụng ngưỡng ẩn danh như AC-UC21.
 
@@ -196,7 +197,7 @@ Các tiêu chí mô tả hành vi mục tiêu của sản phẩm, viết sao cho
 - 8h sáng thứ Hai, mỗi Manager có nhân viên dưới quyền trực tiếp nhận đúng một bản tin (chạy lại job không tạo bản tin thứ hai).
 - Số người chưa check-in, số KR "Có rủi ro"/"Chệch hướng" khớp với Dashboard đội nhóm cùng thời điểm.
 - Phần tóm tắt vướng mắc chỉ dùng check-in của nhân viên dưới quyền trực tiếp; tối đa 3 mục cần chú ý, mỗi mục mở được tới KR tương ứng.
-- Tuần không có check-in → bản tin không gọi AI, chỉ liệt kê người chưa check-in.
+- Tuần không có ghi chú hay vướng mắc nào → bản tin không gọi AI, chỉ có số liệu.
 
 ## AC-UC31 — Bản nháp 1-1
 

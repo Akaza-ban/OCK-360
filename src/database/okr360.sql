@@ -31,7 +31,6 @@ CREATE TYPE okr_level          AS ENUM ('COMPANY', 'DEPARTMENT', 'TEAM', 'INDIVI
 CREATE TYPE org_unit_type      AS ENUM ('DEPARTMENT', 'TEAM');
 CREATE TYPE kr_type            AS ENUM ('NUMBER', 'PERCENT', 'BOOLEAN');
 CREATE TYPE confidence_level   AS ENUM ('ON_TRACK', 'AT_RISK', 'OFF_TRACK');
-CREATE TYPE weight_mode        AS ENUM ('AUTO', 'MANUAL');
 CREATE TYPE campaign_status    AS ENUM ('DRAFT', 'NOMINATION', 'COLLECTING', 'CLOSED', 'PUBLISHED');
 CREATE TYPE reviewer_group     AS ENUM ('SELF', 'MANAGER', 'PEER', 'DIRECT_REPORT');
 CREATE TYPE assignment_status  AS ENUM ('NOT_STARTED', 'DRAFT', 'SUBMITTED', 'CANCELLED');
@@ -139,7 +138,7 @@ ALTER TABLE departments
 CREATE TRIGGER trg_departments_updated_at BEFORE UPDATE ON departments FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 CREATE TRIGGER trg_app_users_updated_at BEFORE UPDATE ON app_users FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 
--- Chống vòng lặp trong cây phòng ban và trong chuỗi báo cáo (BR-003).
+-- Chống vòng lặp trong cây phòng ban và trong chuỗi báo cáo (BR-010, BR-013).
 CREATE FUNCTION check_department_cycle() RETURNS trigger LANGUAGE plpgsql AS $$
 DECLARE
     cur BIGINT := NEW.parent_id;
@@ -219,7 +218,7 @@ CREATE TABLE okr_cycles (
     CONSTRAINT ck_okr_cycles_max_objectives CHECK (max_objectives_per_user BETWEEN 1 AND 10),
     CONSTRAINT ck_okr_cycles_weight CHECK (okr_weight BETWEEN 0 AND 1)
 );
--- Tại một thời điểm chỉ có một chu kỳ đang chạy (BR-004).
+-- Tại một thời điểm chỉ có một chu kỳ đang chạy (BR-021).
 CREATE UNIQUE INDEX uq_okr_cycles_single_active ON okr_cycles ((status)) WHERE status = 'ACTIVE';
 CREATE TRIGGER trg_okr_cycles_updated_at BEFORE UPDATE ON okr_cycles FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 
@@ -244,7 +243,7 @@ CREATE TRIGGER trg_okr_cycles_transition BEFORE UPDATE ON okr_cycles FOR EACH RO
 -- 5. OBJECTIVE VÀ KEY RESULT
 -- Cây OKR lưu bằng parent_id (danh sách kề); truy vấn cả nhánh bằng recursive CTE.
 -- progress là giá trị lưu đệm, được tầng nghiệp vụ tính lại dọc chuỗi tổ tiên
--- trong cùng giao dịch mỗi khi có check-in, sửa KR, liên kết hoặc xóa (BR-009).
+-- trong cùng giao dịch mỗi khi có check-in, sửa KR, liên kết hoặc xóa (BR-043).
 -- final_progress được chốt khi đóng chu kỳ.
 -- ============================================================
 CREATE TABLE objectives (
@@ -256,8 +255,6 @@ CREATE TABLE objectives (
     owner_user_id       BIGINT NOT NULL REFERENCES app_users (id),
     department_id       BIGINT REFERENCES departments (id),
     parent_id           BIGINT REFERENCES objectives (id),
-    weight_mode         weight_mode NOT NULL DEFAULT 'AUTO',
-    weight_in_parent    NUMERIC(5, 2),
     progress            NUMERIC(5, 4) NOT NULL DEFAULT 0,
     final_progress      NUMERIC(5, 4),
     created_by          BIGINT NOT NULL REFERENCES app_users (id),
@@ -269,7 +266,6 @@ CREATE TABLE objectives (
     CONSTRAINT ck_objectives_company_root CHECK (level <> 'COMPANY' OR parent_id IS NULL),
     CONSTRAINT ck_objectives_unit_required CHECK (level NOT IN ('DEPARTMENT', 'TEAM') OR department_id IS NOT NULL),
     CONSTRAINT ck_objectives_progress CHECK (progress BETWEEN 0 AND 1 AND (final_progress IS NULL OR final_progress BETWEEN 0 AND 1)),
-    CONSTRAINT ck_objectives_weight CHECK (weight_in_parent IS NULL OR weight_in_parent BETWEEN 0 AND 100),
     CONSTRAINT ck_objectives_deleted CHECK ((deleted_at IS NULL) = (deleted_by IS NULL))
 );
 CREATE INDEX ix_objectives_cycle_level ON objectives (cycle_id, level) WHERE deleted_at IS NULL;
@@ -278,11 +274,11 @@ CREATE INDEX ix_objectives_owner ON objectives (owner_user_id, cycle_id) WHERE d
 CREATE INDEX ix_objectives_department ON objectives (department_id, cycle_id) WHERE deleted_at IS NULL;
 CREATE TRIGGER trg_objectives_updated_at BEFORE UPDATE ON objectives FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 
--- Quy tắc liên kết (BR-006): cha cùng chu kỳ, chưa xóa, đúng cấp, không vòng lặp.
+-- Quy tắc liên kết (BR-035, BR-036): cha cùng chu kỳ, chưa xóa, đúng cấp, không vòng lặp.
 -- Cấp cha hợp lệ: phòng ban → công ty; team → phòng ban hoặc công ty;
 -- cá nhân → team, phòng ban hoặc công ty (được nối vượt cấp khi phòng ban chưa chia team).
 -- OKR phòng ban phải gắn với đơn vị loại phòng ban; OKR team gắn với đơn vị loại team.
--- Không xóa mềm Objective còn con đang liên kết (BR-007). Chu kỳ đã đóng thì chỉ đọc.
+-- Không xóa mềm Objective còn con đang liên kết (BR-037). Chu kỳ đã đóng thì chỉ đọc.
 CREATE FUNCTION check_objective_rules() RETURNS trigger LANGUAGE plpgsql AS $$
 DECLARE
     p RECORD;
@@ -340,7 +336,6 @@ CREATE TABLE key_results (
     target_value        NUMERIC(14, 4) NOT NULL,
     unit                VARCHAR(30),
     assignee_user_id    BIGINT NOT NULL REFERENCES app_users (id),
-    weight              NUMERIC(5, 2),
     sort_order          SMALLINT NOT NULL DEFAULT 0,
     current_value       NUMERIC(14, 4),
     current_confidence  confidence_level,
@@ -352,14 +347,13 @@ CREATE TABLE key_results (
     CONSTRAINT ck_key_results_values CHECK (
         (kr_type = 'BOOLEAN' AND start_value = 0 AND target_value = 1) OR
         (kr_type <> 'BOOLEAN' AND start_value <> target_value)
-    ),
-    CONSTRAINT ck_key_results_weight CHECK (weight IS NULL OR weight BETWEEN 0 AND 100)
+    )
 );
 CREATE INDEX ix_key_results_objective ON key_results (objective_id) WHERE deleted_at IS NULL;
 CREATE INDEX ix_key_results_assignee ON key_results (assignee_user_id) WHERE deleted_at IS NULL;
 CREATE TRIGGER trg_key_results_updated_at BEFORE UPDATE ON key_results FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 
--- Mỗi Objective có tối đa 5 Key Result đang dùng (BR-021); chu kỳ đã đóng thì chỉ đọc.
+-- Mỗi Objective có tối đa 5 Key Result đang dùng (BR-033); chu kỳ đã đóng thì chỉ đọc.
 CREATE FUNCTION check_key_result_rules() RETURNS trigger LANGUAGE plpgsql AS $$
 DECLARE
     st cycle_status;
@@ -377,12 +371,12 @@ BEGIN
     RETURN NEW;
 END $$;
 -- Bỏ qua khi chỉ có cột đệm (current_value...) thay đổi do check-in.
-CREATE TRIGGER trg_key_results_rules BEFORE INSERT OR UPDATE OF objective_id, title, kr_type, start_value, target_value, unit, assignee_user_id, weight, deleted_at
+CREATE TRIGGER trg_key_results_rules BEFORE INSERT OR UPDATE OF objective_id, title, kr_type, start_value, target_value, unit, assignee_user_id, deleted_at
     ON key_results FOR EACH ROW EXECUTE FUNCTION check_key_result_rules();
 
 -- ============================================================
 -- 6. CHECK-IN
--- Mỗi check-in là một bản ghi bất biến (BR-010): không sửa, không xóa.
+-- Mỗi check-in là một bản ghi bất biến (BR-041): không sửa, không xóa.
 -- Trigger cập nhật giá trị hiện tại lưu đệm trên key_results.
 -- ============================================================
 CREATE TABLE checkins (
@@ -519,7 +513,7 @@ CREATE TABLE review_campaigns (
 );
 CREATE TRIGGER trg_review_campaigns_updated_at BEFORE UPDATE ON review_campaigns FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 
--- Người được đánh giá trong đợt, kèm bản chụp quan hệ báo cáo khi mở thu phiếu (BR-012).
+-- Người được đánh giá trong đợt, kèm bản chụp quan hệ báo cáo khi mở thu phiếu (BR-055).
 CREATE TABLE campaign_participants (
     campaign_id             BIGINT NOT NULL REFERENCES review_campaigns (id),
     reviewee_user_id        BIGINT NOT NULL REFERENCES app_users (id),
@@ -551,7 +545,7 @@ CREATE TABLE nomination_peers (
     PRIMARY KEY (nomination_id, peer_user_id)
 );
 
--- Đồng nghiệp được đề cử không được là chính mình, quản lý trực tiếp, cấp dưới trực tiếp hay người bị khóa (BR-014).
+-- Đồng nghiệp được đề cử không được là chính mình, quản lý trực tiếp, cấp dưới trực tiếp hay người bị khóa (BR-053).
 CREATE FUNCTION check_nomination_peer() RETURNS trigger LANGUAGE plpgsql AS $$
 DECLARE
     rv RECORD;
@@ -611,7 +605,7 @@ CREATE TRIGGER trg_review_assignments_updated_at BEFORE UPDATE ON review_assignm
 -- Trong lúc thu phiếu, assignment_id cho biết câu trả lời thuộc phiếu nào để người chấm
 -- lưu nháp và sửa được. Khi đợt chuyển sang CLOSED, hàm close_review_campaign() xóa
 -- câu trả lời của phiếu chưa nộp và đặt assignment_id = NULL cho mọi câu trả lời còn lại.
--- Từ đó database không còn biết ai đã chấm điểm nào (BR-015), chỉ còn biết điểm đó
+-- Từ đó database không còn biết ai đã chấm điểm nào (BR-058), chỉ còn biết điểm đó
 -- thuộc người được đánh giá nào và nhóm người đánh giá nào.
 -- ============================================================
 CREATE TABLE review_answers (
@@ -631,13 +625,13 @@ CREATE TABLE review_answers (
         (question_id IS NOT NULL AND score IS NULL)
     )
 );
--- score NULL trên tiêu chí = "Không đủ thông tin", không tính vào trung bình (BR-016).
+-- score NULL trên tiêu chí = "Không đủ thông tin", không tính vào trung bình (BR-056).
 -- response_key là mã ngẫu nhiên gom các câu trả lời của cùng một phiếu sau khi đã tách khỏi người chấm.
 CREATE UNIQUE INDEX uq_review_answers_criterion ON review_answers (assignment_id, criterion_id) WHERE assignment_id IS NOT NULL AND criterion_id IS NOT NULL;
 CREATE UNIQUE INDEX uq_review_answers_question ON review_answers (assignment_id, question_id) WHERE assignment_id IS NOT NULL AND question_id IS NOT NULL;
 CREATE INDEX ix_review_answers_reviewee ON review_answers (campaign_id, reviewee_user_id, reviewer_group);
 
--- Vòng đời đợt đánh giá chỉ đi tiến (BR-012), và khóa tỷ trọng của chu kỳ khi bắt đầu thu phiếu.
+-- Vòng đời đợt đánh giá chỉ đi tiến (BR-050), và khóa tỷ trọng của chu kỳ khi bắt đầu thu phiếu.
 CREATE FUNCTION check_campaign_transition() RETURNS trigger LANGUAGE plpgsql AS $$
 DECLARE
     old_i INT := array_position(enum_range(NULL::campaign_status), OLD.status);
@@ -662,7 +656,7 @@ END $$;
 CREATE TRIGGER trg_review_campaigns_transition BEFORE UPDATE OF status ON review_campaigns
     FOR EACH ROW EXECUTE FUNCTION check_campaign_transition();
 
--- Mẫu phiếu đã được đợt khác DRAFT sử dụng thì khóa (BR-013): chỉ nhân bản được.
+-- Mẫu phiếu đã được đợt khác DRAFT sử dụng thì khóa (BR-052): chỉ nhân bản được.
 CREATE FUNCTION check_template_locked() RETURNS trigger LANGUAGE plpgsql AS $$
 DECLARE
     tpl BIGINT := COALESCE(NEW.template_id, OLD.template_id);
@@ -715,7 +709,7 @@ CREATE TABLE final_results (
 -- ============================================================
 -- 11. THÔNG BÁO VÀ NHẬT KÝ
 -- dedupe_key = loại sự kiện + đối tượng + ngày, để mỗi người nhận tối đa một lần nhắc
--- cho mỗi sự kiện mỗi ngày kể cả khi job chạy lại (BR-011, NFR-REL-002).
+-- cho mỗi sự kiện mỗi ngày kể cả khi job chạy lại (BR-081, NFR-REL-003).
 -- ============================================================
 CREATE TABLE notifications (
     id              BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
@@ -732,7 +726,7 @@ CREATE TABLE notifications (
 CREATE INDEX ix_notifications_user_unread ON notifications (user_id, created_at DESC) WHERE read_at IS NULL;
 
 -- Nhật ký không bao giờ chứa mật khẩu, hash, token, nội dung phiếu đánh giá,
--- hay người được đánh giá của phiếu thuộc nhóm ẩn danh (BR-018).
+-- hay người được đánh giá của phiếu thuộc nhóm ẩn danh (BR-083).
 CREATE TABLE audit_logs (
     id              BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     actor_user_id   BIGINT REFERENCES app_users (id),
@@ -1006,7 +1000,7 @@ CREATE TRIGGER trg_one_on_one_drafts_rules BEFORE INSERT OR UPDATE ON one_on_one
 -- 13. VIEWS
 -- ============================================================
 
--- Tiến độ từng Key Result theo BR-008: (hiện tại − ban đầu) / (đích − ban đầu), giới hạn 0–1.
+-- Tiến độ từng Key Result theo BR-042: (hiện tại − ban đầu) / (đích − ban đầu), giới hạn 0–1.
 CREATE VIEW vw_key_result_progress AS
 SELECT
     k.id                AS key_result_id,

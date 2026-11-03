@@ -176,7 +176,8 @@ API không bao giờ trả thẳng view này. View tiến độ cho Nhân sự (
 | Duyệt đề cử | `nominations.status = APPROVED` → tạo `review_assignments` nhóm Đồng nghiệp |
 | Mở thu phiếu | Đổi trạng thái đợt → ghi `campaign_participants` (bản chụp) → tạo phân công Tự đánh giá, Quản lý, Cấp dưới → trigger khóa tỷ trọng |
 | Đóng đợt 360 | `SELECT close_review_campaign(id)` |
-| Đóng chu kỳ | Chốt `final_progress` → tính `final_results` cho mọi người → `okr_cycles.status = CLOSED` |
+| Đóng chu kỳ | Chốt `final_progress` → `okr_cycles.status = CLOSED` |
+| Tổng hợp kết quả | Chỉ chạy khi chu kỳ và đợt 360 đều đã CLOSED → tính và ghi đè `final_results` của mọi người; đợt đã PUBLISHED thì từ chối |
 | Công bố kết quả | Đợt sang PUBLISHED → `final_results.published_at` → thông báo `RESULT_PUBLISHED` |
 | Một lần chạy luồng AI | Lấy sự kiện chưa xử lý (`FOR UPDATE SKIP LOCKED`) → tạo `automation_runs` (trùng `run_key` thì bỏ) → **gọi AI ngoài transaction** → mở transaction mới: ghi nhãn/ghi chú/bản tin/bản nháp + `notifications` + cập nhật lần chạy + `processed_at` của sự kiện |
 | Gửi bản nháp 1-1 | `one_on_one_drafts.status = SENT` → thông báo `ONE_ON_ONE_SENT` → ghi `audit_logs` (không kèm nội dung) |
@@ -243,7 +244,7 @@ Nhân viên chỉ thấy `edited_text` của bản nháp 1-1, không bao giờ t
 
 - `automation_runs` chỉ có số liệu kỹ thuật (trạng thái, thời gian, token, lỗi). Không có cột chứa nội dung gửi cho AI hay AI trả về, nên Admin xem lịch sử chạy không đọc được ghi chú check-in hay nhận xét 360.
 - Luồng **Cảnh báo nhận xét 360** không bao giờ có dòng trong `automation_runs` (trigger chặn), chỉ cộng `automation_daily_usage`. Nếu mỗi lần nộp phiếu có một dòng lịch sử, thời điểm của dòng đó sẽ trùng với lúc một phiếu được nộp và có thể dùng để đoán ai đã chấm.
-- Đổi tên người và tên phòng ban thành mã (`NV-01`, `PB-QA`) trước khi gửi cho AI là việc của tầng nghiệp vụ; bảng ánh xạ mã chỉ sống trong bộ nhớ của lần chạy, không lưu xuống database.
+- Đổi tên người và tên phòng ban thành mã (`NV-01`, `DV-01`) trước khi gửi cho AI là việc của tầng nghiệp vụ; bảng ánh xạ mã chỉ sống trong bộ nhớ của lần chạy, không lưu xuống database.
 - Bản nháp 1-1 chỉ dùng nhận xét của nhóm đủ ngưỡng ẩn danh, lấy từ `review_answers` sau khi đợt đã CLOSED (lúc đó câu trả lời đã tách khỏi người chấm).
 
 ## 8. Dữ liệu demo và kiểm thử

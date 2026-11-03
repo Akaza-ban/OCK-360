@@ -5,7 +5,8 @@ import { ROLE_LABEL } from '../lib/data.js';
 
 const MATRIX = [
   ['Xem cây OKR, dashboard cá nhân', 'Có', 'Có', 'Có', 'Có'],
-  ['OKR cá nhân và check-in', 'Chỉ của bản thân', 'Chỉ của bản thân', 'Của bản thân và nhân viên dưới quyền trực tiếp', 'Chỉ của bản thân'],
+  ['OKR cá nhân', 'Của mọi người', 'Chỉ của bản thân', 'Của bản thân và nhân viên dưới quyền trực tiếp', 'Chỉ của bản thân'],
+  ['Check-in', 'Chỉ KR mình phụ trách', 'Chỉ KR mình phụ trách', 'Chỉ KR mình phụ trách', 'Chỉ KR mình phụ trách'],
   ['OKR phòng ban', 'Có', 'Không', 'Chỉ phòng ban mình phụ trách', 'Không'],
   ['OKR công ty', 'Có', 'Không', 'Không', 'Không'],
   ['Xem kết quả 360', 'Chỉ của bản thân', 'Của mọi người', 'Của bản thân và nhân viên dưới quyền trực tiếp', 'Chỉ của bản thân'],

@@ -1,0 +1,6031 @@
+openapi: 3.0.3
+info:
+  title: OKR360 API
+  version: 1.0.0
+  description: 'Hợp đồng REST của OKR360 V1. Backend NestJS phải tuân theo tài liệu này.
+
+
+    Backend là nơi kiểm tra quyền cuối cùng. `x-roles` là các vai trò được gọi; phạm vi dữ liệu theo quan hệ báo cáo được
+    ghi trong mô tả từng thao tác. `x-use-case` và `x-business-rules` trỏ tới `docs/03-use-cases.md` và `docs/requirements/business-rules.md`.
+
+    '
+servers:
+- url: /api/v1
+  description: Cùng host với Web App
+- url: http://localhost:3000/api/v1
+  description: Máy phát triển
+tags:
+- name: Đăng nhập
+- name: Hồ sơ
+- name: Tổ chức
+- name: Người dùng
+- name: Chu kỳ
+- name: OKR
+- name: Check-in
+- name: Mẫu phiếu 360
+- name: Đợt 360
+- name: Đề cử
+- name: Phiếu 360
+- name: Kết quả 360
+- name: Kết quả cuối kỳ
+- name: Dashboard
+- name: Báo cáo
+- name: Thông báo
+- name: Nhật ký
+- name: Tự động hóa
+- name: Vướng mắc
+- name: Bản tin tuần
+- name: Bản nháp 1-1
+security:
+- bearerAuth: []
+paths:
+  /auth/login:
+    post:
+      tags:
+      - Đăng nhập
+      summary: Đăng nhập
+      operationId: login
+      description: Sai email, sai mật khẩu hay tài khoản bị khóa đều trả cùng một phản hồi 401. Quá 5 lần sai trong 15 phút
+        trả 429.
+      security: []
+      x-use-case: UC01
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+  /auth/logout:
+    post:
+      tags:
+      - Đăng nhập
+      summary: Đăng xuất
+      operationId: logout
+      description: V1 không thu hồi token ở server. Client xóa token và token tự hết hạn.
+      x-use-case: UC02
+      x-roles:
+      - ADMIN
+      - HR
+      - MANAGER
+      - EMPLOYEE
+      responses:
+        '204':
+          description: Thành công, không có nội dung
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /me:
+    get:
+      tags:
+      - Hồ sơ
+      summary: Xem hồ sơ của tôi
+      operationId: getProfile
+      x-use-case: UC03
+      x-roles:
+      - ADMIN
+      - HR
+      - MANAGER
+      - EMPLOYEE
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Profile'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    patch:
+      tags:
+      - Hồ sơ
+      summary: Sửa hồ sơ của tôi
+      operationId: updateProfile
+      x-use-case: UC03
+      x-roles:
+      - ADMIN
+      - HR
+      - MANAGER
+      - EMPLOYEE
+      x-business-rules:
+      - BR-015
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProfileUpdate'
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Profile'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /me/password:
+    post:
+      tags:
+      - Hồ sơ
+      summary: Đổi mật khẩu
+      operationId: changePassword
+      description: Sai mật khẩu cũ trả 400.
+      x-use-case: UC03
+      x-roles:
+      - ADMIN
+      - HR
+      - MANAGER
+      - EMPLOYEE
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordChange'
+      responses:
+        '204':
+          description: Thành công, không có nội dung
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /me/final-results:
+    get:
+      tags:
+      - Kết quả cuối kỳ
+      summary: Xem kết quả cuối kỳ của tôi
+      operationId: getMyFinalResult
+      description: Chỉ có dữ liệu sau khi công bố; trước đó trả 404.
+      x-use-case: UC22
+      x-roles:
+      - ADMIN
+      - HR
+      - MANAGER
+      - EMPLOYEE
+      x-business-rules:
+      - BR-075
+      parameters:
+      - name: cycleId
+        in: query
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FinalResult'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /departments:
+    get:
+      tags:
+      - Tổ chức
+      summary: Danh sách phòng ban và team
+      operationId: listDepartments
+      description: Mọi vai trò đọc được để dùng làm bộ lọc và danh sách chọn.
+      x-use-case: UC04
+      x-roles:
+      - ADMIN
+      - HR
+      - MANAGER
+      - EMPLOYEE
+      parameters:
+      - name: isActive
+        in: query
+        schema:
+          type: boolean
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Department'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      tags:
+      - Tổ chức
+      summary: Thêm phòng ban hoặc team
+      operationId: createDepartment
+      x-use-case: UC04
+      x-roles:
+      - ADMIN
+      - HR
+      x-permission: orgManage
+      x-business-rules:
+      - BR-010
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DepartmentCreate'
+      responses:
+        '201':
+          description: Tạo thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Department'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          description: 'Xung đột: Đơn vị cha tạo vòng lặp.'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+  /departments/{departmentId}:
+    patch:
+      tags:
+      - Tổ chức
+      summary: Sửa phòng ban hoặc team
+      operationId: updateDepartment
+      x-use-case: UC04
+      x-roles:
+      - ADMIN
+      - HR
+      x-permission: orgManage
+      x-business-rules:
+      - BR-010
+      parameters:
+      - name: departmentId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DepartmentUpdate'
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Department'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: 'Xung đột: Đơn vị cha tạo vòng lặp.'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+  /departments/{departmentId}/deactivate:
+    post:
+      tags:
+      - Tổ chức
+      summary: Ngưng hoạt động đơn vị
+      operationId: deactivateDepartment
+      x-use-case: UC04
+      x-roles:
+      - ADMIN
+      - HR
+      x-permission: orgManage
+      x-business-rules:
+      - BR-011
+      parameters:
+      - name: departmentId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Department'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: 'Xung đột: Đơn vị còn nhân viên đang hoạt động.'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+  /users:
+    get:
+      tags:
+      - Người dùng
+      summary: Danh sách người dùng
+      operationId: listUsers
+      x-use-case: UC05
+      x-roles:
+      - ADMIN
+      - HR
+      x-permission: userManage
+      parameters:
+      - $ref: '#/components/parameters/Page'
+      - $ref: '#/components/parameters/PageSize'
+      - name: query
+        in: query
+        schema:
+          type: string
+      - name: departmentId
+        in: query
+        schema:
+          type: integer
+          format: int64
+      - name: role
+        in: query
+        schema:
+          $ref: '#/components/schemas/UserRole'
+      - name: isActive
+        in: query
+        schema:
+          type: boolean
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserPage'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      tags:
+      - Người dùng
+      summary: Thêm người dùng
+      operationId: createUser
+      description: HR gán vai trò ADMIN trả 403.
+      x-use-case: UC05
+      x-roles:
+      - ADMIN
+      - HR
+      x-permission: userManage
+      x-business-rules:
+      - BR-004
+      - BR-012
+      - BR-013
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserCreate'
+      responses:
+        '201':
+          description: Tạo thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          description: 'Xung đột: Email trùng hoặc quản lý tạo vòng lặp.'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+  /users/directory:
+    get:
+      tags:
+      - Người dùng
+      summary: Tìm đồng nghiệp
+      operationId: listUserDirectory
+      description: Dùng cho ô tìm đồng nghiệp, chọn người sở hữu và bộ lọc. Không trả email hay vai trò.
+      x-use-case: UC17
+      x-roles:
+      - ADMIN
+      - HR
+      - MANAGER
+      - EMPLOYEE
+      parameters:
+      - $ref: '#/components/parameters/Page'
+      - $ref: '#/components/parameters/PageSize'
+      - name: query
+        in: query
+        schema:
+          type: string
+      - name: departmentId
+        in: query
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DirectoryEntryPage'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /users/{userId}:
+    get:
+      tags:
+      - Người dùng
+      summary: Xem một người dùng
+      operationId: getUser
+      x-use-case: UC05
+      x-roles:
+      - ADMIN
+      - HR
+      x-permission: userManage
+      parameters:
+      - name: userId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      tags:
+      - Người dùng
+      summary: Sửa người dùng
+      operationId: updateUser
+      description: HR gán vai trò ADMIN trả 403.
+      x-use-case: UC05
+      x-roles:
+      - ADMIN
+      - HR
+      x-permission: userManage
+      x-business-rules:
+      - BR-004
+      - BR-012
+      - BR-013
+      parameters:
+      - name: userId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserUpdate'
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: 'Xung đột: Email trùng hoặc quản lý tạo vòng lặp.'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+  /users/{userId}/status:
+    patch:
+      tags:
+      - Người dùng
+      summary: Bật hoặc tắt tài khoản
+      operationId: updateUserStatus
+      x-use-case: UC05
+      x-roles:
+      - ADMIN
+      - HR
+      x-permission: userManage
+      x-business-rules:
+      - BR-014
+      parameters:
+      - name: userId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserStatusUpdate'
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /cycles:
+    get:
+      tags:
+      - Chu kỳ
+      summary: Danh sách chu kỳ
+      operationId: listCycles
+      description: Mọi vai trò đọc được để dùng cho bộ chọn chu kỳ.
+      x-use-case: UC06
+      x-roles:
+      - ADMIN
+      - HR
+      - MANAGER
+      - EMPLOYEE
+      parameters:
+      - name: status
+        in: query
+        schema:
+          $ref: '#/components/schemas/CycleStatus'
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Cycle'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      tags:
+      - Chu kỳ
+      summary: Tạo chu kỳ
+      operationId: createCycle
+      x-use-case: UC06
+      x-roles:
+      - ADMIN
+      - HR
+      x-permission: cycleManage
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CycleCreate'
+      responses:
+        '201':
+          description: Tạo thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cycle'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /cycles/{cycleId}:
+    patch:
+      tags:
+      - Chu kỳ
+      summary: Sửa chu kỳ
+      operationId: updateCycle
+      x-use-case: UC06
+      x-roles:
+      - ADMIN
+      - HR
+      x-permission: cycleManage
+      x-business-rules:
+      - BR-055
+      parameters:
+      - name: cycleId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CycleUpdate'
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cycle'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: 'Xung đột: Chu kỳ đã đóng, hoặc đổi tỷ trọng sau khi đã khóa.'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+  /cycles/{cycleId}/activate:
+    post:
+      tags:
+      - Chu kỳ
+      summary: Kích hoạt chu kỳ
+      operationId: activateCycle
+      x-use-case: UC06
+      x-roles:
+      - ADMIN
+      - HR
+      x-permission: cycleManage
+      x-business-rules:
+      - BR-020
+      - BR-021
+      parameters:
+      - name: cycleId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cycle'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: 'Xung đột: Đã có chu kỳ ACTIVE khác, hoặc sai trạng thái.'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+  /cycles/{cycleId}/close:
+    post:
+      tags:
+      - Chu kỳ
+      summary: Đóng chu kỳ
+      operationId: closeCycle
+      description: Chốt tiến độ cuối kỳ của mọi Objective.
+      x-use-case: UC06
+      x-roles:
+      - ADMIN
+      - HR
+      x-permission: cycleManage
+      x-business-rules:
+      - BR-020
+      - BR-023
+      parameters:
+      - name: cycleId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cycle'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: 'Xung đột: Sai trạng thái.'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+  /objectives:
+    get:
+      tags:
+      - OKR
+      summary: Danh sách Objective
+      operationId: listObjectives
+      description: OKR đã xóa mềm không xuất hiện. departmentId của phòng ban gồm cả các team bên trong.
+      x-use-case: UC07
+      x-roles:
+      - ADMIN
+      - HR
+      - MANAGER
+      - EMPLOYEE
+      x-permission: okrRead
+      parameters:
+      - $ref: '#/components/parameters/Page'
+      - $ref: '#/components/parameters/PageSize'
+      - name: cycleId
+        in: query
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: ownerUserId
+        in: query
+        schema:
+          type: integer
+          format: int64
+      - name: departmentId
+        in: query
+        schema:
+          type: integer
+          format: int64
+      - name: level
+        in: query
+        schema:
+          $ref: '#/components/schemas/OkrLevel'
+      - name: confidence
+        in: query
+        schema:
+          $ref: '#/components/schemas/ConfidenceLevel'
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ObjectiveSummaryPage'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      tags:
+      - OKR
+      summary: Tạo Objective
+      operationId: createObjective
+      description: Quyền theo cấp OKR và quan hệ báo cáo. Sau khi lưu, luồng Rà soát OKR chạy nền; API không chờ AI.
+      x-use-case: UC08
+      x-roles:
+      - ADMIN
+      - HR
+      - MANAGER
+      - EMPLOYEE
+      x-permission: okrWrite
+      x-business-rules:
+      - BR-022
+      - BR-030
+      - BR-031
+      - BR-032
+      - BR-033
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ObjectiveCreate'
+      responses:
+        '201':
+          description: Tạo thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Objective'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          description: 'Xung đột: Chu kỳ đã đóng.'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+  /objectives/tree:
+    get:
+      tags:
+      - OKR
+      summary: Cây OKR
+      operationId: getObjectiveTree
+      x-use-case: UC07
+      x-roles:
+      - ADMIN
+      - HR
+      - MANAGER
+      - EMPLOYEE
+      x-permission: okrRead
+      parameters:
+      - name: cycleId
+        in: query
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: ownerUserId
+        in: query
+        schema:
+          type: integer
+          format: int64
+      - name: departmentId
+        in: query
+        schema:
+          type: integer
+          format: int64
+      - name: level
+        in: query
+        schema:
+          $ref: '#/components/schemas/OkrLevel'
+      - name: confidence
+        in: query
+        schema:
+          $ref: '#/components/schemas/ConfidenceLevel'
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ObjectiveTreeNode'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /objectives/{objectiveId}:
+    get:
+      tags:
+      - OKR
+      summary: Chi tiết Objective
+      operationId: getObjective
+      x-use-case: UC07
+      x-roles:
+      - ADMIN
+      - HR
+      - MANAGER
+      - EMPLOYEE
+      x-permission: okrRead
+      parameters:
+      - name: objectiveId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Objective'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      tags:
+      - OKR
+      summary: Sửa Objective
+      operationId: updateObjective
+      x-use-case: UC08
+      x-roles:
+      - ADMIN
+      - HR
+      - MANAGER
+      - EMPLOYEE
+      x-permission: okrWrite
+      x-business-rules:
+      - BR-022
+      - BR-030
+      parameters:
+      - name: objectiveId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ObjectiveUpdate'
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Objective'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: 'Xung đột: Chu kỳ đã đóng.'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+    delete:
+      tags:
+      - OKR
+      summary: Xóa mềm Objective
+      operationId: deleteObjective
+      x-use-case: UC11
+      x-roles:
+      - ADMIN
+      - HR
+      - MANAGER
+      - EMPLOYEE
+      x-permission: okrDelete
+      x-business-rules:
+      - BR-037
+      parameters:
+      - name: objectiveId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '204':
+          description: Thành công, không có nội dung
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: 'Xung đột: Còn Objective con, hoặc chu kỳ đã đóng.'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+  /objectives/{objectiveId}/parent:
+    put:
+      tags:
+      - OKR
+      summary: Liên kết hoặc gỡ liên kết cấp trên
+      operationId: linkParentObjective
+      description: Sai cấp hoặc khác chu kỳ trả 400.
+      x-use-case: UC10
+      x-roles:
+      - ADMIN
+      - HR
+      - MANAGER
+      - EMPLOYEE
+      x-permission: okrWrite
+      x-business-rules:
+      - BR-035
+      - BR-036
+      parameters:
+      - name: objectiveId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ParentLink'
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Objective'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: 'Xung đột: Liên kết tạo vòng lặp.'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+  /objectives/{objectiveId}/review-notes:
+    get:
+      tags:
+      - OKR
+      summary: Ghi chú rà soát do AI tạo
+      operationId: listObjectiveReviewNotes
+      x-use-case: UC08
+      x-roles:
+      - ADMIN
+      - HR
+      - MANAGER
+      - EMPLOYEE
+      x-permission: okrRead
+      parameters:
+      - name: objectiveId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ObjectiveReviewNote'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /objectives/{objectiveId}/review-notes/{noteId}/dismiss:
+    post:
+      tags:
+      - OKR
+      summary: Bỏ qua ghi chú rà soát
+      operationId: dismissObjectiveReviewNote
+      x-use-case: UC08
+      x-roles:
+      - ADMIN
+      - HR
+      - MANAGER
+      - EMPLOYEE
+      x-permission: okrWrite
+      parameters:
+      - name: objectiveId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: noteId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ObjectiveReviewNote'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /objectives/{objectiveId}/key-results:
+    post:
+      tags:
+      - OKR
+      summary: Thêm Key Result
+      operationId: createKeyResult
+      description: Thêm KR thứ 6 trả 400.
+      x-use-case: UC09
+      x-roles:
+      - ADMIN
+      - HR
+      - MANAGER
+      - EMPLOYEE
+      x-permission: okrWrite
+      x-business-rules:
+      - BR-033
+      - BR-034
+      parameters:
+      - name: objectiveId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/KeyResultInput'
+      responses:
+        '201':
+          description: Tạo thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KeyResult'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: 'Xung đột: Chu kỳ đã đóng.'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+  /key-results/{keyResultId}:
+    patch:
+      tags:
+      - OKR
+      summary: Sửa Key Result
+      operationId: updateKeyResult
+      description: Sửa giá trị đầu hoặc đích thì tiến độ được tính lại, lịch sử check-in giữ nguyên.
+      x-use-case: UC09
+      x-roles:
+      - ADMIN
+      - HR
+      - MANAGER
+      - EMPLOYEE
+      x-permission: okrWrite
+      x-business-rules:
+      - BR-034
+      parameters:
+      - name: keyResultId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/KeyResultUpdate'
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KeyResult'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: 'Xung đột: Chu kỳ đã đóng.'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+    delete:
+      tags:
+      - OKR
+      summary: Xóa mềm Key Result
+      operationId: deleteKeyResult
+      x-use-case: UC09
+      x-roles:
+      - ADMIN
+      - HR
+      - MANAGER
+      - EMPLOYEE
+      x-permission: okrWrite
+      x-business-rules:
+      - BR-033
+      parameters:
+      - name: keyResultId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '204':
+          description: Thành công, không có nội dung
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: 'Xung đột: Là KR cuối cùng của Objective, hoặc chu kỳ đã đóng.'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+  /key-results/{keyResultId}/checkins:
+    get:
+      tags:
+      - Check-in
+      summary: Lịch sử check-in
+      operationId: listCheckins
+      description: Mới nhất trước, kèm bình luận và nhãn AI.
+      x-use-case: UC13
+      x-roles:
+      - ADMIN
+      - HR
+      - MANAGER
+      - EMPLOYEE
+      x-permission: okrRead
+      parameters:
+      - name: keyResultId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Checkin'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    post:
+      tags:
+      - Check-in
+      summary: Check-in Key Result
+      operationId: createCheckin
+      description: Chỉ người phụ trách KR. Tiến độ được cộng dồn trong cùng transaction. Luồng AI chạy nền; API không chờ
+        AI.
+      x-use-case: UC12
+      x-roles:
+      - ADMIN
+      - HR
+      - MANAGER
+      - EMPLOYEE
+      x-permission: checkinWrite
+      x-business-rules:
+      - BR-022
+      - BR-040
+      - BR-041
+      - BR-043
+      - BR-046
+      parameters:
+      - name: keyResultId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CheckinCreate'
+      responses:
+        '201':
+          description: Tạo thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CheckinResult'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: 'Xung đột: Chu kỳ không ở trạng thái ACTIVE.'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+  /checkins/{checkinId}/comments:
+    post:
+      tags:
+      - Check-in
+      summary: Bình luận vào check-in
+      operationId: createCheckinComment
+      x-use-case: UC14
+      x-roles:
+      - MANAGER
+      x-permission: checkinComment
+      x-business-rules:
+      - BR-047
+      parameters:
+      - name: checkinId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CheckinCommentCreate'
+      responses:
+        '201':
+          description: Tạo thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CheckinComment'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /review-templates:
+    get:
+      tags:
+      - Mẫu phiếu 360
+      summary: Danh sách mẫu phiếu
+      operationId: listTemplates
+      x-use-case: UC15
+      x-roles:
+      - HR
+      x-permission: reviewTemplateManage
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ReviewTemplate'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      tags:
+      - Mẫu phiếu 360
+      summary: Tạo mẫu phiếu
+      operationId: createTemplate
+      x-use-case: UC15
+      x-roles:
+      - HR
+      x-permission: reviewTemplateManage
+      x-business-rules:
+      - BR-052
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReviewTemplateInput'
+      responses:
+        '201':
+          description: Tạo thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReviewTemplate'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /review-templates/{templateId}:
+    put:
+      tags:
+      - Mẫu phiếu 360
+      summary: Sửa mẫu phiếu
+      operationId: updateTemplate
+      x-use-case: UC15
+      x-roles:
+      - HR
+      x-permission: reviewTemplateManage
+      x-business-rules:
+      - BR-052
+      parameters:
+      - name: templateId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReviewTemplateInput'
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReviewTemplate'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: 'Xung đột: Mẫu đã được đợt ngoài DRAFT sử dụng.'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+  /review-templates/{templateId}/duplicate:
+    post:
+      tags:
+      - Mẫu phiếu 360
+      summary: Nhân bản mẫu phiếu
+      operationId: duplicateTemplate
+      x-use-case: UC15
+      x-roles:
+      - HR
+      x-permission: reviewTemplateManage
+      parameters:
+      - name: templateId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '201':
+          description: Tạo thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReviewTemplate'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /campaigns:
+    get:
+      tags:
+      - Đợt 360
+      summary: Danh sách đợt
+      operationId: listCampaigns
+      description: Mọi vai trò đọc được để chọn đợt khi đề cử và xem kết quả.
+      x-use-case: UC16
+      x-roles:
+      - ADMIN
+      - HR
+      - MANAGER
+      - EMPLOYEE
+      parameters:
+      - name: cycleId
+        in: query
+        schema:
+          type: integer
+          format: int64
+      - name: status
+        in: query
+        schema:
+          $ref: '#/components/schemas/CampaignStatus'
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Campaign'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      tags:
+      - Đợt 360
+      summary: Tạo đợt
+      operationId: createCampaign
+      description: Hạn đề cử phải trước hạn nộp phiếu.
+      x-use-case: UC16
+      x-roles:
+      - HR
+      x-permission: reviewCampaignManage
+      x-business-rules:
+      - BR-051
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CampaignCreate'
+      responses:
+        '201':
+          description: Tạo thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Campaign'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          description: 'Xung đột: Chu kỳ đã có đợt 360.'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+  /campaigns/{campaignId}:
+    get:
+      tags:
+      - Đợt 360
+      summary: Chi tiết đợt
+      operationId: getCampaign
+      x-use-case: UC16
+      x-roles:
+      - ADMIN
+      - HR
+      - MANAGER
+      - EMPLOYEE
+      parameters:
+      - name: campaignId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Campaign'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      tags:
+      - Đợt 360
+      summary: Sửa đợt
+      operationId: updateCampaign
+      x-use-case: UC16
+      x-roles:
+      - HR
+      x-permission: reviewCampaignManage
+      parameters:
+      - name: campaignId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CampaignUpdate'
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Campaign'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: 'Xung đột: Đợt không còn ở DRAFT.'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+  /campaigns/{campaignId}/open-nomination:
+    post:
+      tags:
+      - Đợt 360
+      summary: Mở đề cử
+      operationId: openNomination
+      x-use-case: UC16
+      x-roles:
+      - HR
+      x-permission: reviewCampaignManage
+      x-business-rules:
+      - BR-050
+      parameters:
+      - name: campaignId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Campaign'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: 'Xung đột: Sai trạng thái.'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+  /campaigns/{campaignId}/open-collection:
+    post:
+      tags:
+      - Đợt 360
+      summary: Mở thu phiếu
+      operationId: openCollection
+      description: Chụp quan hệ báo cáo, sinh phiếu và khóa tỷ trọng OKR/360.
+      x-use-case: UC16
+      x-roles:
+      - HR
+      x-permission: reviewCampaignManage
+      x-business-rules:
+      - BR-050
+      - BR-055
+      parameters:
+      - name: campaignId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Campaign'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: 'Xung đột: Sai trạng thái.'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+  /campaigns/{campaignId}/progress:
+    get:
+      tags:
+      - Đợt 360
+      summary: Tiến độ nộp phiếu
+      operationId: getCampaignProgress
+      x-use-case: UC20
+      x-roles:
+      - HR
+      x-permission: reviewCampaignManage
+      x-business-rules:
+      - BR-061
+      parameters:
+      - name: campaignId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CampaignProgress'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /campaigns/{campaignId}/remind:
+    post:
+      tags:
+      - Đợt 360
+      summary: Nhắc người chưa nộp
+      operationId: remindReviewers
+      x-use-case: UC20
+      x-roles:
+      - HR
+      x-permission: reviewCampaignManage
+      parameters:
+      - name: campaignId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReminderResult'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: 'Xung đột: Đợt không ở COLLECTING.'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+  /campaigns/{campaignId}/close:
+    post:
+      tags:
+      - Đợt 360
+      summary: Đóng đợt
+      operationId: closeCampaign
+      description: Hủy phiếu chưa nộp, tách câu trả lời khỏi người chấm, ghi sự kiện cho luồng Bản nháp 1-1.
+      x-use-case: UC20
+      x-roles:
+      - HR
+      x-permission: reviewCampaignManage
+      x-business-rules:
+      - BR-050
+      - BR-058
+      parameters:
+      - name: campaignId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Campaign'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: 'Xung đột: Sai trạng thái.'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+  /campaigns/{campaignId}/nominations/me:
+    get:
+      tags:
+      - Đề cử
+      summary: Xem đề cử của tôi
+      operationId: getMyNomination
+      x-use-case: UC17
+      x-roles:
+      - ADMIN
+      - HR
+      - MANAGER
+      - EMPLOYEE
+      x-permission: nominate
+      parameters:
+      - name: campaignId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Nomination'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags:
+      - Đề cử
+      summary: Gửi đề cử
+      operationId: submitNomination
+      description: Người không hợp lệ trả 400.
+      x-use-case: UC17
+      x-roles:
+      - ADMIN
+      - HR
+      - MANAGER
+      - EMPLOYEE
+      x-permission: nominate
+      x-business-rules:
+      - BR-053
+      parameters:
+      - name: campaignId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NominationSubmit'
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Nomination'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: 'Xung đột: Đợt không ở NOMINATION.'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+  /campaigns/{campaignId}/nominations:
+    get:
+      tags:
+      - Đề cử
+      summary: Danh sách đề cử cần duyệt
+      operationId: listPendingNominations
+      description: Manager thấy nhân viên dưới quyền trực tiếp; HR thấy nhân viên không có quản lý trực tiếp. Gồm cả người
+        chưa đề cử.
+      x-use-case: UC18
+      x-roles:
+      - MANAGER
+      - HR
+      x-permission: reviewerApprove
+      parameters:
+      - name: campaignId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Nomination'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /campaigns/{campaignId}/nominations/{revieweeUserId}/approve:
+    post:
+      tags:
+      - Đề cử
+      summary: Duyệt người đánh giá
+      operationId: approveNomination
+      description: Dùng được cả khi nhân viên chưa đề cử.
+      x-use-case: UC18
+      x-roles:
+      - MANAGER
+      - HR
+      x-permission: reviewerApprove
+      x-business-rules:
+      - BR-054
+      parameters:
+      - name: campaignId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: revieweeUserId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NominationApprove'
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Nomination'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: 'Xung đột: Đợt không ở NOMINATION.'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+  /review-forms:
+    get:
+      tags:
+      - Phiếu 360
+      summary: Phiếu cần điền
+      operationId: listMyReviewForms
+      description: Chỉ trả phiếu được giao cho người gọi.
+      x-use-case: UC19
+      x-roles:
+      - ADMIN
+      - HR
+      - MANAGER
+      - EMPLOYEE
+      x-permission: reviewSubmit
+      parameters:
+      - name: campaignId
+        in: query
+        schema:
+          type: integer
+          format: int64
+      - name: status
+        in: query
+        schema:
+          $ref: '#/components/schemas/AssignmentStatus'
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ReviewFormSummary'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /review-forms/{formId}:
+    get:
+      tags:
+      - Phiếu 360
+      summary: Xem phiếu
+      operationId: getReviewForm
+      description: Sau khi đóng đợt, câu trả lời đã tách khỏi người chấm nên trả 404. listMyReviewForms vẫn cho thấy trạng
+        thái phiếu.
+      x-use-case: UC19
+      x-roles:
+      - ADMIN
+      - HR
+      - MANAGER
+      - EMPLOYEE
+      x-permission: reviewSubmit
+      x-business-rules:
+      - BR-058
+      parameters:
+      - name: formId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReviewForm'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /review-forms/{formId}/draft:
+    put:
+      tags:
+      - Phiếu 360
+      summary: Lưu nháp
+      operationId: saveReviewDraft
+      x-use-case: UC19
+      x-roles:
+      - ADMIN
+      - HR
+      - MANAGER
+      - EMPLOYEE
+      x-permission: reviewSubmit
+      parameters:
+      - name: formId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReviewFormInput'
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReviewForm'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: 'Xung đột: Đợt không ở COLLECTING.'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+  /review-forms/{formId}/comment-check:
+    post:
+      tags:
+      - Phiếu 360
+      summary: Kiểm tra nhận xét trước khi nộp
+      operationId: checkReviewComment
+      description: Trả lời tối đa trong 5 giây. AI lỗi vẫn trả 200 với checked false. Không lưu cảnh báo và không ghi lịch
+        sử chạy.
+      x-use-case: UC19
+      x-roles:
+      - ADMIN
+      - HR
+      - MANAGER
+      - EMPLOYEE
+      x-permission: reviewSubmit
+      x-business-rules:
+      - BR-094
+      - BR-101
+      parameters:
+      - name: formId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommentCheckRequest'
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommentCheckResult'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /review-forms/{formId}/submit:
+    post:
+      tags:
+      - Phiếu 360
+      summary: Nộp phiếu
+      operationId: submitReviewForm
+      description: Nộp lại được để sửa khi đợt còn COLLECTING. Thiếu tiêu chí trả 400.
+      x-use-case: UC19
+      x-roles:
+      - ADMIN
+      - HR
+      - MANAGER
+      - EMPLOYEE
+      x-permission: reviewSubmit
+      x-business-rules:
+      - BR-056
+      - BR-057
+      parameters:
+      - name: formId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReviewFormInput'
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReviewForm'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: 'Xung đột: Đợt không ở COLLECTING.'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+  /campaigns/{campaignId}/results:
+    get:
+      tags:
+      - Kết quả 360
+      summary: Danh sách người xem được kết quả
+      operationId: listReviewResultSubjects
+      description: Bản thân, nhân viên dưới quyền trực tiếp, hoặc mọi người với HR. Admin chỉ thấy bản thân.
+      x-use-case: UC21
+      x-roles:
+      - ADMIN
+      - HR
+      - MANAGER
+      - EMPLOYEE
+      x-permission: reviewResultRead
+      x-business-rules:
+      - BR-005
+      - BR-063
+      parameters:
+      - name: campaignId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ReviewResultSubject'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /campaigns/{campaignId}/results/{revieweeUserId}:
+    get:
+      tags:
+      - Kết quả 360
+      summary: Xem kết quả 360
+      operationId: getReviewResult
+      description: Nhân viên xem của mình khi PUBLISHED, trước đó trả 403. Kết quả đã áp ngưỡng ẩn danh.
+      x-use-case: UC21
+      x-roles:
+      - ADMIN
+      - HR
+      - MANAGER
+      - EMPLOYEE
+      x-permission: reviewResultRead
+      x-business-rules:
+      - BR-005
+      - BR-059
+      - BR-060
+      - BR-062
+      - BR-063
+      parameters:
+      - name: campaignId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: revieweeUserId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReviewResult'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /cycles/{cycleId}/final-results/calculate:
+    post:
+      tags:
+      - Kết quả cuối kỳ
+      summary: Tổng hợp kết quả
+      operationId: calculateFinalResults
+      description: Chạy lại được và ghi đè kết quả cũ cho tới khi công bố.
+      x-use-case: UC22
+      x-roles:
+      - HR
+      x-permission: finalResultManage
+      x-business-rules:
+      - BR-070
+      - BR-071
+      - BR-072
+      - BR-073
+      - BR-074
+      parameters:
+      - name: cycleId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FinalResultSummary'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: 'Xung đột: Chu kỳ hoặc đợt chưa CLOSED, hoặc đã công bố.'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+  /cycles/{cycleId}/final-results:
+    get:
+      tags:
+      - Kết quả cuối kỳ
+      summary: Xem kết quả toàn công ty
+      operationId: listFinalResults
+      x-use-case: UC22
+      x-roles:
+      - HR
+      x-permission: finalResultManage
+      parameters:
+      - name: cycleId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FinalResultSummary'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /cycles/{cycleId}/final-results/export:
+    get:
+      tags:
+      - Kết quả cuối kỳ
+      summary: Xuất kết quả
+      operationId: exportFinalResults
+      x-use-case: UC22
+      x-roles:
+      - HR
+      x-permission: finalResultManage
+      parameters:
+      - name: cycleId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: format
+        in: query
+        required: true
+        schema:
+          $ref: '#/components/schemas/ExportFormat'
+      responses:
+        '200':
+          description: File báo cáo
+          content:
+            application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
+              schema:
+                type: string
+                format: binary
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /cycles/{cycleId}/final-results/publish:
+    post:
+      tags:
+      - Kết quả cuối kỳ
+      summary: Công bố kết quả
+      operationId: publishFinalResults
+      description: Đợt chuyển PUBLISHED và từng nhân viên nhận thông báo.
+      x-use-case: UC22
+      x-roles:
+      - HR
+      x-permission: finalResultManage
+      x-business-rules:
+      - BR-050
+      - BR-075
+      parameters:
+      - name: cycleId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublishResult'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: 'Xung đột: Chưa tổng hợp, hoặc đã công bố.'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+  /dashboards/me:
+    get:
+      tags:
+      - Dashboard
+      summary: Dashboard cá nhân
+      operationId: getMyDashboard
+      x-use-case: UC23
+      x-roles:
+      - ADMIN
+      - HR
+      - MANAGER
+      - EMPLOYEE
+      x-permission: dashboard
+      parameters:
+      - name: cycleId
+        in: query
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MyDashboard'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /dashboards/team:
+    get:
+      tags:
+      - Dashboard
+      summary: Dashboard đội nhóm
+      operationId: getTeamDashboard
+      x-use-case: UC23
+      x-roles:
+      - MANAGER
+      x-permission: dashboard
+      x-business-rules:
+      - BR-003
+      parameters:
+      - name: cycleId
+        in: query
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeamDashboard'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /dashboards/company:
+    get:
+      tags:
+      - Dashboard
+      summary: Dashboard công ty
+      operationId: getCompanyDashboard
+      x-use-case: UC23
+      x-roles:
+      - ADMIN
+      - HR
+      x-permission: dashboard
+      parameters:
+      - name: cycleId
+        in: query
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompanyDashboard'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /reports/{reportType}:
+    get:
+      tags:
+      - Báo cáo
+      summary: Xem báo cáo
+      operationId: getReport
+      description: Manager chỉ thấy đơn vị mình phụ trách; riêng FINAL_RESULTS chỉ gồm nhân viên dưới quyền trực tiếp. Admin
+        gọi FINAL_RESULTS trả 403.
+      x-use-case: UC24
+      x-roles:
+      - ADMIN
+      - HR
+      - MANAGER
+      x-permission: reportRead
+      x-business-rules:
+      - BR-005
+      - BR-080
+      parameters:
+      - name: reportType
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/ReportType'
+      - name: cycleId
+        in: query
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: departmentId
+        in: query
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Report'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /reports/{reportType}/export:
+    get:
+      tags:
+      - Báo cáo
+      summary: Xuất báo cáo
+      operationId: exportReport
+      description: File khớp số liệu với cùng bộ lọc. Quyền như getReport.
+      x-use-case: UC24
+      x-roles:
+      - ADMIN
+      - HR
+      - MANAGER
+      x-permission: reportRead
+      x-business-rules:
+      - BR-005
+      - BR-080
+      parameters:
+      - name: reportType
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/ReportType'
+      - name: cycleId
+        in: query
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: departmentId
+        in: query
+        schema:
+          type: integer
+          format: int64
+      - name: format
+        in: query
+        required: true
+        schema:
+          $ref: '#/components/schemas/ExportFormat'
+      responses:
+        '200':
+          description: File báo cáo
+          content:
+            application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
+              schema:
+                type: string
+                format: binary
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /notifications:
+    get:
+      tags:
+      - Thông báo
+      summary: Danh sách thông báo
+      operationId: listNotifications
+      x-use-case: UC25
+      x-roles:
+      - ADMIN
+      - HR
+      - MANAGER
+      - EMPLOYEE
+      parameters:
+      - $ref: '#/components/parameters/Page'
+      - $ref: '#/components/parameters/PageSize'
+      - name: unreadOnly
+        in: query
+        schema:
+          type: boolean
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationPage'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /notifications/read-all:
+    post:
+      tags:
+      - Thông báo
+      summary: Đánh dấu tất cả đã đọc
+      operationId: markAllNotificationsRead
+      x-use-case: UC25
+      x-roles:
+      - ADMIN
+      - HR
+      - MANAGER
+      - EMPLOYEE
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MarkAllReadResult'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /notifications/{notificationId}/read:
+    post:
+      tags:
+      - Thông báo
+      summary: Đánh dấu đã đọc
+      operationId: markNotificationRead
+      x-use-case: UC25
+      x-roles:
+      - ADMIN
+      - HR
+      - MANAGER
+      - EMPLOYEE
+      parameters:
+      - name: notificationId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Notification'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /audit-logs:
+    get:
+      tags:
+      - Nhật ký
+      summary: Nhật ký hoạt động
+      operationId: listAuditLogs
+      x-use-case: UC26
+      x-roles:
+      - ADMIN
+      - HR
+      x-permission: auditRead
+      x-business-rules:
+      - BR-083
+      parameters:
+      - $ref: '#/components/parameters/Page'
+      - $ref: '#/components/parameters/PageSize'
+      - name: actorUserId
+        in: query
+        schema:
+          type: integer
+          format: int64
+      - name: module
+        in: query
+        schema:
+          type: string
+      - name: action
+        in: query
+        schema:
+          $ref: '#/components/schemas/AuditAction'
+      - name: from
+        in: query
+        schema:
+          type: string
+          format: date-time
+      - name: to
+        in: query
+        schema:
+          type: string
+          format: date-time
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuditLogPage'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /automation/flows:
+    get:
+      tags:
+      - Tự động hóa
+      summary: Danh sách luồng
+      operationId: listAutomationFlows
+      x-use-case: UC27
+      x-roles:
+      - ADMIN
+      - HR
+      x-permission: automationRead
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AutomationFlowConfig'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /automation/flows/{flow}:
+    patch:
+      tags:
+      - Tự động hóa
+      summary: Cấu hình luồng
+      operationId: updateAutomationFlow
+      description: Hạn mức không hợp lệ hoặc lịch sai định dạng trả 400. Chưa cấu hình khóa dịch vụ AI thì không bật được,
+        trả 409.
+      x-use-case: UC27
+      x-roles:
+      - ADMIN
+      x-permission: automationManage
+      x-business-rules:
+      - BR-098
+      - BR-099
+      parameters:
+      - name: flow
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/AutomationFlow'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AutomationFlowUpdate'
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AutomationFlowConfig'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: 'Xung đột: Chưa cấu hình khóa dịch vụ AI.'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+  /automation/runs:
+    get:
+      tags:
+      - Tự động hóa
+      summary: Lịch sử chạy
+      operationId: listAutomationRuns
+      x-use-case: UC28
+      x-roles:
+      - ADMIN
+      - HR
+      x-permission: automationRead
+      x-business-rules:
+      - BR-100
+      parameters:
+      - $ref: '#/components/parameters/Page'
+      - $ref: '#/components/parameters/PageSize'
+      - name: flow
+        in: query
+        schema:
+          $ref: '#/components/schemas/AutomationFlow'
+      - name: status
+        in: query
+        schema:
+          $ref: '#/components/schemas/RunStatus'
+      - name: from
+        in: query
+        schema:
+          type: string
+          format: date-time
+      - name: to
+        in: query
+        schema:
+          type: string
+          format: date-time
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AutomationRunPage'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /automation/runs/{runId}:
+    get:
+      tags:
+      - Tự động hóa
+      summary: Chi tiết lần chạy
+      operationId: getAutomationRun
+      x-use-case: UC28
+      x-roles:
+      - ADMIN
+      - HR
+      x-permission: automationRead
+      x-business-rules:
+      - BR-100
+      parameters:
+      - name: runId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AutomationRun'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /automation/runs/{runId}/retry:
+    post:
+      tags:
+      - Tự động hóa
+      summary: Chạy lại lần lỗi
+      operationId: retryAutomationRun
+      x-use-case: UC28
+      x-roles:
+      - ADMIN
+      x-permission: automationManage
+      parameters:
+      - name: runId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AutomationRun'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: 'Xung đột: Lần chạy không ở trạng thái lỗi.'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+  /automation/runs/{runId}/explanation:
+    get:
+      tags:
+      - Tự động hóa
+      summary: AI đã làm gì?
+      operationId: getAiRunExplanation
+      description: Chỉ người xem được kết quả của lần chạy mới gọi được. Nội dung được dựng lại từ dữ liệu người đó có quyền
+        đọc.
+      x-use-case: UC32
+      x-roles:
+      - ADMIN
+      - HR
+      - MANAGER
+      - EMPLOYEE
+      x-business-rules:
+      - BR-091
+      - BR-100
+      parameters:
+      - name: runId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AiExplanation'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /blockers:
+    get:
+      tags:
+      - Vướng mắc
+      summary: Vướng mắc chuyển đến
+      operationId: listRoutedBlockers
+      description: Chỉ vướng mắc chuyển tới đơn vị người gọi phụ trách.
+      x-use-case: UC29
+      x-roles:
+      - ADMIN
+      - HR
+      - MANAGER
+      x-permission: blockerHandle
+      parameters:
+      - $ref: '#/components/parameters/Page'
+      - $ref: '#/components/parameters/PageSize'
+      - name: routing
+        in: query
+        schema:
+          $ref: '#/components/schemas/RoutingStatus'
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RoutedBlockerPage'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /blockers/{checkinId}/acknowledge:
+    post:
+      tags:
+      - Vướng mắc
+      summary: Nhận xử lý
+      operationId: acknowledgeBlocker
+      x-use-case: UC29
+      x-roles:
+      - ADMIN
+      - HR
+      - MANAGER
+      x-permission: blockerHandle
+      parameters:
+      - name: checkinId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BlockerAcknowledge'
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RoutedBlocker'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: 'Xung đột: Vướng mắc đã được xử lý.'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+  /blockers/{checkinId}/reject:
+    post:
+      tags:
+      - Vướng mắc
+      summary: Không liên quan phòng tôi
+      operationId: rejectBlocker
+      description: Chuyển về quản lý trực tiếp của người check-in và tính là một lần phân loại sai.
+      x-use-case: UC29
+      x-roles:
+      - ADMIN
+      - HR
+      - MANAGER
+      x-permission: blockerHandle
+      x-business-rules:
+      - BR-103
+      parameters:
+      - name: checkinId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BlockerReject'
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RoutedBlocker'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: 'Xung đột: Vướng mắc đã được xử lý.'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+  /weekly-digests:
+    get:
+      tags:
+      - Bản tin tuần
+      summary: Danh sách bản tin
+      operationId: listWeeklyDigests
+      x-use-case: UC30
+      x-roles:
+      - MANAGER
+      x-permission: digestRead
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/WeeklyDigestSummary'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /weekly-digests/{digestId}:
+    get:
+      tags:
+      - Bản tin tuần
+      summary: Xem bản tin
+      operationId: getWeeklyDigest
+      description: Lần mở đầu tiên ghi nhận đã đọc.
+      x-use-case: UC30
+      x-roles:
+      - MANAGER
+      x-permission: digestRead
+      x-business-rules:
+      - BR-105
+      parameters:
+      - name: digestId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WeeklyDigest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /one-on-one-drafts:
+    get:
+      tags:
+      - Bản nháp 1-1
+      summary: Danh sách bản nháp
+      operationId: listOneOnOneDrafts
+      description: Theo bản chụp quan hệ báo cáo lúc mở thu phiếu.
+      x-use-case: UC31
+      x-roles:
+      - MANAGER
+      - HR
+      x-permission: aiDraftReview
+      parameters:
+      - name: campaignId
+        in: query
+        schema:
+          type: integer
+          format: int64
+      - name: status
+        in: query
+        schema:
+          $ref: '#/components/schemas/DraftStatus'
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/OneOnOneDraftSummary'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /one-on-one-drafts/{draftId}:
+    get:
+      tags:
+      - Bản nháp 1-1
+      summary: Xem bản nháp
+      operationId: getOneOnOneDraft
+      x-use-case: UC31
+      x-roles:
+      - MANAGER
+      - HR
+      x-permission: aiDraftReview
+      parameters:
+      - name: draftId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OneOnOneDraft'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      tags:
+      - Bản nháp 1-1
+      summary: Sửa bản nháp
+      operationId: updateOneOnOneDraft
+      description: Chỉ sửa nội dung gửi đi; đề xuất gốc của AI không đổi.
+      x-use-case: UC31
+      x-roles:
+      - MANAGER
+      - HR
+      x-permission: aiDraftReview
+      x-business-rules:
+      - BR-092
+      parameters:
+      - name: draftId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OneOnOneDraftUpdate'
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OneOnOneDraft'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: 'Xung đột: Bản nháp đã gửi hoặc đã bỏ.'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+  /one-on-one-drafts/{draftId}/send:
+    post:
+      tags:
+      - Bản nháp 1-1
+      summary: Gửi cho nhân viên
+      operationId: sendOneOnOneDraft
+      x-use-case: UC31
+      x-roles:
+      - MANAGER
+      - HR
+      x-permission: aiDraftReview
+      x-business-rules:
+      - BR-092
+      - BR-106
+      parameters:
+      - name: draftId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OneOnOneDraft'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: 'Xung đột: Đợt chưa PUBLISHED, hoặc bản nháp đã gửi hay đã bỏ.'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+  /one-on-one-drafts/{draftId}/discard:
+    post:
+      tags:
+      - Bản nháp 1-1
+      summary: Bỏ bản nháp
+      operationId: discardOneOnOneDraft
+      x-use-case: UC31
+      x-roles:
+      - MANAGER
+      - HR
+      x-permission: aiDraftReview
+      parameters:
+      - name: draftId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OneOnOneDraft'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: 'Xung đột: Bản nháp đã gửi hoặc đã bỏ.'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Token hết hạn sau 30 phút. V1 không có refresh token.
+  parameters:
+    Page:
+      name: page
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+    PageSize:
+      name: pageSize
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+  responses:
+    ValidationError:
+      description: Dữ liệu không hợp lệ
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ValidationProblemDetails'
+    Unauthorized:
+      description: Thiếu token, token sai hoặc hết hạn; với đăng nhập là thông tin không đúng
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+    Forbidden:
+      description: Không có quyền với vai trò hoặc dữ liệu này
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+    NotFound:
+      description: Không tìm thấy, hoặc đã bị xóa mềm
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+    TooManyRequests:
+      description: Quá 5 lần đăng nhập sai trong 15 phút
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+  schemas:
+    UserRole:
+      type: string
+      enum:
+      - ADMIN
+      - HR
+      - MANAGER
+      - EMPLOYEE
+    CycleStatus:
+      type: string
+      enum:
+      - DRAFT
+      - ACTIVE
+      - CLOSED
+    OkrLevel:
+      type: string
+      enum:
+      - COMPANY
+      - DEPARTMENT
+      - TEAM
+      - INDIVIDUAL
+    OrgUnitType:
+      type: string
+      enum:
+      - DEPARTMENT
+      - TEAM
+    KrType:
+      type: string
+      enum:
+      - NUMBER
+      - PERCENT
+      - BOOLEAN
+    ConfidenceLevel:
+      type: string
+      enum:
+      - ON_TRACK
+      - AT_RISK
+      - OFF_TRACK
+    CampaignStatus:
+      type: string
+      enum:
+      - DRAFT
+      - NOMINATION
+      - COLLECTING
+      - CLOSED
+      - PUBLISHED
+    ReviewerGroup:
+      type: string
+      enum:
+      - SELF
+      - MANAGER
+      - PEER
+      - DIRECT_REPORT
+    ResultGroup:
+      type: string
+      description: Nhóm hiển thị trong kết quả. PEER_AND_REPORT là nhóm gộp khi dưới ngưỡng ẩn danh.
+      enum:
+      - MANAGER
+      - PEER
+      - DIRECT_REPORT
+      - PEER_AND_REPORT
+    AssignmentStatus:
+      type: string
+      enum:
+      - NOT_STARTED
+      - DRAFT
+      - SUBMITTED
+      - CANCELLED
+    NominationStatus:
+      type: string
+      enum:
+      - DRAFT
+      - PENDING
+      - APPROVED
+    ResultGrade:
+      type: string
+      enum:
+      - EXCELLENT
+      - GOOD
+      - MEETS
+      - NEEDS_IMPROVEMENT
+      - INSUFFICIENT_DATA
+    NotificationType:
+      type: string
+      enum:
+      - CHECKIN_REMINDER
+      - CHECKIN_OFF_TRACK
+      - CHECKIN_COMMENT
+      - PLANNING_REMINDER
+      - NOMINATION_REMINDER
+      - NOMINATION_PENDING
+      - REVIEW_REMINDER
+      - RESULT_PUBLISHED
+      - BLOCKER_ROUTED
+      - BLOCKER_UPDATED
+      - WEEKLY_DIGEST
+      - CHECKIN_MISMATCH
+      - AI_DRAFT_READY
+      - ONE_ON_ONE_SENT
+      - AUTOMATION_ALERT
+    AuditAction:
+      type: string
+      enum:
+      - CREATE
+      - UPDATE
+      - SOFT_DELETE
+      - RESTORE
+      - STATUS_CHANGE
+      - CHECKIN
+      - SUBMIT
+      - PUBLISH
+      - LOGIN
+      - LOGIN_FAILED
+      - EXPORT
+    AutomationFlow:
+      type: string
+      enum:
+      - BLOCKER_ROUTING
+      - WEEKLY_DIGEST
+      - ONE_ON_ONE_DRAFT
+      - CHECKIN_MISMATCH
+      - OKR_REVIEW
+      - REVIEW_COMMENT_GUARD
+    TriggerKind:
+      type: string
+      enum:
+      - EVENT
+      - SCHEDULE
+      - ON_SUBMIT
+    RunStatus:
+      type: string
+      enum:
+      - PENDING
+      - RUNNING
+      - SUCCEEDED
+      - FAILED
+      - SKIPPED
+    BlockerCategory:
+      type: string
+      enum:
+      - DEPENDENCY
+      - RESOURCE
+      - TECHNICAL
+      - PRIORITY_CHANGE
+      - OTHER
+    SeverityLevel:
+      type: string
+      enum:
+      - LOW
+      - MEDIUM
+      - HIGH
+    RoutingStatus:
+      type: string
+      enum:
+      - OPEN
+      - ACKNOWLEDGED
+      - REJECTED
+    ReviewIssue:
+      type: string
+      enum:
+      - NOT_MEASURABLE
+      - OUTPUT_ONLY
+      - DUPLICATE
+      - NOT_ALIGNED
+    DraftStatus:
+      type: string
+      enum:
+      - PENDING_REVIEW
+      - SENT
+      - DISCARDED
+    ReportType:
+      type: string
+      enum:
+      - OKR_PROGRESS
+      - CHECKIN_RATE
+      - FINAL_RESULTS
+    ExportFormat:
+      type: string
+      enum:
+      - XLSX
+      - PDF
+    CommentWarningKind:
+      type: string
+      enum:
+      - IDENTIFYING
+      - OFFENSIVE
+    PageMeta:
+      type: object
+      required:
+      - page
+      - pageSize
+      - total
+      properties:
+        page:
+          type: integer
+          minimum: 1
+        pageSize:
+          type: integer
+          minimum: 1
+          maximum: 100
+        total:
+          type: integer
+          minimum: 0
+    ProblemDetails:
+      type: object
+      description: Lỗi theo RFC 9457. traceId là mã tra cứu hiển thị cho người dùng.
+      required:
+      - type
+      - title
+      - status
+      - errorCode
+      - traceId
+      properties:
+        type:
+          type: string
+        title:
+          type: string
+        status:
+          type: integer
+          minimum: 400
+          maximum: 599
+        errorCode:
+          type: string
+        detail:
+          type: string
+          nullable: true
+        instance:
+          type: string
+          nullable: true
+        traceId:
+          type: string
+    ValidationProblemDetails:
+      allOf:
+      - $ref: '#/components/schemas/ProblemDetails'
+      - type: object
+        required:
+        - errors
+        properties:
+          errors:
+            type: object
+            description: Lỗi theo tên trường.
+            additionalProperties:
+              type: array
+              items:
+                type: string
+    UserRef:
+      type: object
+      description: Thông tin tối thiểu của một người.
+      required:
+      - id
+      - fullName
+      properties:
+        id:
+          type: integer
+          format: int64
+        fullName:
+          type: string
+        jobTitle:
+          type: string
+          nullable: true
+        avatarUrl:
+          type: string
+          format: uri
+          nullable: true
+    UnitRef:
+      type: object
+      required:
+      - id
+      - name
+      - unitType
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        unitType:
+          $ref: '#/components/schemas/OrgUnitType'
+    LoginRequest:
+      type: object
+      required:
+      - email
+      - password
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+    LoginResponse:
+      type: object
+      required:
+      - accessToken
+      - expiresAt
+      - user
+      properties:
+        accessToken:
+          type: string
+        expiresAt:
+          type: string
+          format: date-time
+        user:
+          $ref: '#/components/schemas/Profile'
+    Profile:
+      type: object
+      description: 'Hồ sơ an toàn: không có mật khẩu hay hash.'
+      required:
+      - id
+      - email
+      - fullName
+      - role
+      - department
+      - managedUnitIds
+      properties:
+        id:
+          type: integer
+          format: int64
+        email:
+          type: string
+          format: email
+        fullName:
+          type: string
+        jobTitle:
+          type: string
+          nullable: true
+        phone:
+          type: string
+          nullable: true
+        avatarUrl:
+          type: string
+          format: uri
+          nullable: true
+        role:
+          $ref: '#/components/schemas/UserRole'
+        department:
+          $ref: '#/components/schemas/UnitRef'
+        manager:
+          nullable: true
+          allOf:
+          - $ref: '#/components/schemas/UserRef'
+          type: object
+        managedUnitIds:
+          type: array
+          items:
+            type: integer
+            format: int64
+    ProfileUpdate:
+      type: object
+      description: Chỉ các trường người dùng tự sửa được (BR-015). V1 lưu ảnh dạng đường dẫn, chưa có API tải file lên.
+      properties:
+        fullName:
+          type: string
+          minLength: 1
+          maxLength: 150
+        phone:
+          type: string
+          nullable: true
+          maxLength: 30
+        avatarUrl:
+          type: string
+          format: uri
+          nullable: true
+    PasswordChange:
+      type: object
+      required:
+      - currentPassword
+      - newPassword
+      properties:
+        currentPassword:
+          type: string
+        newPassword:
+          type: string
+          minLength: 8
+    Department:
+      type: object
+      required:
+      - id
+      - name
+      - unitType
+      - parentId
+      - memberCount
+      - isActive
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        unitType:
+          $ref: '#/components/schemas/OrgUnitType'
+        parentId:
+          type: integer
+          format: int64
+        head:
+          nullable: true
+          allOf:
+          - $ref: '#/components/schemas/UserRef'
+          type: object
+        memberCount:
+          type: integer
+        isActive:
+          type: boolean
+    DepartmentCreate:
+      type: object
+      required:
+      - name
+      - unitType
+      - parentId
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 150
+        unitType:
+          $ref: '#/components/schemas/OrgUnitType'
+        parentId:
+          type: integer
+          format: int64
+        headUserId:
+          type: integer
+          format: int64
+          nullable: true
+    DepartmentUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 150
+        parentId:
+          type: integer
+          format: int64
+          nullable: true
+        headUserId:
+          type: integer
+          format: int64
+          nullable: true
+    User:
+      type: object
+      required:
+      - id
+      - email
+      - fullName
+      - role
+      - department
+      - isActive
+      properties:
+        id:
+          type: integer
+          format: int64
+        email:
+          type: string
+          format: email
+        fullName:
+          type: string
+        jobTitle:
+          type: string
+          nullable: true
+        phone:
+          type: string
+          nullable: true
+        role:
+          $ref: '#/components/schemas/UserRole'
+        department:
+          $ref: '#/components/schemas/UnitRef'
+        manager:
+          nullable: true
+          allOf:
+          - $ref: '#/components/schemas/UserRef'
+          type: object
+        isActive:
+          type: boolean
+        lastLoginAt:
+          type: string
+          format: date-time
+          nullable: true
+    UserCreate:
+      type: object
+      required:
+      - email
+      - fullName
+      - initialPassword
+      - role
+      - departmentId
+      properties:
+        email:
+          type: string
+          format: email
+        fullName:
+          type: string
+          minLength: 1
+          maxLength: 150
+        initialPassword:
+          type: string
+          minLength: 8
+        jobTitle:
+          type: string
+          nullable: true
+        role:
+          $ref: '#/components/schemas/UserRole'
+        departmentId:
+          type: integer
+          format: int64
+        managerId:
+          type: integer
+          format: int64
+          nullable: true
+    UserUpdate:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        fullName:
+          type: string
+          minLength: 1
+          maxLength: 150
+        jobTitle:
+          type: string
+          nullable: true
+        role:
+          $ref: '#/components/schemas/UserRole'
+        departmentId:
+          type: integer
+          format: int64
+        managerId:
+          type: integer
+          format: int64
+          nullable: true
+    UserStatusUpdate:
+      type: object
+      required:
+      - isActive
+      properties:
+        isActive:
+          type: boolean
+    DirectoryEntry:
+      type: object
+      description: Danh bạ nội bộ, không có email hay vai trò.
+      required:
+      - id
+      - fullName
+      - department
+      properties:
+        id:
+          type: integer
+          format: int64
+        fullName:
+          type: string
+        jobTitle:
+          type: string
+          nullable: true
+        avatarUrl:
+          type: string
+          format: uri
+          nullable: true
+        department:
+          $ref: '#/components/schemas/UnitRef'
+    UserPage:
+      allOf:
+      - $ref: '#/components/schemas/PageMeta'
+      - type: object
+        required:
+        - items
+        properties:
+          items:
+            type: array
+            items:
+              $ref: '#/components/schemas/User'
+    DirectoryEntryPage:
+      allOf:
+      - $ref: '#/components/schemas/PageMeta'
+      - type: object
+        required:
+        - items
+        properties:
+          items:
+            type: array
+            items:
+              $ref: '#/components/schemas/DirectoryEntry'
+    Cycle:
+      type: object
+      required:
+      - id
+      - name
+      - startDate
+      - endDate
+      - planningDeadline
+      - status
+      - maxObjectivesPerUser
+      - okrWeight
+      - weightLocked
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+        planningDeadline:
+          type: string
+          format: date
+        status:
+          $ref: '#/components/schemas/CycleStatus'
+        maxObjectivesPerUser:
+          type: integer
+        okrWeight:
+          type: number
+        weightLocked:
+          type: boolean
+        activatedAt:
+          type: string
+          format: date-time
+          nullable: true
+        closedAt:
+          type: string
+          format: date-time
+          nullable: true
+    CycleCreate:
+      type: object
+      required:
+      - name
+      - startDate
+      - endDate
+      - planningDeadline
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 50
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+        planningDeadline:
+          type: string
+          format: date
+        maxObjectivesPerUser:
+          type: integer
+          minimum: 1
+          maximum: 10
+          default: 5
+        okrWeight:
+          type: number
+          minimum: 0
+          maximum: 1
+          default: 0.6
+    CycleUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 50
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+        planningDeadline:
+          type: string
+          format: date
+        maxObjectivesPerUser:
+          type: integer
+          minimum: 1
+          maximum: 10
+        okrWeight:
+          type: number
+          minimum: 0
+          maximum: 1
+    KeyResult:
+      type: object
+      required:
+      - id
+      - objectiveId
+      - title
+      - krType
+      - startValue
+      - targetValue
+      - assignee
+      - progress
+      - sortOrder
+      properties:
+        id:
+          type: integer
+          format: int64
+        objectiveId:
+          type: integer
+          format: int64
+        title:
+          type: string
+        krType:
+          $ref: '#/components/schemas/KrType'
+        startValue:
+          type: number
+        targetValue:
+          type: number
+        unit:
+          type: string
+          nullable: true
+        assignee:
+          $ref: '#/components/schemas/UserRef'
+        currentValue:
+          type: number
+          nullable: true
+        currentConfidence:
+          nullable: true
+          allOf:
+          - $ref: '#/components/schemas/ConfidenceLevel'
+          type: string
+        lastCheckinAt:
+          type: string
+          format: date-time
+          nullable: true
+        progress:
+          type: number
+          minimum: 0
+          maximum: 1
+        sortOrder:
+          type: integer
+    KeyResultInput:
+      type: object
+      description: Kiểu BOOLEAN dùng startValue 0, targetValue 1. Kiểu khác cần giá trị đầu khác giá trị đích (BR-034).
+      required:
+      - title
+      - krType
+      - startValue
+      - targetValue
+      - assigneeUserId
+      properties:
+        title:
+          type: string
+          minLength: 5
+          maxLength: 200
+        krType:
+          $ref: '#/components/schemas/KrType'
+        startValue:
+          type: number
+        targetValue:
+          type: number
+        unit:
+          type: string
+          nullable: true
+          maxLength: 30
+        assigneeUserId:
+          type: integer
+          format: int64
+        sortOrder:
+          type: integer
+    KeyResultUpdate:
+      type: object
+      properties:
+        title:
+          type: string
+          minLength: 5
+          maxLength: 200
+        startValue:
+          type: number
+        targetValue:
+          type: number
+        unit:
+          type: string
+          nullable: true
+          maxLength: 30
+        assigneeUserId:
+          type: integer
+          format: int64
+        sortOrder:
+          type: integer
+    ObjectiveSummary:
+      type: object
+      description: progress lưu dạng 0–1. confidence là mức xấu nhất trong các KR đã có check-in (BR-045).
+      required:
+      - id
+      - cycleId
+      - level
+      - title
+      - owner
+      - parentId
+      - progress
+      - isLinked
+      properties:
+        id:
+          type: integer
+          format: int64
+        cycleId:
+          type: integer
+          format: int64
+        level:
+          $ref: '#/components/schemas/OkrLevel'
+        title:
+          type: string
+        owner:
+          $ref: '#/components/schemas/UserRef'
+        unit:
+          nullable: true
+          allOf:
+          - $ref: '#/components/schemas/UnitRef'
+          type: object
+        parentId:
+          type: integer
+          format: int64
+        progress:
+          type: number
+          minimum: 0
+          maximum: 1
+        confidence:
+          nullable: true
+          allOf:
+          - $ref: '#/components/schemas/ConfidenceLevel'
+          type: string
+        isLinked:
+          type: boolean
+    Objective:
+      allOf:
+      - $ref: '#/components/schemas/ObjectiveSummary'
+      - type: object
+        required:
+        - keyResults
+        - children
+        - reviewNotes
+        properties:
+          description:
+            type: string
+            nullable: true
+          parent:
+            nullable: true
+            allOf:
+            - $ref: '#/components/schemas/ObjectiveSummary'
+            type: object
+          finalProgress:
+            type: number
+            nullable: true
+          keyResults:
+            type: array
+            items:
+              $ref: '#/components/schemas/KeyResult'
+          children:
+            type: array
+            items:
+              $ref: '#/components/schemas/ObjectiveSummary'
+          reviewNotes:
+            type: array
+            items:
+              $ref: '#/components/schemas/ObjectiveReviewNote'
+    ObjectiveTreeNode:
+      allOf:
+      - $ref: '#/components/schemas/ObjectiveSummary'
+      - type: object
+        required:
+        - children
+        properties:
+          children:
+            type: array
+            items:
+              $ref: '#/components/schemas/ObjectiveTreeNode'
+    ObjectiveCreate:
+      type: object
+      description: departmentId bắt buộc với cấp DEPARTMENT và TEAM (BR-031).
+      required:
+      - cycleId
+      - level
+      - title
+      - ownerUserId
+      - keyResults
+      properties:
+        cycleId:
+          type: integer
+          format: int64
+        level:
+          $ref: '#/components/schemas/OkrLevel'
+        title:
+          type: string
+          minLength: 5
+          maxLength: 200
+        description:
+          type: string
+          nullable: true
+        ownerUserId:
+          type: integer
+          format: int64
+        departmentId:
+          type: integer
+          format: int64
+          nullable: true
+        parentId:
+          type: integer
+          format: int64
+          nullable: true
+        keyResults:
+          type: array
+          items:
+            $ref: '#/components/schemas/KeyResultInput'
+          minItems: 1
+          maxItems: 5
+    ObjectiveUpdate:
+      type: object
+      properties:
+        title:
+          type: string
+          minLength: 5
+          maxLength: 200
+        description:
+          type: string
+          nullable: true
+        ownerUserId:
+          type: integer
+          format: int64
+    ParentLink:
+      type: object
+      description: null để gỡ liên kết.
+      required:
+      - parentId
+      properties:
+        parentId:
+          type: integer
+          format: int64
+    ObjectiveReviewNote:
+      type: object
+      required:
+      - id
+      - objectiveId
+      - issue
+      - message
+      - aiGenerated
+      - runId
+      - createdAt
+      properties:
+        id:
+          type: integer
+          format: int64
+        objectiveId:
+          type: integer
+          format: int64
+        keyResultId:
+          type: integer
+          format: int64
+          nullable: true
+        issue:
+          $ref: '#/components/schemas/ReviewIssue'
+        message:
+          type: string
+        aiGenerated:
+          type: boolean
+        runId:
+          type: integer
+          format: int64
+        dismissedAt:
+          type: string
+          format: date-time
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+    ObjectiveSummaryPage:
+      allOf:
+      - $ref: '#/components/schemas/PageMeta'
+      - type: object
+        required:
+        - items
+        properties:
+          items:
+            type: array
+            items:
+              $ref: '#/components/schemas/ObjectiveSummary'
+    CheckinCreate:
+      type: object
+      description: Kiểu BOOLEAN chỉ nhận 0 hoặc 1.
+      required:
+      - value
+      - confidence
+      properties:
+        value:
+          type: number
+        confidence:
+          $ref: '#/components/schemas/ConfidenceLevel'
+        note:
+          type: string
+          nullable: true
+        blocker:
+          type: string
+          nullable: true
+    CheckinInsight:
+      type: object
+      description: Nhãn AI. Có thể chưa có ngay sau khi lưu, vì AI chạy nền.
+      required:
+      - aiGenerated
+      properties:
+        aiGenerated:
+          type: boolean
+        blockerCategory:
+          nullable: true
+          allOf:
+          - $ref: '#/components/schemas/BlockerCategory'
+          type: string
+        severity:
+          nullable: true
+          allOf:
+          - $ref: '#/components/schemas/SeverityLevel'
+          type: string
+        targetUnit:
+          nullable: true
+          allOf:
+          - $ref: '#/components/schemas/UnitRef'
+          type: object
+        routing:
+          nullable: true
+          allOf:
+          - $ref: '#/components/schemas/RoutingStatus'
+          type: string
+        handlerNote:
+          type: string
+          nullable: true
+        isMismatch:
+          type: boolean
+          nullable: true
+        blockerRunId:
+          type: integer
+          format: int64
+          nullable: true
+        mismatchRunId:
+          type: integer
+          format: int64
+          nullable: true
+    CheckinComment:
+      type: object
+      required:
+      - id
+      - author
+      - body
+      - createdAt
+      properties:
+        id:
+          type: integer
+          format: int64
+        author:
+          $ref: '#/components/schemas/UserRef'
+        body:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+    CheckinCommentCreate:
+      type: object
+      required:
+      - body
+      properties:
+        body:
+          type: string
+          minLength: 1
+    Checkin:
+      type: object
+      required:
+      - id
+      - keyResultId
+      - value
+      - confidence
+      - createdBy
+      - createdAt
+      - comments
+      properties:
+        id:
+          type: integer
+          format: int64
+        keyResultId:
+          type: integer
+          format: int64
+        value:
+          type: number
+        confidence:
+          $ref: '#/components/schemas/ConfidenceLevel'
+        note:
+          type: string
+          nullable: true
+        blocker:
+          type: string
+          nullable: true
+        createdBy:
+          $ref: '#/components/schemas/UserRef'
+        createdAt:
+          type: string
+          format: date-time
+        comments:
+          type: array
+          items:
+            $ref: '#/components/schemas/CheckinComment'
+        insight:
+          nullable: true
+          allOf:
+          - $ref: '#/components/schemas/CheckinInsight'
+          type: object
+    CheckinResult:
+      type: object
+      description: Trả về các Objective đã được cộng dồn lại, để giao diện cập nhật ngay.
+      required:
+      - checkin
+      - keyResult
+      - affectedObjectives
+      properties:
+        checkin:
+          $ref: '#/components/schemas/Checkin'
+        keyResult:
+          $ref: '#/components/schemas/KeyResult'
+        affectedObjectives:
+          type: array
+          items:
+            $ref: '#/components/schemas/ObjectiveSummary'
+    ReviewCriterion:
+      type: object
+      required:
+      - id
+      - name
+      - isRequired
+      - sortOrder
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        description:
+          type: string
+          nullable: true
+        isRequired:
+          type: boolean
+        sortOrder:
+          type: integer
+    ReviewCriterionInput:
+      type: object
+      required:
+      - name
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 150
+        description:
+          type: string
+          nullable: true
+        isRequired:
+          type: boolean
+          default: 'true'
+    ReviewQuestion:
+      type: object
+      required:
+      - id
+      - questionText
+      - sortOrder
+      properties:
+        id:
+          type: integer
+          format: int64
+        questionText:
+          type: string
+        sortOrder:
+          type: integer
+    ReviewQuestionInput:
+      type: object
+      required:
+      - questionText
+      properties:
+        questionText:
+          type: string
+          minLength: 1
+          maxLength: 300
+    ReviewTemplate:
+      type: object
+      required:
+      - id
+      - name
+      - criteria
+      - questions
+      - isLocked
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        criteria:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReviewCriterion'
+        questions:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReviewQuestion'
+        isLocked:
+          type: boolean
+    ReviewTemplateInput:
+      type: object
+      required:
+      - name
+      - criteria
+      - questions
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 150
+        criteria:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReviewCriterionInput'
+          minItems: 1
+        questions:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReviewQuestionInput'
+    Campaign:
+      type: object
+      required:
+      - id
+      - cycleId
+      - templateId
+      - name
+      - nominationDeadline
+      - submitDeadline
+      - minPeers
+      - maxPeers
+      - anonymityThreshold
+      - status
+      - participantCount
+      properties:
+        id:
+          type: integer
+          format: int64
+        cycleId:
+          type: integer
+          format: int64
+        templateId:
+          type: integer
+          format: int64
+        name:
+          type: string
+        nominationDeadline:
+          type: string
+          format: date
+        submitDeadline:
+          type: string
+          format: date
+        minPeers:
+          type: integer
+        maxPeers:
+          type: integer
+        anonymityThreshold:
+          type: integer
+        status:
+          $ref: '#/components/schemas/CampaignStatus'
+        participantCount:
+          type: integer
+    CampaignCreate:
+      type: object
+      required:
+      - cycleId
+      - templateId
+      - name
+      - nominationDeadline
+      - submitDeadline
+      - revieweeUserIds
+      properties:
+        cycleId:
+          type: integer
+          format: int64
+        templateId:
+          type: integer
+          format: int64
+        name:
+          type: string
+          minLength: 1
+          maxLength: 150
+        nominationDeadline:
+          type: string
+          format: date
+        submitDeadline:
+          type: string
+          format: date
+        revieweeUserIds:
+          type: array
+          items:
+            type: integer
+            format: int64
+          minItems: 1
+    CampaignUpdate:
+      type: object
+      properties:
+        templateId:
+          type: integer
+          format: int64
+        name:
+          type: string
+          minLength: 1
+          maxLength: 150
+        nominationDeadline:
+          type: string
+          format: date
+        submitDeadline:
+          type: string
+          format: date
+        revieweeUserIds:
+          type: array
+          items:
+            type: integer
+            format: int64
+          minItems: 1
+    UnitSubmissionRate:
+      type: object
+      required:
+      - unit
+      - submitted
+      - total
+      - rate
+      properties:
+        unit:
+          $ref: '#/components/schemas/UnitRef'
+        submitted:
+          type: integer
+        total:
+          type: integer
+        rate:
+          type: number
+          minimum: 0
+          maximum: 1
+    ReviewerProgress:
+      type: object
+      description: Không có người được đánh giá (BR-061).
+      required:
+      - reviewer
+      - remainingForms
+      properties:
+        reviewer:
+          $ref: '#/components/schemas/UserRef'
+        remainingForms:
+          type: integer
+    CampaignProgress:
+      type: object
+      required:
+      - campaignId
+      - submitted
+      - total
+      - byUnit
+      - reviewers
+      properties:
+        campaignId:
+          type: integer
+          format: int64
+        submitted:
+          type: integer
+        total:
+          type: integer
+        byUnit:
+          type: array
+          items:
+            $ref: '#/components/schemas/UnitSubmissionRate'
+        reviewers:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReviewerProgress'
+    ReminderResult:
+      type: object
+      required:
+      - remindedCount
+      properties:
+        remindedCount:
+          type: integer
+    Nomination:
+      type: object
+      required:
+      - campaignId
+      - reviewee
+      - status
+      - nominationDeadline
+      - peers
+      properties:
+        campaignId:
+          type: integer
+          format: int64
+        reviewee:
+          $ref: '#/components/schemas/UserRef'
+        status:
+          $ref: '#/components/schemas/NominationStatus'
+        nominationDeadline:
+          type: string
+          format: date
+        peers:
+          type: array
+          items:
+            $ref: '#/components/schemas/UserRef'
+        submittedAt:
+          type: string
+          format: date-time
+          nullable: true
+        approvedAt:
+          type: string
+          format: date-time
+          nullable: true
+    NominationSubmit:
+      type: object
+      required:
+      - peerUserIds
+      properties:
+        peerUserIds:
+          type: array
+          items:
+            type: integer
+            format: int64
+          minItems: 3
+          maxItems: 5
+    NominationApprove:
+      type: object
+      description: Danh sách cuối sau khi quản lý giữ, thêm hoặc bớt.
+      required:
+      - peerUserIds
+      properties:
+        peerUserIds:
+          type: array
+          items:
+            type: integer
+            format: int64
+          minItems: 3
+          maxItems: 5
+    ReviewFormSummary:
+      type: object
+      required:
+      - id
+      - campaignId
+      - campaignName
+      - reviewee
+      - reviewerGroup
+      - status
+      - submitDeadline
+      properties:
+        id:
+          type: integer
+          format: int64
+        campaignId:
+          type: integer
+          format: int64
+        campaignName:
+          type: string
+        reviewee:
+          $ref: '#/components/schemas/UserRef'
+        reviewerGroup:
+          $ref: '#/components/schemas/ReviewerGroup'
+        status:
+          $ref: '#/components/schemas/AssignmentStatus'
+        submitDeadline:
+          type: string
+          format: date
+    ReviewScore:
+      type: object
+      description: null nghĩa là Không đủ thông tin.
+      required:
+      - criterionId
+      - score
+      properties:
+        criterionId:
+          type: integer
+          format: int64
+        score:
+          type: integer
+          minimum: 1
+          maximum: 5
+    ReviewOpenAnswer:
+      type: object
+      required:
+      - questionId
+      - answerText
+      properties:
+        questionId:
+          type: integer
+          format: int64
+        answerText:
+          type: string
+    ReviewForm:
+      allOf:
+      - $ref: '#/components/schemas/ReviewFormSummary'
+      - type: object
+        required:
+        - criteria
+        - questions
+        - scores
+        - answers
+        properties:
+          criteria:
+            type: array
+            items:
+              $ref: '#/components/schemas/ReviewCriterion'
+          questions:
+            type: array
+            items:
+              $ref: '#/components/schemas/ReviewQuestion'
+          scores:
+            type: array
+            items:
+              $ref: '#/components/schemas/ReviewScore'
+          answers:
+            type: array
+            items:
+              $ref: '#/components/schemas/ReviewOpenAnswer'
+    ReviewFormInput:
+      type: object
+      required:
+      - scores
+      - answers
+      properties:
+        scores:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReviewScore'
+        answers:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReviewOpenAnswer'
+    CommentCheckRequest:
+      type: object
+      required:
+      - answers
+      properties:
+        answers:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReviewOpenAnswer'
+    CommentWarning:
+      type: object
+      required:
+      - questionId
+      - sentence
+      - kind
+      - reason
+      properties:
+        questionId:
+          type: integer
+          format: int64
+        sentence:
+          type: string
+        kind:
+          $ref: '#/components/schemas/CommentWarningKind'
+        reason:
+          type: string
+    CommentCheckResult:
+      type: object
+      description: checked false khi AI lỗi, quá 5 giây, luồng tắt hoặc vượt hạn mức; khi đó phiếu vẫn nộp được.
+      required:
+      - checked
+      - warnings
+      properties:
+        checked:
+          type: boolean
+        warnings:
+          type: array
+          items:
+            $ref: '#/components/schemas/CommentWarning'
+    GroupScore:
+      type: object
+      required:
+      - group
+      - merged
+      - formCount
+      properties:
+        group:
+          $ref: '#/components/schemas/ResultGroup'
+        merged:
+          type: boolean
+        formCount:
+          type: integer
+        score:
+          type: number
+          nullable: true
+    HiddenGroup:
+      type: object
+      description: Nhóm bị ẩn vì chưa đủ ngưỡng.
+      required:
+      - group
+      - formCount
+      properties:
+        group:
+          $ref: '#/components/schemas/ResultGroup'
+        formCount:
+          type: integer
+    CriterionResult:
+      type: object
+      required:
+      - criterionId
+      - name
+      properties:
+        criterionId:
+          type: integer
+          format: int64
+        name:
+          type: string
+        selfScore:
+          type: number
+          nullable: true
+        othersScore:
+          type: number
+          nullable: true
+        gap:
+          type: number
+          nullable: true
+    GroupCriterionScore:
+      type: object
+      required:
+      - criterionId
+      - group
+      properties:
+        criterionId:
+          type: integer
+          format: int64
+        group:
+          $ref: '#/components/schemas/ResultGroup'
+        score:
+          type: number
+          nullable: true
+    QuestionResult:
+      type: object
+      description: Nhận xét không kèm tên và không theo thứ tự nộp (NFR-PRIV-003).
+      required:
+      - questionId
+      - questionText
+      - answers
+      properties:
+        questionId:
+          type: integer
+          format: int64
+        questionText:
+          type: string
+        answers:
+          type: array
+          items:
+            type: string
+    ManagerSummary:
+      type: object
+      description: Chỉ là nội dung người duyệt đã gửi, không bao giờ là bản gốc của AI (BR-092).
+      required:
+      - text
+      - sentBy
+      - sentAt
+      properties:
+        text:
+          type: string
+        sentBy:
+          $ref: '#/components/schemas/UserRef'
+        sentAt:
+          type: string
+          format: date-time
+    ReviewResult:
+      type: object
+      description: Không có trường nào cho biết ai đã chấm (BR-060).
+      required:
+      - campaignId
+      - reviewee
+      - groups
+      - hiddenGroups
+      - criteria
+      - criteriaByGroup
+      - comments
+      properties:
+        campaignId:
+          type: integer
+          format: int64
+        reviewee:
+          $ref: '#/components/schemas/UserRef'
+        overallScore:
+          type: number
+          nullable: true
+        groups:
+          type: array
+          items:
+            $ref: '#/components/schemas/GroupScore'
+        hiddenGroups:
+          type: array
+          items:
+            $ref: '#/components/schemas/HiddenGroup'
+        criteria:
+          type: array
+          items:
+            $ref: '#/components/schemas/CriterionResult'
+        criteriaByGroup:
+          type: array
+          items:
+            $ref: '#/components/schemas/GroupCriterionScore'
+        comments:
+          type: array
+          items:
+            $ref: '#/components/schemas/QuestionResult'
+        managerSummary:
+          nullable: true
+          allOf:
+          - $ref: '#/components/schemas/ManagerSummary'
+          type: object
+    ReviewResultSubject:
+      type: object
+      required:
+      - reviewee
+      - isAvailable
+      properties:
+        reviewee:
+          $ref: '#/components/schemas/UserRef'
+        isAvailable:
+          type: boolean
+    FinalResult:
+      type: object
+      required:
+      - cycleId
+      - user
+      - department
+      - grade
+      - computedAt
+      properties:
+        cycleId:
+          type: integer
+          format: int64
+        user:
+          $ref: '#/components/schemas/UserRef'
+        department:
+          $ref: '#/components/schemas/UnitRef'
+        okrProgress:
+          type: number
+          nullable: true
+        okrScore:
+          type: number
+          nullable: true
+        reviewScore:
+          type: number
+          nullable: true
+        finalScore:
+          type: number
+          nullable: true
+        grade:
+          $ref: '#/components/schemas/ResultGrade'
+        computedAt:
+          type: string
+          format: date-time
+        publishedAt:
+          type: string
+          format: date-time
+          nullable: true
+    FinalResultSummary:
+      type: object
+      required:
+      - cycleId
+      - okrWeight
+      - total
+      - insufficientData
+      - items
+      - isPublished
+      properties:
+        cycleId:
+          type: integer
+          format: int64
+        okrWeight:
+          type: number
+        total:
+          type: integer
+        insufficientData:
+          type: integer
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/FinalResult'
+        isPublished:
+          type: boolean
+    PublishResult:
+      type: object
+      required:
+      - publishedCount
+      - publishedAt
+      properties:
+        publishedCount:
+          type: integer
+        publishedAt:
+          type: string
+          format: date-time
+    UnitProgress:
+      type: object
+      required:
+      - unit
+      - progress
+      - objectiveCount
+      properties:
+        unit:
+          $ref: '#/components/schemas/UnitRef'
+        progress:
+          type: number
+          minimum: 0
+          maximum: 1
+        objectiveCount:
+          type: integer
+    MyDashboard:
+      type: object
+      required:
+      - cycleId
+      - okrProgress
+      - expectedProgress
+      - objectives
+      - keyResultsNeedingCheckin
+      - pendingReviewForms
+      properties:
+        cycleId:
+          type: integer
+          format: int64
+        okrProgress:
+          type: number
+          minimum: 0
+          maximum: 1
+        expectedProgress:
+          type: number
+          minimum: 0
+          maximum: 1
+        objectives:
+          type: array
+          items:
+            $ref: '#/components/schemas/ObjectiveSummary'
+        keyResultsNeedingCheckin:
+          type: array
+          items:
+            $ref: '#/components/schemas/KeyResult'
+        pendingReviewForms:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReviewFormSummary'
+    TeamDashboard:
+      type: object
+      required:
+      - cycleId
+      - units
+      - objectives
+      - membersWithoutCheckin
+      - atRiskObjectives
+      properties:
+        cycleId:
+          type: integer
+          format: int64
+        units:
+          type: array
+          items:
+            $ref: '#/components/schemas/UnitProgress'
+        objectives:
+          type: array
+          items:
+            $ref: '#/components/schemas/ObjectiveSummary'
+        membersWithoutCheckin:
+          type: array
+          items:
+            $ref: '#/components/schemas/UserRef'
+        atRiskObjectives:
+          type: array
+          items:
+            $ref: '#/components/schemas/ObjectiveSummary'
+    CompanyDashboard:
+      type: object
+      required:
+      - cycleId
+      - departments
+      - checkinRate
+      properties:
+        cycleId:
+          type: integer
+          format: int64
+        departments:
+          type: array
+          items:
+            $ref: '#/components/schemas/UnitProgress'
+        checkinRate:
+          type: number
+          minimum: 0
+          maximum: 1
+        reviewCompletionRate:
+          type: number
+          nullable: true
+          minimum: 0
+          maximum: 1
+    OkrProgressRow:
+      type: object
+      required:
+      - unit
+      - level
+      - objectiveCount
+      - averageProgress
+      - atRiskCount
+      - offTrackCount
+      properties:
+        unit:
+          $ref: '#/components/schemas/UnitRef'
+        level:
+          $ref: '#/components/schemas/OkrLevel'
+        objectiveCount:
+          type: integer
+        averageProgress:
+          type: number
+        atRiskCount:
+          type: integer
+        offTrackCount:
+          type: integer
+    CheckinRateRow:
+      type: object
+      required:
+      - unit
+      - weekStart
+      - expected
+      - actual
+      - rate
+      properties:
+        unit:
+          $ref: '#/components/schemas/UnitRef'
+        weekStart:
+          type: string
+          format: date
+        expected:
+          type: integer
+        actual:
+          type: integer
+        rate:
+          type: number
+    OkrProgressReport:
+      type: object
+      required:
+      - type
+      - cycleId
+      - generatedAt
+      - rows
+      properties:
+        type:
+          type: string
+          enum:
+          - OKR_PROGRESS
+        cycleId:
+          type: integer
+          format: int64
+        departmentId:
+          type: integer
+          format: int64
+          nullable: true
+        generatedAt:
+          type: string
+          format: date-time
+        rows:
+          type: array
+          items:
+            $ref: '#/components/schemas/OkrProgressRow'
+    CheckinRateReport:
+      type: object
+      required:
+      - type
+      - cycleId
+      - generatedAt
+      - rows
+      properties:
+        type:
+          type: string
+          enum:
+          - CHECKIN_RATE
+        cycleId:
+          type: integer
+          format: int64
+        departmentId:
+          type: integer
+          format: int64
+          nullable: true
+        generatedAt:
+          type: string
+          format: date-time
+        rows:
+          type: array
+          items:
+            $ref: '#/components/schemas/CheckinRateRow'
+    FinalResultReport:
+      type: object
+      required:
+      - type
+      - cycleId
+      - generatedAt
+      - rows
+      properties:
+        type:
+          type: string
+          enum:
+          - FINAL_RESULTS
+        cycleId:
+          type: integer
+          format: int64
+        departmentId:
+          type: integer
+          format: int64
+          nullable: true
+        generatedAt:
+          type: string
+          format: date-time
+        rows:
+          type: array
+          items:
+            $ref: '#/components/schemas/FinalResult'
+    Report:
+      oneOf:
+      - $ref: '#/components/schemas/OkrProgressReport'
+      - $ref: '#/components/schemas/CheckinRateReport'
+      - $ref: '#/components/schemas/FinalResultReport'
+      discriminator:
+        propertyName: type
+        mapping:
+          OKR_PROGRESS: '#/components/schemas/OkrProgressReport'
+          CHECKIN_RATE: '#/components/schemas/CheckinRateReport'
+          FINAL_RESULTS: '#/components/schemas/FinalResultReport'
+    Notification:
+      type: object
+      required:
+      - id
+      - type
+      - body
+      - createdAt
+      properties:
+        id:
+          type: integer
+          format: int64
+        type:
+          $ref: '#/components/schemas/NotificationType'
+        body:
+          type: string
+        link:
+          type: string
+          nullable: true
+        readAt:
+          type: string
+          format: date-time
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+    MarkAllReadResult:
+      type: object
+      required:
+      - updatedCount
+      properties:
+        updatedCount:
+          type: integer
+    AuditLog:
+      type: object
+      description: Không có nội dung phiếu hay cặp người chấm ẩn danh (BR-083).
+      required:
+      - id
+      - action
+      - module
+      - createdAt
+      properties:
+        id:
+          type: integer
+          format: int64
+        actor:
+          nullable: true
+          allOf:
+          - $ref: '#/components/schemas/UserRef'
+          type: object
+        action:
+          $ref: '#/components/schemas/AuditAction'
+        module:
+          type: string
+        entityType:
+          type: string
+          nullable: true
+        entityId:
+          type: integer
+          format: int64
+          nullable: true
+        summary:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+    NotificationPage:
+      allOf:
+      - $ref: '#/components/schemas/PageMeta'
+      - type: object
+        required:
+        - items
+        properties:
+          items:
+            type: array
+            items:
+              $ref: '#/components/schemas/Notification'
+    AuditLogPage:
+      allOf:
+      - $ref: '#/components/schemas/PageMeta'
+      - type: object
+        required:
+        - items
+        properties:
+          items:
+            type: array
+            items:
+              $ref: '#/components/schemas/AuditLog'
+    AutomationFlowConfig:
+      type: object
+      required:
+      - flow
+      - name
+      - description
+      - triggerKind
+      - isEnabled
+      - dailyQuota
+      - callsToday
+      - failedLast7Days
+      - pendingRuns
+      properties:
+        flow:
+          $ref: '#/components/schemas/AutomationFlow'
+        name:
+          type: string
+        description:
+          type: string
+        triggerKind:
+          $ref: '#/components/schemas/TriggerKind'
+        scheduleCron:
+          type: string
+          nullable: true
+        isEnabled:
+          type: boolean
+        dailyQuota:
+          type: integer
+          minimum: 1
+        callsToday:
+          type: integer
+        lastRunAt:
+          type: string
+          format: date-time
+          nullable: true
+        failedLast7Days:
+          type: integer
+        pendingRuns:
+          type: integer
+    AutomationFlowUpdate:
+      type: object
+      description: scheduleCron chỉ áp dụng cho luồng SCHEDULE.
+      properties:
+        isEnabled:
+          type: boolean
+        scheduleCron:
+          type: string
+          nullable: true
+          maxLength: 50
+        dailyQuota:
+          type: integer
+          minimum: 1
+    AutomationRun:
+      type: object
+      description: Chỉ có số liệu kỹ thuật, không có nội dung (BR-100).
+      required:
+      - id
+      - flow
+      - runKey
+      - status
+      - attemptCount
+      - createdAt
+      properties:
+        id:
+          type: integer
+          format: int64
+        flow:
+          $ref: '#/components/schemas/AutomationFlow'
+        eventId:
+          type: integer
+          format: int64
+          nullable: true
+        runKey:
+          type: string
+        status:
+          $ref: '#/components/schemas/RunStatus'
+        attemptCount:
+          type: integer
+        nextAttemptAt:
+          type: string
+          format: date-time
+          nullable: true
+        startedAt:
+          type: string
+          format: date-time
+          nullable: true
+        finishedAt:
+          type: string
+          format: date-time
+          nullable: true
+        inputTokens:
+          type: integer
+          nullable: true
+        outputTokens:
+          type: integer
+          nullable: true
+        errorMessage:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+    AiExplanationStep:
+      type: object
+      required:
+      - key
+      - label
+      - status
+      properties:
+        key:
+          type: string
+        label:
+          type: string
+        status:
+          type: string
+        detail:
+          type: string
+          nullable: true
+    AiExplanation:
+      type: object
+      description: Dựng lại từ dữ liệu người xem có quyền đọc, không đọc từ log.
+      required:
+      - runId
+      - flow
+      - subject
+      - steps
+      properties:
+        runId:
+          type: integer
+          format: int64
+        flow:
+          $ref: '#/components/schemas/AutomationFlow'
+        subject:
+          type: string
+        steps:
+          type: array
+          items:
+            $ref: '#/components/schemas/AiExplanationStep'
+    RoutedBlocker:
+      type: object
+      required:
+      - checkinId
+      - keyResultId
+      - keyResultTitle
+      - reporter
+      - reporterUnit
+      - blocker
+      - category
+      - severity
+      - targetUnit
+      - routing
+      - aiGenerated
+      - createdAt
+      properties:
+        checkinId:
+          type: integer
+          format: int64
+        keyResultId:
+          type: integer
+          format: int64
+        keyResultTitle:
+          type: string
+        reporter:
+          $ref: '#/components/schemas/UserRef'
+        reporterUnit:
+          $ref: '#/components/schemas/UnitRef'
+        blocker:
+          type: string
+        category:
+          $ref: '#/components/schemas/BlockerCategory'
+        severity:
+          $ref: '#/components/schemas/SeverityLevel'
+        targetUnit:
+          $ref: '#/components/schemas/UnitRef'
+        routing:
+          $ref: '#/components/schemas/RoutingStatus'
+        aiGenerated:
+          type: boolean
+        handledBy:
+          nullable: true
+          allOf:
+          - $ref: '#/components/schemas/UserRef'
+          type: object
+        handledAt:
+          type: string
+          format: date-time
+          nullable: true
+        handlerNote:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+    BlockerAcknowledge:
+      type: object
+      properties:
+        note:
+          type: string
+          nullable: true
+          maxLength: 300
+    BlockerReject:
+      type: object
+      properties:
+        note:
+          type: string
+          nullable: true
+          maxLength: 300
+    DigestStats:
+      type: object
+      required:
+      - from
+      - to
+      - memberCount
+      - checkedInCount
+      - notCheckedIn
+      - atRiskKeyResultIds
+      - offTrackKeyResultIds
+      properties:
+        from:
+          type: string
+          format: date
+        to:
+          type: string
+          format: date
+        memberCount:
+          type: integer
+        checkedInCount:
+          type: integer
+        notCheckedIn:
+          type: array
+          items:
+            $ref: '#/components/schemas/UserRef'
+        atRiskKeyResultIds:
+          type: array
+          items:
+            type: integer
+            format: int64
+        offTrackKeyResultIds:
+          type: array
+          items:
+            type: integer
+            format: int64
+    DigestHighlight:
+      type: object
+      required:
+      - text
+      properties:
+        text:
+          type: string
+          maxLength: 300
+        keyResultId:
+          type: integer
+          format: int64
+          nullable: true
+    WeeklyDigestSummary:
+      type: object
+      required:
+      - id
+      - weekStart
+      - createdAt
+      properties:
+        id:
+          type: integer
+          format: int64
+        weekStart:
+          type: string
+          format: date
+        readAt:
+          type: string
+          format: date-time
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+    WeeklyDigest:
+      allOf:
+      - $ref: '#/components/schemas/WeeklyDigestSummary'
+      - type: object
+        required:
+        - stats
+        - highlights
+        - aiGenerated
+        - runId
+        properties:
+          stats:
+            $ref: '#/components/schemas/DigestStats'
+          highlights:
+            type: array
+            maxItems: 3
+            items:
+              $ref: '#/components/schemas/DigestHighlight'
+          aiGenerated:
+            type: boolean
+          runId:
+            type: integer
+            format: int64
+    OneOnOneDraftSummary:
+      type: object
+      required:
+      - id
+      - campaignId
+      - reviewee
+      - status
+      - createdAt
+      properties:
+        id:
+          type: integer
+          format: int64
+        campaignId:
+          type: integer
+          format: int64
+        reviewee:
+          $ref: '#/components/schemas/UserRef'
+        status:
+          $ref: '#/components/schemas/DraftStatus'
+        createdAt:
+          type: string
+          format: date-time
+        sentAt:
+          type: string
+          format: date-time
+          nullable: true
+    OneOnOneDraft:
+      allOf:
+      - $ref: '#/components/schemas/OneOnOneDraftSummary'
+      - type: object
+        required:
+        - aiStrengths
+        - aiImprovements
+        - aiGenerated
+        - runId
+        properties:
+          aiStrengths:
+            type: array
+            items:
+              type: string
+          aiImprovements:
+            type: array
+            items:
+              type: string
+          editedText:
+            type: string
+            nullable: true
+          aiGenerated:
+            type: boolean
+          runId:
+            type: integer
+            format: int64
+          campaignPublished:
+            type: boolean
+    OneOnOneDraftUpdate:
+      type: object
+      required:
+      - editedText
+      properties:
+        editedText:
+          type: string
+          minLength: 1
+    AutomationRunPage:
+      allOf:
+      - $ref: '#/components/schemas/PageMeta'
+      - type: object
+        required:
+        - items
+        properties:
+          items:
+            type: array
+            items:
+              $ref: '#/components/schemas/AutomationRun'
+    RoutedBlockerPage:
+      allOf:
+      - $ref: '#/components/schemas/PageMeta'
+      - type: object
+        required:
+        - items
+        properties:
+          items:
+            type: array
+            items:
+              $ref: '#/components/schemas/RoutedBlocker'

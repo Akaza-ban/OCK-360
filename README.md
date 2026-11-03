@@ -1,6 +1,8 @@
 # OKR360
 
-OKR360 giúp công ty đặt mục tiêu theo phương pháp OKR, liên kết mục tiêu từ công ty xuống phòng ban và từng cá nhân, theo dõi tiến độ qua check-in hằng tuần, đánh giá nhân viên 360 độ ẩn danh, rồi tổng hợp hai nguồn dữ liệu thành kết quả cuối kỳ. Hệ thống phân quyền theo vai trò và theo quan hệ báo cáo trong công ty.
+**Đề tài:** Ứng dụng AI tự động hóa quản lý mục tiêu OKR và đánh giá 360 độ
+
+OKR360 giúp công ty đặt mục tiêu theo phương pháp OKR, liên kết mục tiêu từ công ty xuống phòng ban và từng cá nhân, theo dõi tiến độ qua check-in hằng tuần, đánh giá nhân viên 360 độ ẩn danh, rồi tổng hợp hai nguồn dữ liệu thành kết quả cuối kỳ. Hệ thống phân quyền theo vai trò và theo quan hệ báo cáo trong công ty. AI đọc ghi chú check-in và nhận xét 360 để chuyển vướng mắc đến đúng người, viết bản tin tuần và bản nháp buổi 1-1; AI không chấm điểm, và con người luôn là người quyết định.
 
 ## 1. Requirements — INVEST, Use Cases, and Acceptance Criteria
 
@@ -86,7 +88,8 @@ Sơ đồ use case chi tiết, phạm vi dữ liệu của từng vai trò, quy 
 | Năng lực                                  | Admin                | HR                                           | Manager                                        | Employee         |
 | ----------------------------------------- | -------------------- | -------------------------------------------- | ---------------------------------------------- | ---------------- |
 | Xem cây OKR, dashboard cá nhân            | Có                   | Có                                           | Có                                             | Có               |
-| OKR cá nhân và check-in                   | Chỉ của bản thân     | Chỉ của bản thân                             | Của bản thân và nhân viên dưới quyền trực tiếp | Chỉ của bản thân |
+| OKR cá nhân                               | Của mọi người        | Chỉ của bản thân                             | Của bản thân và nhân viên dưới quyền trực tiếp | Chỉ của bản thân |
+| Check-in                                  | Chỉ KR mình phụ trách | Chỉ KR mình phụ trách                       | Chỉ KR mình phụ trách                          | Chỉ KR mình phụ trách |
 | OKR phòng ban                             | Có                   | Không                                        | Chỉ trưởng phòng, với phòng ban của mình       | Không            |
 | OKR team                                  | Có                   | Không                                        | Team lead: team mình; trưởng phòng: mọi team trong phòng | Không  |
 | OKR công ty                               | Có                   | Không                                        | Không                                          | Không            |
@@ -251,6 +254,69 @@ Admin bật/tắt từng luồng, đặt lịch chạy và hạn mức gọi AI;
 
 ![Lịch sử chạy](docs/images/tu-dong-hoa/05-lich-su-chay.png)
 
+## 3. C4 Architecture
+
+Backend dùng NestJS, tách thành hai tiến trình dùng chung mã nguồn: API phục vụ người dùng và Worker làm việc nền. AI chậm hoặc lỗi không làm chậm thao tác của người dùng. Cấp Component, cách triển khai và lý do của từng lựa chọn nằm ở [Kiến trúc C4](docs/architecture/c4.md) và [Quyết định kiến trúc](docs/architecture/decisions.md). Dữ liệu gửi cho AI, khuôn JSON và cách kiểm tra của từng luồng nằm ở [Đặc tả luồng AI](docs/architecture/ai-flows.md).
+
+### C1 — System Context
+
+```mermaid
+flowchart TB
+    employee(["Nhân viên"])
+    manager(["Quản lý"])
+    hr(["Nhân sự"])
+    admin(["Quản trị viên"])
+    okr360["<b>OKR360</b><br/>Quản lý OKR, đánh giá 360 độ<br/>và tự động hóa bằng AI"]
+    ai["Dịch vụ AI"]
+    smtp["Máy chủ SMTP"]
+
+    employee & manager & hr & admin -->|"Dùng qua trình duyệt"| okr360
+    okr360 -->|"Văn bản đã đổi tên thành mã"| ai
+    okr360 -->|"Thông báo, nhắc nhở"| smtp
+
+    classDef actor fill:#666,color:#fff,stroke:#333
+    classDef system fill:#1168bd,color:#fff,stroke:#0b4f9e
+    classDef external fill:#8a8a8a,color:#fff,stroke:#5e5e5e
+    class employee,manager,hr,admin actor
+    class okr360 system
+    class ai,smtp external
+```
+
+### C2 — Container
+
+```mermaid
+flowchart TB
+    user(["Người dùng"])
+
+    subgraph system["OKR360"]
+        spa["<b>Web App</b><br/>React, Vite"]
+        api["<b>API</b><br/>NestJS, REST JSON, JWT"]
+        worker["<b>Worker</b><br/>NestJS, lập lịch, xử lý AI, email"]
+        db[("<b>Database</b><br/>PostgreSQL 15+")]
+    end
+
+    ai["Dịch vụ AI"]
+    smtp["Máy chủ SMTP"]
+
+    user --> spa
+    spa -->|"REST, Bearer token"| api
+    api -->|"Đọc, ghi; sự kiện cùng transaction"| db
+    worker -->|"Nhận sự kiện, ghi kết quả AI"| db
+    worker -->|"Luồng chạy nền"| ai
+    api -->|"Chỉ cảnh báo nhận xét 360"| ai
+    worker --> smtp
+
+    classDef actor fill:#666,color:#fff,stroke:#333
+    classDef container fill:#1168bd,color:#fff,stroke:#0b4f9e
+    classDef background fill:#8a6d3b,color:#fff,stroke:#6b532c
+    classDef external fill:#8a8a8a,color:#fff,stroke:#5e5e5e
+    class user actor
+    class spa,api,db container
+    class worker background
+    class ai,smtp external
+    style system fill:#f8fbff,stroke:#1168bd,stroke-dasharray:5 5
+```
+
 ## 4. Database Diagrams and OpenAPI 3.0 Contract
 
 ### 4.1 Database diagrams
@@ -360,4 +426,8 @@ Tài liệu chi tiết:
 
 ### 4.2 OpenAPI 3.0 contract
 
-Chưa thực hiện.
+[`openapi.yaml`](docs/api/openapi.yaml) là hợp đồng giữa frontend và backend, gồm 89 thao tác dưới `/api/v1`. Mỗi thao tác ghi rõ use case, vai trò được gọi và quy tắc nghiệp vụ liên quan. Lỗi dùng định dạng Problem Details. Quy ước, cách xem và các điểm cần chốt nằm ở [tài liệu API](docs/api/README.md).
+
+## 5. Frontend and Backend Folder Structures
+
+Mỗi tính năng nằm trọn trong một thư mục ở cả hai phía. Frontend giữ các trang hiện có và thêm một file `api.js` cho mỗi tính năng, dữ liệu giả chuyển sang `mocks/`. Backend là một dự án NestJS với hai điểm khởi động cho API và Worker; mỗi module chia ba tầng `api`, `application`, `infrastructure`, và chiều phụ thuộc được kiểm tra tự động. Chi tiết nằm ở [Folder structure](docs/07-folder-structure.md).

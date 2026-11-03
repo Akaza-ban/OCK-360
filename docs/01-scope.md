@@ -1,5 +1,7 @@
 # Phạm vi V1 — OKR360
 
+**Đề tài:** Ứng dụng AI tự động hóa quản lý mục tiêu OKR và đánh giá 360 độ
+
 > Trạng thái thiết kế: TARGET V1 — Phân tích đề tài tìm hiểu, xác định phạm vi đề tài.
 
 ## 1. Vấn đề
@@ -118,7 +120,7 @@ AI worker (chạy nền, đọc sự kiện từ hàng đợi)
 
 Thao tác của người dùng (check-in, nộp phiếu, đóng đợt) ghi một sự kiện vào database trong cùng transaction. AI worker xử lý sự kiện sau, nên AI chậm hoặc lỗi không làm chậm hay hỏng thao tác của người dùng.
 
-Lựa chọn công nghệ cụ thể (ASP.NET Core hoặc NestJS/Spring Boot theo stack công ty) được chốt ở bước thiết kế kiến trúc.
+Backend dùng NestJS. Các lựa chọn công nghệ chi tiết nằm ở [Kiến trúc C4](architecture/c4.md) và [Quyết định kiến trúc](architecture/decisions.md).
 
 ## 7. Hướng mở rộng sau V1
 

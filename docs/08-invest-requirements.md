@@ -69,7 +69,7 @@ US27–US34   Tự động hóa bằng AI             (F13)
 
 ## Đánh giá INVEST từng story
 
-`PASS` nghĩa là thiết kế hiện tại đủ thông tin để lập kế hoạch và nghiệm thu, không có nghĩa đã cài đặt. `REVIEW` nghĩa là cần chốt thêm với mentor trước khi làm.
+`PASS` nghĩa là thiết kế hiện tại đủ thông tin để lập kế hoạch và nghiệm thu, không có nghĩa đã cài đặt. `REVIEW` nghĩa là story chưa đạt tiêu chí Small, cần tách nhỏ khi lập kế hoạch triển khai.
 
 | Story | I | N | V | E | S | T | Ghi chú |
 |---|---|---|---|---|---|---|---|
@@ -94,7 +94,7 @@ US27–US34   Tự động hóa bằng AI             (F13)
 | US19 | PASS | PASS | PASS | PASS | PASS | PASS | Ẩn danh và "Không đủ thông tin". |
 | US20 | PASS | PASS | PASS | PASS | PASS | PASS | HR chỉ thấy số phiếu còn thiếu theo người đánh giá, không thấy cặp ai–ai. |
 | US21 | PASS | PASS | PASS | PASS | PASS | PASS | Ngưỡng tối thiểu 3 phiếu mỗi nhóm. |
-| US22 | PASS | PASS | PASS | PASS | **REVIEW** | PASS | Story lớn nhất; có thể tách "tính điểm" và "công bố". Tỷ trọng mặc định 60/40 cần mentor xác nhận. |
+| US22 | PASS | PASS | PASS | PASS | **REVIEW** | PASS | Story lớn nhất; có thể tách "tính điểm" và "công bố". Tỷ trọng mặc định 60/40 đã chốt (BR-072). |
 | US23 | PASS | PASS | PASS | PASS | **REVIEW** | PASS | Ba loại dashboard; nên tách thành 3 story khi lập kế hoạch sprint. |
 | US24 | PASS | PASS | PASS | PASS | PASS | PASS | Báo cáo 360 tuân thủ ngưỡng ẩn danh. |
 | US25 | PASS | PASS | PASS | PASS | PASS | PASS | Lịch nhắc mô tả ở UC25. |
@@ -104,7 +104,7 @@ US27–US34   Tự động hóa bằng AI             (F13)
 | US29 | PASS | PASS | PASS | PASS | PASS | PASS | Có nút "Không liên quan phòng tôi" để đo độ chính xác. |
 | US30 | PASS | PASS | PASS | PASS | PASS | PASS | Con số lấy từ database, AI chỉ viết phần tóm tắt. |
 | US31 | PASS | PASS | PASS | PASS | PASS | PASS | Chỉ gửi được sau khi đợt `PUBLISHED`; chỉ dùng nhóm đủ ngưỡng ẩn danh. |
-| US32 | PASS | PASS | PASS | PASS | **REVIEW** | PASS | Nền tảng của F13; nên tách thành "ghi sự kiện và hàng đợi", "gọi AI và kiểm tra kết quả", "thử lại và chống chạy trùng". Cần mentor chốt dịch vụ AI được dùng với dữ liệu công ty. |
+| US32 | PASS | PASS | PASS | PASS | **REVIEW** | PASS | Nền tảng của F13; nên tách thành "ghi sự kiện và hàng đợi", "gọi AI và kiểm tra kết quả", "thử lại và chống chạy trùng". Dịch vụ AI được chọn khi làm backend, qua AI Gateway (ADR-005). |
 | US33 | PASS | PASS | PASS | PASS | PASS | PASS | Gộp hai luồng nhỏ cùng kiểu "nhắc người viết". |
 | US34 | PASS | PASS | PASS | PASS | PASS | PASS | Chạy đồng bộ, tối đa 5 giây; AI lỗi thì vẫn cho nộp. |
 
@@ -115,7 +115,7 @@ US27–US34   Tự động hóa bằng AI             (F13)
 - Dữ liệu của chu kỳ `CLOSED` chỉ đọc.
 - Truy vấn mặc định loại bỏ bản ghi có `deleted_at`.
 - Danh tính người đánh giá ẩn danh không xuất hiện ở bất kỳ API, báo cáo, file xuất hay nhật ký nào dành cho người dùng.
-- Lỗi API dùng định dạng `ProblemDetails` (`400`, `401`, `403`, `404`, `409`).
+- Lỗi API dùng định dạng `ProblemDetails` (`400`, `401`, `403`, `404`, `409`, `429`).
 - AI không chấm điểm, không xếp loại, không sửa số liệu OKR hay 360; tên người được đổi thành mã trước khi gửi cho dịch vụ AI; nội dung gửi cho người khác luôn qua bước người duyệt.
 
 **Liên quan:** [Use case](03-use-cases.md) · [Tiêu chí chấp nhận](06-acceptance-criteria.md)

@@ -262,7 +262,7 @@ flowchart LR
 
 ## Nối màn hình với API
 
-Tên thao tác API là dự kiến, sẽ được chốt khi viết hợp đồng OpenAPI ở bước 4.
+Tên thao tác khớp với hợp đồng [OpenAPI](api/openapi.yaml).
 
 | Màn hình                   | Thao tác API                                                                                                                                       |
 | -------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -292,6 +292,8 @@ Tên thao tác API là dự kiến, sẽ được chốt khi viết hợp đồn
 | Luồng tự động              | `listAutomationFlows`, `updateAutomationFlow`, `listAutomationRuns`, `retryAutomationRun`                                                          |
 | Điền phiếu (cảnh báo AI)   | `checkReviewComment` (gọi khi bấm nộp, tối đa 5 giây)                                                                                              |
 | Chi tiết Objective (AI)    | `listObjectiveReviewNotes`, `dismissObjectiveReviewNote`                                                                                           |
+| Ngăn "AI đã làm gì?"       | `getAiRunExplanation`                                                                                                                              |
+| Thao tác dùng chung        | `listUserDirectory`, `getCampaign`, `listReviewResultSubjects`, `getMyFinalResult`, `getAutomationRun`                                             |
 
 Thao tác `listCycles` và `listDepartments` cũng cung cấp danh sách chọn cho bộ chọn chu kỳ, bộ lọc và biểu mẫu; chúng không cần màn hình riêng cho việc đó.
 

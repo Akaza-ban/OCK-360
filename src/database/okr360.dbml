@@ -42,11 +42,6 @@ Enum confidence_level {
   OFF_TRACK
 }
 
-Enum weight_mode {
-  AUTO
-  MANUAL
-}
-
 Enum campaign_status {
   DRAFT
   NOMINATION
@@ -244,8 +239,6 @@ Table objectives {
   owner_user_id bigint [not null]
   department_id bigint
   parent_id bigint
-  weight_mode weight_mode [not null, default: 'AUTO']
-  weight_in_parent numeric(5,2)
   progress numeric(5,4) [not null, default: `0`]
   final_progress numeric(5,4)
   created_by bigint [not null]
@@ -266,7 +259,6 @@ Table key_results {
   target_value numeric(14,4) [not null]
   unit varchar(30)
   assignee_user_id bigint [not null]
-  weight numeric(5,2)
   sort_order smallint [not null, default: `0`]
   current_value numeric(14,4)
   current_confidence confidence_level

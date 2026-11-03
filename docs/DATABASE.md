@@ -80,7 +80,6 @@ Mũi tên đậm đi từ nhóm Tổ chức gom chung các khóa ngoại tới `
 | `org_unit_type` | DEPARTMENT, TEAM | Phòng ban, Team |
 | `kr_type` | NUMBER, PERCENT, BOOLEAN | Số, Phần trăm, Có/Không |
 | `confidence_level` | ON_TRACK, AT_RISK, OFF_TRACK | Đúng tiến độ, Có rủi ro, Chệch hướng |
-| `weight_mode` | AUTO, MANUAL | Chia đều, Tự đặt trọng số |
 | `campaign_status` | DRAFT, NOMINATION, COLLECTING, CLOSED, PUBLISHED | Nháp, Đề cử, Thu phiếu, Đã đóng, Đã công bố |
 | `reviewer_group` | SELF, MANAGER, PEER, DIRECT_REPORT | Tự đánh giá, Quản lý, Đồng nghiệp, Cấp dưới |
 | `assignment_status` | NOT_STARTED, DRAFT, SUBMITTED, CANCELLED | Chưa làm, Đang điền, Đã nộp, Đã hủy |
@@ -185,7 +184,6 @@ erDiagram
         bigint owner_user_id FK
         bigint department_id FK
         bigint parent_id FK
-        weight_mode weight_mode
         numeric progress "lưu đệm"
         numeric final_progress "chốt khi đóng"
         timestamptz deleted_at

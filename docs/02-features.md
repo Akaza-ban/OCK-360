@@ -30,7 +30,7 @@ Cập nhật tiến độ Key Result hằng tuần; hệ thống tự tính và 
 
 Check-in: giá trị hiện tại, mức tự tin (Đúng hướng / Có rủi ro / Chệch hướng), ghi chú, vướng mắc, người check-in, thời điểm. Mỗi lần check-in là một bản ghi mới; bản cũ được giữ nguyên làm lịch sử.
 
-Tiến độ Key Result tính theo công thức (hiện tại − ban đầu) / (đích − ban đầu), giới hạn từ 0% đến 100%. Mẫu: đã viết 25/50 test case → 50%.
+Tiến độ Key Result tính theo công thức (hiện tại − ban đầu) / (đích − ban đầu), giới hạn từ 0% đến 100%.
 
 ## F06 Đánh giá 360 độ
 
@@ -119,14 +119,14 @@ AI chỉ **đọc, phân loại, tóm tắt, cảnh báo và tạo bản nháp**
 - **F13.7 Cấu hình luồng tự động**
 - F13.8 Lịch sử chạy
 
-| Luồng | Khi nào chạy | AI làm gì | Hệ thống tự làm gì |
-| --- | --- | --- | --- |
-| F13.1 | Check-in có ghi vướng mắc | Phân loại vướng mắc (phụ thuộc phòng khác, thiếu nguồn lực, kỹ thuật, ưu tiên thay đổi, khác), phòng liên quan, mức nghiêm trọng | Gắn nhãn vào check-in; báo trưởng phòng liên quan nếu là phụ thuộc phòng khác |
-| F13.2 | 8h sáng thứ Hai | Gom vướng mắc giống nhau trong check-in tuần trước của đội, chọn tối đa 3 việc cần chú ý | Gửi bản tin cho quản lý trong ứng dụng và qua email |
-| F13.3 | HR đóng đợt 360 | Tóm tắt nhận xét mở của các nhóm đủ ngưỡng ẩn danh thành điểm mạnh và điểm cần cải thiện | Lưu **bản nháp** cho quản lý trực tiếp; quản lý sửa rồi gửi cho nhân viên, hoặc bỏ |
-| F13.4 | Có check-in mới | So mức tự tin với ghi chú, ví dụ chọn "Đúng hướng" nhưng ghi "trễ 2 tuần" | Nhắc người check-in xem lại; mâu thuẫn 3 lần liên tiếp thì báo quản lý trực tiếp |
-| F13.5 | Lưu Objective mới | Kiểm tra KR có đo được không, có trùng KR của người cùng phòng không, có khớp Objective cấp trên không | Gắn ghi chú rà soát vào Objective để người tạo và quản lý cùng xem |
-| F13.6 | Bấm Nộp phiếu 360 | Phát hiện câu có thể làm lộ người viết hoặc lời lẽ xúc phạm | Hiện cảnh báo **chỉ cho người viết**; người viết sửa hoặc vẫn nộp |
+| Luồng | Khi nào chạy              | AI làm gì                                                                                                                        | Hệ thống tự làm gì                                                                 |
+| ----- | ------------------------- | -------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| F13.1 | Check-in có ghi vướng mắc | Phân loại vướng mắc (phụ thuộc phòng khác, thiếu nguồn lực, kỹ thuật, ưu tiên thay đổi, khác), phòng liên quan, mức nghiêm trọng | Gắn nhãn vào check-in; báo trưởng phòng liên quan nếu là phụ thuộc phòng khác      |
+| F13.2 | 8h sáng thứ Hai           | Gom vướng mắc giống nhau trong check-in tuần trước của đội, chọn tối đa 3 việc cần chú ý                                         | Gửi bản tin cho quản lý trong ứng dụng và qua email                                |
+| F13.3 | HR đóng đợt 360           | Tóm tắt nhận xét mở của các nhóm đủ ngưỡng ẩn danh thành điểm mạnh và điểm cần cải thiện                                         | Lưu **bản nháp** cho quản lý trực tiếp; quản lý sửa rồi gửi cho nhân viên, hoặc bỏ |
+| F13.4 | Có check-in mới           | So mức tự tin với ghi chú, ví dụ chọn "Đúng hướng" nhưng ghi "trễ 2 tuần"                                                        | Nhắc người check-in xem lại; mâu thuẫn 3 lần liên tiếp thì báo quản lý trực tiếp   |
+| F13.5 | Lưu Objective mới         | Kiểm tra KR có đo được không, có trùng KR của người cùng phòng không, có khớp Objective cấp trên không                           | Gắn ghi chú rà soát vào Objective để người tạo và quản lý cùng xem                 |
+| F13.6 | Bấm Nộp phiếu 360         | Phát hiện câu có thể làm lộ người viết hoặc lời lẽ xúc phạm                                                                      | Hiện cảnh báo **chỉ cho người viết**; người viết sửa hoặc vẫn nộp                  |
 
 Cấu hình mỗi luồng: bật/tắt, lịch chạy (với luồng theo lịch), hạn mức số lần gọi AI mỗi ngày.
 
