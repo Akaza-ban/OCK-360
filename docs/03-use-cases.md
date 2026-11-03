@@ -235,7 +235,7 @@ Cả bốn vai trò đều dùng: đăng nhập, đăng xuất, hồ sơ, dashbo
 
 ## Phân định Người, Tự động và AI
 
-"Tự động" và "AI" là hai việc khác nhau. Mọi luồng AI đều chạy tự động, nhưng phần lớn việc tự động không dùng AI. Các use case bên dưới gắn nhãn cho từng bước theo quy ước sau:
+Mọi luồng AI đều chạy tự động, nhưng phần lớn việc tự động không dùng AI. Các use case bên dưới gắn nhãn cho từng bước theo quy ước sau:
 
 | Nhãn          | Ai thực hiện                                    | Đặc điểm                                                                 | Ví dụ                                                         |
 | ------------- | ----------------------------------------------- | ------------------------------------------------------------------------ | ------------------------------------------------------------- |

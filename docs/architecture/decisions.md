@@ -4,19 +4,19 @@
 
 Mỗi quyết định ghi lý do và cái giá phải trả, để sau này biết điều gì có thể đổi. Trạng thái **Đã chốt** là quyết định đã có từ chủ dự án hoặc từ thiết kế hiện có. **Đề xuất** là lựa chọn mới ở bước kiến trúc, có hiệu lực cho tới khi bị thay thế.
 
-| Mã | Quyết định | Trạng thái |
-|---|---|---|
-| [ADR-001](#adr-001--backend-dùng-nestjs) | Backend dùng NestJS | Đã chốt |
-| [ADR-002](#adr-002--một-mã-nguồn-hai-tiến-trình) | Một mã nguồn, hai tiến trình API và Worker | Đề xuất |
-| [ADR-003](#adr-003--database-giữ-luật-và-truy-vấn-bằng-kysely) | Database giữ luật, truy vấn bằng Kysely | Đề xuất |
-| [ADR-004](#adr-004--hộp-thư-sự-kiện-trong-postgresql-không-dùng-redis) | Hộp thư sự kiện trong PostgreSQL, không dùng Redis | Đề xuất |
-| [ADR-005](#adr-005--gọi-ai-qua-một-cổng-riêng) | Gọi AI qua một cổng riêng | Đề xuất |
-| [ADR-006](#adr-006--đăng-nhập-bằng-jwt-30-phút-và-argon2id) | Đăng nhập bằng JWT 30 phút và Argon2id | Đề xuất |
-| [ADR-007](#adr-007--v1-chạy-bằng-docker-compose) | V1 chạy bằng Docker Compose | Đề xuất |
+| Mã                                                                     | Quyết định                                         | Trạng thái |
+| ---------------------------------------------------------------------- | -------------------------------------------------- | ---------- |
+| [ADR-001](#adr-001--backend-dùng-nestjs)                               | Backend dùng NestJS                                | Đã chốt    |
+| [ADR-002](#adr-002--một-mã-nguồn-hai-tiến-trình)                       | Một mã nguồn, hai tiến trình API và Worker         | Đề xuất    |
+| [ADR-003](#adr-003--database-giữ-luật-và-truy-vấn-bằng-kysely)         | Database giữ luật, truy vấn bằng Kysely            | Đề xuất    |
+| [ADR-004](#adr-004--hộp-thư-sự-kiện-trong-postgresql-không-dùng-redis) | Hộp thư sự kiện trong PostgreSQL, không dùng Redis | Đề xuất    |
+| [ADR-005](#adr-005--gọi-ai-qua-một-cổng-riêng)                         | Gọi AI qua một cổng riêng                          | Đề xuất    |
+| [ADR-006](#adr-006--đăng-nhập-bằng-jwt-30-phút-và-argon2id)            | Đăng nhập bằng JWT 30 phút và Argon2id             | Đề xuất    |
+| [ADR-007](#adr-007--v1-chạy-bằng-docker-compose)                       | V1 chạy bằng Docker Compose                        | Đề xuất    |
 
 ## ADR-001 — Backend dùng NestJS
 
-- **Bối cảnh:** dự án cá nhân, frontend và công cụ sinh dữ liệu đều dùng JavaScript.
+- **Bối cảnh:** frontend và công cụ sinh dữ liệu đều dùng JavaScript.
 - **Quyết định:** backend dùng NestJS với TypeScript.
 - **Lý do:** một hệ ngôn ngữ cho cả dự án; NestJS có sẵn module, dependency injection và guard, hợp với kiến trúc ba tầng.
 - **Cái giá:** NestJS không tự tách tầng; ranh giới API, Application, Infrastructure phải được giữ bằng cấu trúc thư mục và quy tắc import.
