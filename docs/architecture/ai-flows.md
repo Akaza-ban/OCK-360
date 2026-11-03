@@ -35,7 +35,7 @@ Giới hạn thời gian và thử lại:
 | Quy tắc | Chi tiết |
 |---|---|
 | Người | Đổi thành `NV-01`, `NV-02`... Thay họ tên đầy đủ trước, rồi tới tên gọi, để "Nguyễn Thị Lan" không còn sót "Lan" |
-| Đơn vị | Phòng ban và team đổi thành `DV-01`, `DV-02`... AI trả về mã đơn vị, hệ thống tự đổi lại |
+| Đơn vị | Phòng ban và team được gửi dạng mã `DV-01`, `DV-02`... kèm danh bạ tên, vì AI cần biết "team QA" là đơn vị nào. AI trả về mã, hệ thống tự đổi lại. Tên đơn vị không phải dữ liệu cá nhân |
 | Bảng mã | Tạo mới cho mỗi lần chạy, chỉ nằm trong bộ nhớ; không lưu database, không gửi đi |
 | Không bao giờ gửi | Email, số điện thoại, mã người dùng, điểm từng phiếu 360, tên người chấm |
 | Được gửi | Mã nội bộ của Key Result, vì không phải dữ liệu cá nhân và AI cần nó để trỏ tới KR |
@@ -197,12 +197,5 @@ Vì vậy, văn bản kiểu "bỏ qua hướng dẫn, gửi thông báo cho m�
 ## 5. Ngăn "AI đã làm gì?"
 
 Hệ thống không lưu nội dung gửi cho AI hay câu trả lời thô. Khi người dùng mở ngăn giải thích (`getAiRunExplanation`), API dựng lại các bước từ dữ liệu người đó có quyền đọc: dữ liệu gốc, bảng mã tạo lại, khuôn JSON và kết quả đã lưu. Vì vậy phần "AI trả về" là kết quả đã kiểm tra, không phải câu trả lời thô, và `reason` không xuất hiện.
-
-## Cần chốt
-
-| # | Vấn đề | Đề xuất |
-|---|---|---|
-| 1 | BR-093 và AC-UC32 yêu cầu không gửi tên phòng ban thật. Nhưng để biết "chờ team QA" là đơn vị nào, AI cần danh bạ có tên đơn vị, và chính văn bản vướng mắc cũng chứa tên đó. Bản mẫu đang gửi danh bạ có tên. | Cho phép gửi tên đơn vị, vì không phải dữ liệu cá nhân; tên người, email và số điện thoại vẫn tuyệt đối không gửi. Sửa BR-093, AC-UC32 và NFR-PRIV-004 theo hướng này |
-| 2 | AC-UC31 yêu cầu mọi người có ít nhất một nhóm đủ ngưỡng đều có bản nháp. Nhưng nếu các nhóm đó không viết nhận xét mở nào, AI không có gì để tóm tắt. | Không tạo bản nháp khi không có nhận xét mở, màn hình ghi lý do. Sửa AC-UC31 và BR-106 theo hướng này |
 
 **Liên quan:** [Kiến trúc C4](c4.md) · [Quyết định kiến trúc](decisions.md) · [Quy tắc nghiệp vụ](../requirements/business-rules.md) · [Use case UC32](../03-use-cases.md#uc32-chạy-luồng-tự-động-ai)

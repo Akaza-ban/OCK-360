@@ -108,7 +108,7 @@ Email, vai trò, phòng ban và quản lý trực tiếp chỉ được xem, kh�
 
 Hệ thống tự đọc phần **văn bản** mà luật thông thường không hiểu được (ghi chú, vướng mắc, nhận xét), rồi tự chuyển việc đến đúng người, tóm tắt và cảnh báo. Mỗi luồng chạy khi có sự kiện hoặc tới lịch, không cần ai bấm nút.
 
-AI chỉ **đọc, phân loại, tóm tắt, cảnh báo và tạo bản nháp**. AI không chấm điểm, không xếp loại, không sửa số liệu OKR hay 360.
+**Lưu ý** : AI chỉ **đọc, phân loại, tóm tắt, cảnh báo và tạo bản nháp**. AI không chấm điểm, không xếp loại, không sửa số liệu OKR hay 360.
 
 - **F13.1 Chuyển vướng mắc đến đúng người**
 - **F13.2 Bản tin tuần cho quản lý**
@@ -116,8 +116,7 @@ AI chỉ **đọc, phân loại, tóm tắt, cảnh báo và tạo bản nháp**
 - F13.4 Phát hiện check-in không khớp
 - F13.5 Rà soát OKR mới tạo
 - F13.6 Cảnh báo nhận xét 360 dễ lộ danh tính
-- **F13.7 Cấu hình luồng tự động**
-- F13.8 Lịch sử chạy
+- F13.7 Lịch sử chạy
 
 | Luồng | Khi nào chạy              | AI làm gì                                                                                                                        | Hệ thống tự làm gì                                                                 |
 | ----- | ------------------------- | -------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |

@@ -109,7 +109,7 @@ Tài liệu này gom các quy tắc đang nằm rải rác trong use case, tiêu
 | BR-090 | AI không chấm điểm, không xếp loại, không sửa số liệu OKR hay 360. Kết quả AI chỉ là nhãn, cảnh báo, thông báo, ghi chú hoặc bản nháp. | 03, AC-UC32 | US32 |
 | BR-091 | Mọi nội dung do AI tạo đều có nhãn "Do AI tạo". | 03, 04 | US29–US34 |
 | BR-092 | Nội dung gửi cho người khác ngoài chính người viết luôn là bản nháp, có người duyệt rồi mới gửi. Nhân viên không bao giờ thấy bản gốc của AI. | 03, UC31, 05 §7.3 | US31 |
-| BR-093 | Trước khi gửi cho dịch vụ AI, tên người và tên phòng ban được đổi thành mã. Bảng mã chỉ nằm trong bộ nhớ của lần chạy. | 03, AC-UC32, 05 §7.4 | US32 |
+| BR-093 | Trước khi gửi cho dịch vụ AI, tên người được đổi thành mã; đơn vị được gửi dạng mã kèm danh bạ tên. Email và số điện thoại không bao giờ được gửi. Bảng mã chỉ nằm trong bộ nhớ của lần chạy. | 03, AC-UC32, 05 §7.4 | US32 |
 | BR-094 | Nhận xét 360 chỉ được gửi cho AI ở hai luồng: Bản nháp 1-1 (đợt đã `CLOSED`, nhóm đủ ngưỡng, không kèm điểm từng phiếu) và Cảnh báo nhận xét (phiếu đang nộp, đã đổi tên thành mã). | 03 | US31, US34 |
 | BR-095 | Văn bản người dùng gõ chỉ là dữ liệu, không phải lệnh cho AI. Kết quả sai khuôn JSON thì không hành động và ghi Lỗi. | 03, AC-UC32 | US32 |
 | BR-096 | Luồng AI chạy nền sau khi thao tác gốc đã lưu xong. AI chậm hoặc lỗi không làm hỏng thao tác gốc. | 03, AC-UC32, 05 §7.1 | US32 |
@@ -122,6 +122,6 @@ Tài liệu này gom các quy tắc đang nằm rải rác trong use case, tiêu
 | BR-103 | Người phụ trách từ chối vướng mắc thì nó chuyển về quản lý trực tiếp của người check-in và được tính là một lần AI phân loại sai. | UC29, AC-UC29 | US29 |
 | BR-104 | Mâu thuẫn giữa mức tự tin và ghi chú thì nhắc người check-in; 3 lần liên tiếp thì báo quản lý trực tiếp. | F13.4, AC-UC32 | US33 |
 | BR-105 | Con số trong bản tin tuần lấy từ database, AI chỉ viết phần tóm tắt, tối đa 3 mục. Mỗi quản lý nhận một bản tin mỗi tuần. | UC30, AC-UC30 | US30 |
-| BR-106 | Bản nháp 1-1 chỉ gửi được khi đợt đã `PUBLISHED`, không chứa câu trích nguyên văn hay điểm từng phiếu. Người không có nhóm nào đủ ngưỡng thì không có bản nháp. | UC31, AC-UC31 | US31 |
+| BR-106 | Bản nháp 1-1 chỉ gửi được khi đợt đã `PUBLISHED`, không chứa câu trích nguyên văn hay điểm từng phiếu. Người không có nhóm nào đủ ngưỡng, hoặc nhóm đủ ngưỡng không có nhận xét mở, thì không có bản nháp. | UC31, AC-UC31 | US31 |
 
 **Liên quan:** [Yêu cầu phi chức năng](non-functional-requirements.md) · [Use case](../03-use-cases.md) · [Tiêu chí chấp nhận](../06-acceptance-criteria.md) · [Thiết kế dữ liệu](../05-data-model.md)

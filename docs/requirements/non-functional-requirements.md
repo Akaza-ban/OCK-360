@@ -73,7 +73,7 @@ Mọi yêu cầu hiệu năng được đo với bộ dữ liệu sau. Đây là
 | NFR-PRIV-001 | Sau khi đóng đợt, ngay cả người đọc được toàn bộ database cũng không nối được điểm với người chấm. | Kiểm thử schema | 05 §3.1 | Đã có |
 | NFR-PRIV-002 | Mọi API, báo cáo, file xuất và nhật ký không chứa cặp người chấm và người được chấm của nhóm ẩn danh. | Kiểm thử API, rà soát file xuất | BR-060 | Đã có |
 | NFR-PRIV-003 | Nhận xét không kèm tên và không hiện theo thứ tự nộp. | Kiểm thử API | `review.js` | Đã có |
-| NFR-PRIV-004 | Nội dung gửi cho dịch vụ AI không chứa họ tên, email hay tên phòng ban thật. | Ghi lại nội dung gửi đi trong môi trường test | AC-UC32 | Đã có |
+| NFR-PRIV-004 | Nội dung gửi cho dịch vụ AI không chứa họ tên, email hay số điện thoại; đơn vị chỉ xuất hiện dạng mã kèm danh bạ. | Ghi lại nội dung gửi đi trong môi trường test | AC-UC32 | Đã có |
 | NFR-PRIV-005 | Lịch sử chạy và hộp thư sự kiện không có cột chứa nội dung. | Kiểm thử schema | 05 §7.1, 05 §7.4 | Đã có |
 | NFR-PRIV-006 | Cảnh báo nhận xét 360 không tạo dòng lịch sử chạy, để thời điểm chạy không giúp đoán ai đã chấm. | Kiểm thử schema | 05 §7.4 | Đã có |
 

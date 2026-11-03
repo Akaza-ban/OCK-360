@@ -39,7 +39,7 @@ US23–US26   Dashboard, báo cáo, thông báo, nhật ký
 US27–US34   Tự động hóa bằng AI
 ```
 
-31 story đạt đủ 6 tiêu chí. Ba story US22 (kết quả cuối kỳ), US23 (dashboard) và US32 (nền tảng chạy luồng AI) đạt mọi tiêu chí trừ **Small**, nên sẽ được tách nhỏ khi lập kế hoạch sprint. Chi tiết từng story nằm ở [INVEST Requirements](docs/08-invest-requirements.md); tiêu chí chấp nhận của từng use case nằm ở [Acceptance Criteria](docs/06-acceptance-criteria.md).
+31 story đạt đủ 6 tiêu chí. Ba story US22 (kết quả cuối kỳ), US23 (dashboard) và US32 (nền tảng chạy luồng AI) đạt mọi tiêu chí trừ **Small**, nên sẽ được tách nhỏ khi lập kế hoạch sprint. Chi tiết từng story nằm ở [INVEST Requirements](docs/08-invest-requirements.md); tiêu chí chấp nhận của từng use case nằm ở [Acceptance Criteria](docs/06-acceptance-criteria.md). [Bảng truy vết](docs/traceability.md) nối mỗi story tới màn hình, quy tắc, API, database và sơ đồ sequence.
 
 ### 1.3 Use cases
 
@@ -431,3 +431,33 @@ Tài liệu chi tiết:
 ## 5. Frontend and Backend Folder Structures
 
 Mỗi tính năng nằm trọn trong một thư mục ở cả hai phía. Frontend giữ các trang hiện có và thêm một file `api.js` cho mỗi tính năng, dữ liệu giả chuyển sang `mocks/`. Backend là một dự án NestJS với hai điểm khởi động cho API và Worker; mỗi module chia ba tầng `api`, `application`, `infrastructure`, và chiều phụ thuộc được kiểm tra tự động. Chi tiết nằm ở [Folder structure](docs/07-folder-structure.md).
+
+## 6. Detailed Class and Sequence Design
+
+### 6.1 Class diagrams (C4 Level 4)
+
+[Sơ đồ class](docs/architecture/class-diagrams.md) vẽ các class chính của backend theo 7 module: controller, service, repository, AI Gateway và Worker. Mỗi hàm của controller là đúng một `operationId` trong OpenAPI, nên đủ 89 thao tác đều có chỗ trong code.
+
+### 6.2 Sequence diagrams
+
+[Sơ đồ sequence](docs/architecture/sequence-diagrams.md) có một sơ đồ cho mỗi use case, cùng số với use case (SD-12 là UC12), kèm các nhánh lỗi chính. Sơ đồ dưới đây tóm tắt cách check-in và AI phối hợp.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor U as Người phụ trách
+    participant API as API
+    participant DB as PostgreSQL
+    participant WK as Worker
+    participant AI as Dịch vụ AI
+
+    U->>API: Check-in có vướng mắc
+    API->>DB: Lưu check-in, cộng dồn tiến độ, ghi sự kiện trong một transaction
+    API-->>U: 201, tiến độ cập nhật ngay
+    WK->>DB: Đọc sự kiện chưa xử lý
+    WK->>AI: Vướng mắc đã đổi tên thành mã
+    AI-->>WK: JSON phân loại
+    WK->>DB: Kiểm tra khuôn, ghi nhãn và thông báo cho đơn vị liên quan
+```
+
+Check-in không chờ AI: AI chậm hay lỗi cũng không làm hỏng thao tác của người dùng.

@@ -244,7 +244,7 @@ Nhân viên chỉ thấy `edited_text` của bản nháp 1-1, không bao giờ t
 
 - `automation_runs` chỉ có số liệu kỹ thuật (trạng thái, thời gian, token, lỗi). Không có cột chứa nội dung gửi cho AI hay AI trả về, nên Admin xem lịch sử chạy không đọc được ghi chú check-in hay nhận xét 360.
 - Luồng **Cảnh báo nhận xét 360** không bao giờ có dòng trong `automation_runs` (trigger chặn), chỉ cộng `automation_daily_usage`. Nếu mỗi lần nộp phiếu có một dòng lịch sử, thời điểm của dòng đó sẽ trùng với lúc một phiếu được nộp và có thể dùng để đoán ai đã chấm.
-- Đổi tên người và tên phòng ban thành mã (`NV-01`, `DV-01`) trước khi gửi cho AI là việc của tầng nghiệp vụ; bảng ánh xạ mã chỉ sống trong bộ nhớ của lần chạy, không lưu xuống database.
+- Đổi tên người thành mã (`NV-01`) và gửi đơn vị dạng mã kèm danh bạ (`DV-01`) trước khi gửi cho AI là việc của tầng nghiệp vụ; bảng ánh xạ mã chỉ sống trong bộ nhớ của lần chạy, không lưu xuống database.
 - Bản nháp 1-1 chỉ dùng nhận xét của nhóm đủ ngưỡng ẩn danh, lấy từ `review_answers` sau khi đợt đã CLOSED (lúc đó câu trả lời đã tách khỏi người chấm).
 
 ## 8. Dữ liệu demo và kiểm thử
