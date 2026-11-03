@@ -1,120 +1,120 @@
-# Tác nhân, vai trò và use case
+# Actors, Roles, and Use Cases
 
-> Trạng thái thiết kế: TARGET V1
+> Design Status: TARGET V1
 >
-> Trạng thái triển khai: CHƯA BẮT ĐẦU
+> Implementation Status: NOT STARTED
 
-Tên sản phẩm: **OKR360**.
+Product Name: **OKR360**.
 
-## Tác nhân / vai trò
+## Actors / Roles
 
-| Vai trò    | Tên hiển thị  | Trong thực tế                                         | Mối quan tâm chính                                                   |
-| ---------- | ------------- | ----------------------------------------------------- | -------------------------------------------------------------------- |
-| `ADMIN`    | Quản trị viên | Quản trị hệ thống, nhập OKR công ty thay ban lãnh đạo | Tổ chức, OKR công ty, an toàn hệ thống                               |
-| `HR`       | Nhân sự       | Phòng nhân sự                                         | Chu kỳ OKR, đợt đánh giá 360, kết quả cuối kỳ                        |
-| `MANAGER`  | Quản lý       | Trưởng phòng, team lead                               | OKR phòng ban hoặc OKR team, theo sát cấp dưới, duyệt người đánh giá |
-| `EMPLOYEE` | Nhân viên     | Mọi nhân viên                                         | OKR cá nhân, check-in, điền phiếu đánh giá                           |
-| —          | Bộ lập lịch   | Chương trình chạy nền                                 | Gửi nhắc nhở đúng giờ, kích hoạt luồng AI theo lịch                  |
-| —          | Bộ xử lý AI   | Chương trình chạy nền gọi dịch vụ AI                  | Đọc văn bản, phân loại, tóm tắt, tạo cảnh báo và bản nháp            |
+| Role       | Display Name | In Practice                                           | Primary Concern                                                      |
+| ---------- | ------------ | ----------------------------------------------------- | -------------------------------------------------------------------- |
+| `ADMIN`    | System Admin | System administrator, enters company OKRs on behalf of executive leadership | Organization, company OKRs, system security                          |
+| `HR`       | HR           | HR department                                         | OKR cycles, 360 review campaigns, end-of-cycle results               |
+| `MANAGER`  | Manager      | Department head, team lead                            | Department or team OKRs, monitoring subordinates, approving reviewers |
+| `EMPLOYEE` | Employee     | All employees                                         | Personal OKRs, check-ins, completing review forms                    |
+| —          | Scheduler    | Background job runner                                 | Sending timely reminders, triggering scheduled AI workflows          |
+| —          | AI Processor | Background worker calling AI services                 | Reading free text, classifying, summarizing, generating alerts and drafts |
 
-**Phòng ban và team:** công ty chia thành phòng ban; phòng ban lớn chia tiếp thành team (ví dụ Phòng Dev có Team Thanh toán và Team Nền tảng). Mỗi phòng ban có một trưởng phòng, mỗi team có một team lead; cả hai thường mang vai trò `MANAGER`. Thành viên team báo cáo cho team lead, team lead báo cáo cho trưởng phòng.
+**Departments and teams:** The company is divided into departments; large departments are further divided into teams (e.g., Dev Department includes Payments Team and Platform Team). Each department has a department head, and each team has a team lead; both typically hold the `MANAGER` role. Team members report to the team lead, and team leads report to the department head.
 
-**Quy tắc kế thừa:** mỗi người dùng có đúng một vai trò. `ADMIN`, `HR`, `MANAGER` đều là nhân viên nên có **toàn bộ quyền của `EMPLOYEE`** (có OKR cá nhân, được đánh giá 360, điền phiếu). Vai trò chỉ cộng thêm quyền.
+**Inheritance rules:** Each user has exactly one role. `ADMIN`, `HR`, and `MANAGER` are all employees and therefore inherit **all permissions of `EMPLOYEE`** (having personal OKRs, participating in 360 reviews, completing review forms). Roles only add permissions.
 
-## Phạm vi dữ liệu
+## Data Scope
 
-Có những việc một vai trò được làm, nhưng **chỉ với một phần dữ liệu**. Ma trận bên dưới dùng 3 cách gọi phạm vi sau:
+Certain actions are permitted for a role, but **only on a subset of data**. The matrix below uses the following 3 scope definitions:
 
-| Tên                                    | Mô tả                                                                                               | Ví dụ                                                                                                                                                                  |
-| -------------------------------------- | --------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Chỉ của bản thân**                   | Dữ liệu do chính người dùng sở hữu: OKR cá nhân của họ, Key Result họ phụ trách, kết quả 360 của họ | Lan chỉ check-in được Key Result Lan phụ trách                                                                                                                         |
-| **Chỉ đơn vị mình phụ trách**          | Với trưởng phòng: phòng ban của mình và mọi team trong phòng. Với team lead: chỉ team của mình      | Anh Sơn là trưởng phòng Dev nên sửa được OKR Phòng Dev và OKR của Team Thanh toán, Team Nền tảng; anh Nam là team lead Thanh toán nên chỉ sửa được OKR Team Thanh toán |
-| **Chỉ nhân viên dưới quyền trực tiếp** | Những người có "quản lý trực tiếp" là người dùng này                                                | Lan báo cáo cho anh Nam (team lead), nên anh Nam xem được kết quả 360 của Lan; anh Sơn (trưởng phòng) thì không, vì Lan không báo cáo trực tiếp cho anh                |
+| Name                                   | Description                                                                                         | Example                                                                                                                                                                  |
+| -------------------------------------- | --------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Self only**                          | Data owned by the user themselves: their personal OKRs, Key Results they are assigned to, their 360 review results | Lan can only check in Key Results she is responsible for                                                                                                                 |
+| **Assigned unit only**                 | For department heads: their department and all teams within that department. For team leads: their team only | Son is the Dev department head, so he can edit Dev Department OKRs and OKRs of Payments Team and Platform Team; Nam is Payments team lead, so he can only edit Payments Team OKRs |
+| **Direct subordinates only**           | Users whose "direct manager" is this user                                                           | Lan reports to Nam (team lead), so Nam can view Lan's 360 review results; Son (department head) cannot, because Lan does not report directly to him                     |
 
-## Ma trận vai trò × chức năng
+## Role × Feature Matrix
 
-| Chức năng                                            | Admin                         | HR                                           | Manager                                            | Employee                      |
+| Feature                                              | Admin                         | HR                                           | Manager                                            | Employee                      |
 | ---------------------------------------------------- | ----------------------------- | -------------------------------------------- | -------------------------------------------------- | ----------------------------- |
-| Đăng nhập, đăng xuất, hồ sơ cá nhân                  | Có                            | Có                                           | Có                                                 | Có                            |
-| Quản lý phòng ban và team                            | Có                            | Có                                           | Không                                              | Không                         |
-| Quản lý người dùng                                   | Có                            | Có, nhưng không được gán vai trò Admin       | Không                                              | Không                         |
-| Quản lý chu kỳ OKR                                   | Có                            | Có                                           | Không                                              | Không                         |
-| Xem cây OKR toàn công ty                             | Có                            | Có                                           | Có                                                 | Có                            |
-| Tạo/sửa OKR công ty                                  | Có                            | Không                                        | Không                                              | Không                         |
-| Tạo/sửa OKR phòng ban                                | Có                            | Không                                        | Chỉ trưởng phòng, với phòng ban của mình           | Không                         |
-| Tạo/sửa OKR team                                     | Có                            | Không                                        | Chỉ đơn vị mình phụ trách                          | Không                         |
-| Tạo/sửa OKR cá nhân                                  | Có, của mọi người             | Chỉ của bản thân                             | Của bản thân và của nhân viên dưới quyền trực tiếp | Chỉ của bản thân              |
-| Xóa mềm OKR                                          | Có, của mọi người             | Chỉ của bản thân                             | Của bản thân và OKR thuộc đơn vị mình phụ trách    | Chỉ của bản thân              |
-| Check-in Key Result                                  | Chỉ Key Result mình phụ trách | Chỉ Key Result mình phụ trách                | Chỉ Key Result mình phụ trách                      | Chỉ Key Result mình phụ trách |
-| Bình luận vào check-in                               | Không                         | Không                                        | Chỉ check-in của nhân viên dưới quyền trực tiếp    | Không                         |
-| Quản lý bộ tiêu chí 360                              | Không                         | Có                                           | Không                                              | Không                         |
-| Tạo, mở, đóng đợt đánh giá 360                       | Không                         | Có                                           | Không                                              | Không                         |
-| Đề cử đồng nghiệp đánh giá mình                      | Có                            | Có                                           | Có                                                 | Có                            |
-| Duyệt người đánh giá                                 | Không                         | Chỉ cho nhân viên không có quản lý trực tiếp | Chỉ cho nhân viên dưới quyền trực tiếp             | Không                         |
-| Điền phiếu được phân công                            | Có                            | Có                                           | Có                                                 | Có                            |
-| Xem kết quả 360                                      | Chỉ của bản thân              | Của mọi người                                | Của bản thân và của nhân viên dưới quyền trực tiếp | Chỉ của bản thân              |
-| Tổng hợp và công bố kết quả cuối kỳ                  | Không                         | Có                                           | Không                                              | Không                         |
-| Dashboard cá nhân                                    | Có                            | Có                                           | Có                                                 | Có                            |
-| Dashboard đội nhóm                                   | Không                         | Không                                        | Có                                                 | Không                         |
-| Dashboard công ty                                    | Có                            | Có                                           | Không                                              | Không                         |
-| Báo cáo                                              | Có, trừ báo cáo kết quả 360   | Có, toàn công ty                             | Chỉ đơn vị mình phụ trách                          | Không                         |
-| Nhật ký hoạt động                                    | Có                            | Có                                           | Không                                              | Không                         |
-| Cấu hình luồng tự động AI                            | Có                            | Không                                        | Không                                              | Không                         |
-| Xem lịch sử chạy tự động                             | Có                            | Có                                           | Không                                              | Không                         |
-| Xử lý vướng mắc được AI chuyển đến                   | Chỉ đơn vị mình phụ trách     | Chỉ đơn vị mình phụ trách                    | Chỉ đơn vị mình phụ trách                          | Không                         |
-| Xem bản tin tuần do AI tạo                           | Không                         | Không                                        | Chỉ nhân viên dưới quyền trực tiếp                 | Không                         |
-| Duyệt bản nháp 1-1 do AI tạo                         | Không                         | Chỉ cho nhân viên không có quản lý trực tiếp | Chỉ cho nhân viên dưới quyền trực tiếp             | Không                         |
-| Nhận cảnh báo AI về OKR, check-in, nhận xét của mình | Có                            | Có                                           | Có                                                 | Có                            |
+| Login, logout, personal profile                      | Yes                           | Yes                                          | Yes                                                | Yes                           |
+| Manage departments and teams                         | Yes                           | Yes                                          | No                                                 | No                            |
+| Manage users                                         | Yes                           | Yes, but cannot assign Admin role            | No                                                 | No                            |
+| Manage OKR cycles                                    | Yes                           | Yes                                          | No                                                 | No                            |
+| View company-wide OKR tree                           | Yes                           | Yes                                          | Yes                                                | Yes                           |
+| Create/edit company OKRs                             | Yes                           | No                                           | No                                                 | No                            |
+| Create/edit department OKRs                          | Yes                           | No                                           | Department head only, for own department           | No                            |
+| Create/edit team OKRs                                | Yes                           | No                                           | Assigned unit only                                 | No                            |
+| Create/edit personal OKRs                            | Yes, for everyone             | Self only                                    | Self and direct subordinates                       | Self only                     |
+| Soft delete OKRs                                     | Yes, for everyone             | Self only                                    | Self and OKRs within assigned unit                 | Self only                     |
+| Check-in Key Result                                  | Assigned Key Results only     | Assigned Key Results only                    | Assigned Key Results only                          | Assigned Key Results only     |
+| Comment on check-ins                                 | No                            | No                                           | Direct subordinates' check-ins only                | No                            |
+| Manage 360 evaluation criteria                       | No                            | Yes                                          | No                                                 | No                            |
+| Create, open, close 360 review campaign              | No                            | Yes                                          | No                                                 | No                            |
+| Nominate peer reviewers                              | Yes                           | Yes                                          | Yes                                                | Yes                           |
+| Approve reviewers                                    | No                            | Only for employees without a direct manager  | Direct subordinates only                           | No                            |
+| Complete assigned review forms                       | Yes                           | Yes                                          | Yes                                                | Yes                           |
+| View 360 results                                     | Self only                     | Everyone's                                   | Self and direct subordinates                       | Self only                     |
+| Aggregate and publish final results                  | No                            | Yes                                          | No                                                 | No                            |
+| Personal dashboard                                   | Yes                           | Yes                                          | Yes                                                | Yes                           |
+| Team dashboard                                       | No                            | No                                           | Yes                                                | No                            |
+| Company dashboard                                    | Yes                           | Yes                                          | No                                                 | No                            |
+| Reports                                              | Yes, except 360 result reports| Yes, company-wide                            | Assigned unit only                                 | No                            |
+| Audit logs                                           | Yes                           | Yes                                          | No                                                 | No                            |
+| Configure AI automated workflows                     | Yes                           | No                                           | No                                                 | No                            |
+| View automated execution history                     | Yes                           | Yes                                          | No                                                 | No                            |
+| Handle forwarded blockers                            | Assigned unit only            | Assigned unit only                           | Assigned unit only                                 | No                            |
+| View AI-generated weekly digest                      | No                            | No                                           | Direct subordinates only                           | No                            |
+| Review AI-generated 1-on-1 draft                     | No                            | Only for employees without a direct manager  | Direct subordinates only                           | No                            |
+| Receive AI alerts on own OKRs, check-ins, comments   | Yes                           | Yes                                          | Yes                                                | Yes                           |
 
-Admin **không** xem được kết quả 360 của người khác. Lý do là nguyên tắc quyền tối thiểu: người quản trị kỹ thuật không cần biết đồng nghiệp chấm nhau thế nào. Vì vậy Admin bật/tắt được các luồng AI nhưng không đọc được bản nháp 1-1, và lịch sử chạy không lưu nội dung gửi cho AI.
+System Admin **cannot** view 360 review results of other users. This follows the principle of least privilege: technical administrators do not need to know how colleagues evaluate each other. Consequently, Admin can toggle AI workflows but cannot read 1-on-1 drafts, and execution history does not store payload contents sent to AI.
 
-## Sơ đồ use case
+## Use Case Diagrams
 
-Sơ đồ được chia làm 3 phần. Các vai trò không nối bằng mũi tên, vì trong sơ đồ use case, đường nối giữa tác nhân và use case chỉ có nghĩa "tác nhân này dùng use case đó".
+The diagram is divided into 3 parts. Roles are not connected by arrows to use cases, because in use case diagrams, a line connecting an actor and a use case simply signifies "this actor uses that use case."
 
-### 1. Quan hệ kế thừa giữa các vai trò
+### 1. Role Inheritance Relationship
 
-Quản lý, Nhân sự và Quản trị viên đều là nhân viên, nên kế thừa toàn bộ use case của Nhân viên ở sơ đồ 2.
+Managers, HR, and System Admins are all employees, and therefore inherit all Employee use cases shown in Diagram 2.
 
 ```mermaid
 flowchart BT
-    manager(["Quản lý"]) -. "kế thừa" .-> employee(["Nhân viên"])
-    hr(["Nhân sự"]) -. "kế thừa" .-> employee
-    admin(["Quản trị viên"]) -. "kế thừa" .-> employee
+    manager(["Manager"]) -. "inherits" .-> employee(["Employee"])
+    hr(["HR"]) -. "inherits" .-> employee
+    admin(["System Admin"]) -. "inherits" .-> employee
 
     classDef actor fill:#666,color:#fff,stroke:#333
     class employee,manager,hr,admin actor
 ```
 
-### 2. Sơ đồ use case tổng quan của nhân viên
+### 2. Employee Overview Use Case Diagram
 
-UC32 là use case của hệ thống: Bộ lập lịch kích hoạt các luồng chạy theo lịch, AI thực hiện năm luồng chạy nền. Kết quả đến người dùng qua UC25 (thông báo) và các màn hình của UC08, UC12. Luồng thứ sáu, cảnh báo nhận xét 360, không chạy nền mà chạy ngay trong UC19. Từng bước do người, hệ thống hay AI thực hiện được ghi ở [Phân định Người, Tự động và AI](#phân-định-người-tự-động-và-ai).
+UC32 is a system use case: the Scheduler triggers workflows on schedule, and the AI Processor executes the five background workflows. Results reach users via UC25 (notifications) and the screens of UC08 and UC12. The sixth workflow, 360 review comment guard, does not run in the background but executes synchronously within UC19. Individual steps performed by humans, automation, or AI are documented in [Demarcation of Human, Automation, and AI](#demarcation-of-human-automation-and-ai).
 
 ```mermaid
 flowchart LR
-    employee(["Nhân viên"])
+    employee(["Employee"])
 
-    subgraph system["OKR360 — Ranh giới hệ thống"]
-        uc01(["UC01 Đăng nhập"])
-        uc02(["UC02 Đăng xuất"])
-        uc03(["UC03 Quản lý hồ sơ"])
-        uc23(["UC23 Xem dashboard"])
-        uc07(["UC07 Xem cây OKR"])
-        uc08(["UC08 Tạo/sửa Objective"])
-        uc09(["UC09 Quản lý Key Result"])
-        uc10(["UC10 Liên kết cấp trên"])
-        uc11(["UC11 Xóa mềm OKR"])
+    subgraph system["OKR360 — System Boundary"]
+        uc01(["UC01 Login"])
+        uc02(["UC02 Logout"])
+        uc03(["UC03 Manage Profile"])
+        uc23(["UC23 View Dashboard"])
+        uc07(["UC07 View OKR Tree"])
+        uc08(["UC08 Create/Edit Objective"])
+        uc09(["UC09 Manage Key Result"])
+        uc10(["UC10 Align to Parent Objective"])
+        uc11(["UC11 Soft Delete OKR"])
         uc12(["UC12 Check-in Key Result"])
-        uc13(["UC13 Xem lịch sử tiến độ"])
-        uc17(["UC17 Đề cử đồng nghiệp"])
-        uc19(["UC19 Điền phiếu đánh giá"])
-        uc21(["UC21 Xem kết quả 360"])
-        uc25(["UC25 Nhận thông báo"])
-        uc32(["UC32 Chạy luồng tự động AI"])
+        uc13(["UC13 View Progress History"])
+        uc17(["UC17 Nominate Peers"])
+        uc19(["UC19 Complete Review Form"])
+        uc21(["UC21 View 360 Results"])
+        uc25(["UC25 Receive Notifications"])
+        uc32(["UC32 Execute AI Automated Workflows"])
     end
 
-    scheduler(["Bộ lập lịch"])
-    aiworker(["Bộ xử lý AI"])
+    scheduler(["Scheduler"])
+    aiworker(["AI Processor"])
 
     employee --- uc01 & uc02 & uc03 & uc23 & uc07 & uc08 & uc09 & uc10 & uc11 & uc12 & uc13 & uc17 & uc19 & uc21 & uc25
     uc25 & uc32 --- scheduler
@@ -129,35 +129,35 @@ flowchart LR
     style system fill:#f8fbff,stroke:#1168bd,stroke-dasharray:5 5
 ```
 
-### 3. Use case của Quản lý, Nhân sự và Quản trị viên
+### 3. Use Cases for Manager, HR, and System Admin
 
-Màu xanh lá là use case Quản lý dùng; màu tím là use case chỉ Nhân sự hoặc Quản trị viên dùng; màu nâu là use case của phần tự động hóa bằng AI. UC18, UC24, UC29 và UC31 được nhiều vai trò dùng chung, nhưng phạm vi dữ liệu khác nhau (xem ma trận ở trên). UC29 dành cho người phụ trách đơn vị (trưởng phòng hoặc team lead), thường là Quản lý.
+Green indicates use cases used by Manager; purple indicates use cases used exclusively by HR or System Admin; brown indicates AI automation use cases. UC18, UC24, UC29, and UC31 are shared across multiple roles, but with different data scopes (see matrix above). UC29 is intended for the person in charge of an organizational unit (department head or team lead), typically a Manager.
 
 ```mermaid
 flowchart LR
-    manager(["Quản lý"])
+    manager(["Manager"])
 
-    subgraph system["OKR360 — Ranh giới hệ thống"]
-        uc14(["UC14 Phản hồi check-in"])
-        uc18(["UC18 Duyệt người đánh giá"])
-        uc24(["UC24 Xem, xuất báo cáo"])
-        uc04(["UC04 Quản lý phòng ban, team"])
-        uc05(["UC05 Quản lý người dùng"])
-        uc06(["UC06 Quản lý chu kỳ OKR"])
-        uc26(["UC26 Xem nhật ký"])
-        uc15(["UC15 Quản lý bộ tiêu chí"])
-        uc16(["UC16 Tạo, mở đợt đánh giá"])
-        uc20(["UC20 Theo dõi, đóng đợt"])
-        uc22(["UC22 Tổng hợp, công bố kết quả"])
-        uc29(["UC29 Xử lý vướng mắc được chuyển đến"])
-        uc30(["UC30 Xem bản tin tuần"])
-        uc31(["UC31 Duyệt bản nháp 1-1"])
-        uc27(["UC27 Cấu hình luồng tự động"])
-        uc28(["UC28 Xem lịch sử chạy"])
+    subgraph system["OKR360 — System Boundary"]
+        uc14(["UC14 Provide Check-in Feedback"])
+        uc18(["UC18 Approve Reviewers"])
+        uc24(["UC24 View and Export Reports"])
+        uc04(["UC04 Manage Departments and Teams"])
+        uc05(["UC05 Manage Users"])
+        uc06(["UC06 Manage OKR Cycles"])
+        uc26(["UC26 View Audit Logs"])
+        uc15(["UC15 Manage Evaluation Criteria"])
+        uc16(["UC16 Create and Open Review Campaign"])
+        uc20(["UC20 Monitor and Close Campaign"])
+        uc22(["UC22 Aggregate and Publish Results"])
+        uc29(["UC29 Handle Forwarded Blockers"])
+        uc30(["UC30 View Weekly Digest"])
+        uc31(["UC31 Review 1-on-1 Draft"])
+        uc27(["UC27 Configure Automated Workflows"])
+        uc28(["UC28 View Execution History"])
     end
 
-    admin(["Quản trị viên"])
-    hr(["Nhân sự"])
+    admin(["System Admin"])
+    hr(["HR"])
 
     manager --- uc14 & uc18 & uc24 & uc29 & uc30 & uc31
     uc24 & uc04 & uc05 & uc06 & uc26 & uc27 & uc28 --- admin
@@ -174,31 +174,31 @@ flowchart LR
     style system fill:#f8fbff,stroke:#1168bd,stroke-dasharray:5 5
 ```
 
-## Quy tắc và ràng buộc dùng chung
+## Common Rules and Constraints
 
-Nhiều use case dùng chung các bước kiểm tra. Sơ đồ dưới cho biết nhóm use case nào phải đi qua bước nào: màu xanh đậm là bước kiểm tra chung của mọi hệ thống, màu xanh nhạt là quy tắc riêng của nghiệp vụ OKR360.
+Many use cases share common verification steps. The diagram below illustrates which group of use cases must pass through which checks: dark blue represents standard verification steps common to any system, light blue represents specific business rules of OKR360.
 
 ```mermaid
 flowchart LR
-    any["Mọi use case<br/>(trừ UC01 Đăng nhập)"]
-    okr["Tạo/sửa/xóa OKR, check-in<br/>UC08–UC12"]
-    mgrAct["Manager thao tác cho<br/>nhân viên dưới quyền<br/>UC08, UC14, UC18, UC31"]
-    result["Xem kết quả, báo cáo 360<br/>UC21, UC24"]
-    review["Điền phiếu đánh giá<br/>UC19"]
-    aiflow["Luồng tự động AI<br/>UC32"]
+    any["All use cases<br/>(except UC01 Login)"]
+    okr["Create/edit/delete OKR, check-in<br/>UC08–UC12"]
+    mgrAct["Manager operations for<br/>direct subordinates<br/>UC08, UC14, UC18, UC31"]
+    result["View 360 results, reports<br/>UC21, UC24"]
+    review["Complete review form<br/>UC19"]
+    aiflow["AI automated workflows<br/>UC32"]
 
-    auth["Xác thực phiên đăng nhập"]:::shared
-    rbac["Kiểm tra quyền theo vai trò"]:::shared
-    cycle["Chu kỳ chưa đóng"]:::rule
-    validate["Kiểm tra dữ liệu nhập"]:::shared
-    rollup["Tính lại tiến độ lên cấp trên"]:::rule
-    audit["Ghi nhật ký"]:::shared
-    scope["Kiểm tra quan hệ báo cáo"]:::rule
-    anon["Giữ ẩn danh, ngưỡng 3 phiếu"]:::rule
-    campaign["Đợt đánh giá đang thu phiếu"]:::rule
-    pseudo["Đổi tên người thành mã<br/>trước khi gửi AI"]:::rule
-    schema["Kết quả AI đúng khuôn,<br/>sai thì không hành động"]:::rule
-    readonly["AI không sửa điểm,<br/>chỉ tạo nhãn, cảnh báo, bản nháp"]:::rule
+    auth["Validate login session"]:::shared
+    rbac["Check permissions by role"]:::shared
+    cycle["Cycle not closed"]:::rule
+    validate["Validate input data"]:::shared
+    rollup["Recalculate progress to parent"]:::rule
+    audit["Record audit log"]:::shared
+    scope["Verify reporting relationship"]:::rule
+    anon["Maintain anonymity, threshold of 3"]:::rule
+    campaign["Campaign currently collecting"]:::rule
+    pseudo["Pseudonymize names<br/>before sending to AI"]:::rule
+    schema["AI output matches schema,<br/>fail on mismatch"]:::rule
+    readonly["AI cannot alter scores,<br/>only generates tags, alerts, drafts"]:::rule
 
     any --> auth & rbac
     okr --> cycle & validate & rollup & audit
@@ -211,692 +211,692 @@ flowchart LR
     classDef rule fill:#e8f1fc,color:#123,stroke:#3a7bd5
 ```
 
-- Mọi use case trừ đăng nhập đều phải xác thực phiên và kiểm tra quyền **ở backend**; giao diện ẩn nút đi chỉ để gọn mắt, không phải để bảo mật.
-- OKR có 4 cấp: công ty, phòng ban, team, cá nhân. Được nối vượt cấp: phòng ban chưa chia team thì OKR cá nhân nối thẳng lên OKR phòng ban.
-- Tạo/sửa OKR được phép khi chu kỳ ở `DRAFT` hoặc `ACTIVE`; check-in chỉ được phép khi chu kỳ `ACTIVE`. Chu kỳ `CLOSED` thì chỉ xem.
-- Mỗi lần OKR thay đổi hoặc có check-in, tiến độ được tính lại dọc theo chuỗi mục tiêu cấp trên **trong cùng một lần lưu**.
-- Manager chỉ thao tác được trên đơn vị mình phụ trách (trưởng phòng: phòng ban và các team bên trong; team lead: team của mình) và nhân viên dưới quyền trực tiếp.
-- Kết quả 360 của nhóm Đồng nghiệp và Cấp dưới chỉ hiển thị khi có **từ 3 phiếu trở lên**; không màn hình, báo cáo hay nhật ký nào cho biết ai đánh giá ai.
-- Employee chỉ check-in được Key Result mình phụ trách và chỉ sửa được OKR cá nhân của bản thân.
+- All use cases except login must validate session and verify permissions **at the backend**; hiding buttons on the UI is purely for clean visual presentation, not for security.
+- OKRs exist across 4 levels: company, department, team, personal. Skipping levels is allowed: if a department has not been divided into teams, personal OKRs link directly to department OKRs.
+- Creating/editing OKRs is permitted when the cycle is in `DRAFT` or `ACTIVE`; check-ins are permitted only when the cycle is `ACTIVE`. When a cycle is `CLOSED`, it is read-only.
+- Each time an OKR changes or a check-in occurs, progress is recalculated along the parent objective chain **within the same save transaction**.
+- Managers can only operate within their assigned unit (department heads: their department and contained teams; team leads: their team) and on their direct subordinates.
+- 360 results for Peer and Subordinate groups are only displayed when there are **3 or more submissions**; no screen, report, or log reveals who evaluated whom.
+- Employees can only check in Key Results they are responsible for and can only edit their own personal OKRs.
 
-Quy tắc riêng cho tự động hóa bằng AI:
+Specific rules for AI automation:
 
-- AI **không chấm điểm, không xếp loại, không sửa** số liệu OKR hay 360. Kết quả của AI chỉ là nhãn, cảnh báo, thông báo hoặc bản nháp; mọi nội dung do AI tạo đều có nhãn "Do AI tạo".
-- Nội dung gửi tới ai khác ngoài chính người viết (bản tóm tắt 1-1) luôn là **bản nháp**, có người duyệt rồi mới gửi.
-- Trước khi gửi cho dịch vụ AI, tên người được đổi thành mã (ví dụ `NV-01`); phòng ban và team được gửi dạng mã kèm danh bạ tên (ví dụ `DV-01` = Phòng QA) để AI trả về mã. Hệ thống đổi mã về tên khi nhận kết quả. Email và số điện thoại không bao giờ được gửi; tên đơn vị không phải dữ liệu cá nhân nên được gửi.
-- Nhận xét 360 chỉ được gửi cho AI trong hai trường hợp. Luồng "Bản nháp 1-1": khi đợt đã `CLOSED`, chỉ của nhóm đủ ngưỡng ẩn danh (sau khi gộp), không kèm điểm từng phiếu hay bất kỳ thông tin nào nối được tới người viết. Luồng "Cảnh báo nhận xét 360" (UC19): khi đợt đang `COLLECTING`, chỉ phần nhận xét của chính phiếu đang nộp, đã đổi tên thành mã.
-- Văn bản người dùng gõ chỉ là **dữ liệu**, không phải lệnh cho AI. Kết quả AI phải đúng khuôn JSON đã định; sai khuôn thì không hành động và ghi lỗi.
-- Luồng AI chạy nền sau khi thao tác gốc đã lưu xong; AI chậm hoặc lỗi không làm hỏng check-in hay nộp phiếu. Lỗi thì thử lại tối đa 3 lần, sau đó đánh dấu Lỗi.
-- Mỗi sự kiện chỉ được một luồng xử lý một lần, kể cả khi job chạy lại.
-- Ngoại lệ: cảnh báo nhận xét 360 (UC19) chạy ngay khi bấm nộp, chờ tối đa 5 giây; AI lỗi hoặc quá giờ thì cho nộp bình thường, không cảnh báo. Luồng này không qua hộp thư sự kiện, không có dòng trong lịch sử chạy và không lưu cảnh báo; hệ thống chỉ cộng số lần gọi AI để áp hạn mức, vì một dòng lịch sử cho mỗi lần nộp có thể giúp đoán ai đã chấm.
-- Mỗi luồng có hạn mức số lần gọi AI mỗi ngày; vượt hạn mức thì luồng tạm dừng tới hôm sau và Admin nhận cảnh báo.
+- AI **does not score, grade, or alter** OKR or 360 metrics. AI outputs are strictly limited to tags, alerts, notifications, or drafts; all AI-generated content carries an "AI Generated" badge.
+- Content delivered to anyone other than the original author (such as the 1-on-1 summary draft) is always a **draft**, requiring human review and approval before being sent.
+- Before sending data to the AI service, human names are pseudonymized into identifiers (e.g., `NV-01`); departments and teams are sent as identifiers accompanied by a name directory (e.g., `DV-01` = QA Department) so that AI returns IDs. The system maps IDs back to names upon receiving results. Email addresses and phone numbers are never transmitted; organizational unit names are not personal data and may be included.
+- 360 review comments are only sent to AI in two circumstances: The "1-on-1 Draft" workflow: when the campaign is `CLOSED`, only for groups meeting the anonymity threshold (after aggregation), without individual scores or any information that could trace back to the author. The "360 Review Comment Guard" workflow (UC19): when the campaign is `COLLECTING`, only for the comments section of the form currently being submitted, with names pseudonymized.
+- User-typed text is strictly **data**, never instructions for the AI. AI results must conform to the defined JSON schema; if the schema is invalid, no action is taken and an error is logged.
+- AI workflows run in the background after the primary transaction has completed; slow or failing AI calls do not fail check-ins or form submissions. On failure, the system retries up to 3 times, then marks the run as Error.
+- Each event is processed at most once per workflow, even if the job is rerun.
+- Exception: the 360 review comment guard (UC19) runs immediately upon clicking submit, waiting a maximum of 5 seconds; if AI errors or times out, the submission proceeds normally without warning. This workflow does not use the event outbox, does not create a record in execution history, and does not store alerts; the system only increments the AI call count to enforce quotas, because a history log entry for each submission could enable guessing who submitted.
+- Each workflow has a daily AI call quota; if the quota is exceeded, the workflow pauses until the next day, and System Admin receives an alert.
 
-Cả bốn vai trò đều dùng: đăng nhập, đăng xuất, hồ sơ, dashboard cá nhân, cây OKR, OKR cá nhân, check-in, đề cử, điền phiếu, xem kết quả 360 của bản thân, thông báo.
+All four roles use: login, logout, profile, personal dashboard, OKR tree, personal OKR, check-in, nominate, complete review form, view own 360 results, notifications.
 
-## Phân định Người, Tự động và AI
+## Demarcation of Human, Automation, and AI
 
-Mọi luồng AI đều chạy tự động, nhưng phần lớn việc tự động không dùng AI. Các use case bên dưới gắn nhãn cho từng bước theo quy ước sau:
+All AI workflows run automatically, but most automated tasks do not use AI. The use cases below label each step according to the following conventions:
 
-| Nhãn          | Ai thực hiện                                    | Đặc điểm                                                                 | Ví dụ                                                         |
-| ------------- | ----------------------------------------------- | ------------------------------------------------------------------------ | ------------------------------------------------------------- |
-| **[Người]**   | Người dùng                                      | Thao tác và quyết định; chịu trách nhiệm về kết quả                      | Duyệt bản nháp 1-1, công bố kết quả, chọn "Vẫn nộp"           |
-| **[Tự động]** | Hệ thống hoặc Bộ lập lịch, không cần ai bấm nút | Chạy theo luật cố định, cùng đầu vào luôn cho cùng kết quả; không gọi AI | Cộng dồn tiến độ, tính điểm cuối kỳ, nhắc check-in sau 7 ngày |
-| **[AI]**      | Dịch vụ AI bên ngoài (mô hình ngôn ngữ)         | Đọc văn bản tự do, trả JSON; kết quả có thể sai nên luôn được kiểm tra   | Phân loại vướng mắc, tóm tắt nhận xét 360                     |
+| Label          | Performed By                                    | Characteristics                                                          | Example                                                       |
+| -------------- | ----------------------------------------------- | ------------------------------------------------------------------------ | ------------------------------------------------------------- |
+| **[Human]**    | User                                            | Takes actions and makes decisions; accountable for outcomes              | Approve 1-on-1 draft, publish results, select "Submit Anyway" |
+| **[Automated]**| System or Scheduler, without manual triggering  | Runs based on fixed rules; identical input always produces identical output; does not call AI | Roll up progress, calculate end-of-cycle scores, remind check-in after 7 days |
+| **[AI]**       | External AI service (language model)            | Reads unstructured text, returns JSON; outputs may be inaccurate and are always validated | Classify blockers, summarize 360 comments                     |
 
-Một vài điểm cần lưu ý khi đọc:
+Key points when reading:
 
-- Việc xử lý thông thường của một yêu cầu (kiểm tra quyền, kiểm tra dữ liệu nhập, lưu dữ liệu) không gắn nhãn. Bước không có nhãn là người dùng thao tác hoặc hệ thống xử lý trực tiếp thao tác đó.
-- **[Người]** chỉ được ghi ở những chỗ cần làm rõ người quyết định sau một bước Tự động hoặc AI.
-- Bộ xử lý AI là chương trình của hệ thống, không phải AI. Trong một lần chạy, chỉ bước gọi dịch vụ AI mang nhãn **[AI]**; các bước đổi tên thành mã, kiểm tra khuôn, gắn nhãn, gửi thông báo và ghi lịch sử đều là **[Tự động]**.
+- Standard processing of a request (permission check, input validation, data persistence) is not labeled. Unlabeled steps are performed directly by the user or processed directly by the system in response to user actions.
+- **[Human]** is only explicitly noted where human decision-making needs clarification following an Automated or AI step.
+- The AI Processor is a system background service, not AI itself. Within a run, only the step calling the external AI service carries the **[AI]** label; pseudonymization, schema validation, tagging, notification dispatch, and history logging are all **[Automated]**.
 
-### Tổng hợp theo use case
+### Summary by Use Case
 
-Bảng này chỉ liệt kê use case có bước Tự động hoặc AI. Các use case còn lại không có bước nào như vậy; UC27 và UC28 là việc của người cấu hình và theo dõi tự động hóa.
+This table lists only use cases containing Automated or AI steps. Other use cases have no such steps; UC27 and UC28 are human workflows for configuring and monitoring automation.
 
-| Use case                  | Tự động                                                                                                                  | AI                                                                 | Người quyết định                                                     |
+| Use Case                  | Automated                                                                                                                | AI                                                                 | Decision Maker (Human)                                               |
 | ------------------------- | ------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------ | -------------------------------------------------------------------- |
-| UC06 Quản lý chu kỳ       | Chốt tiến độ khi đóng chu kỳ                                                                                             | Không                                                              | Admin, HR kích hoạt và đóng chu kỳ                                   |
-| UC08 Tạo/sửa Objective    | Ghi nhật ký; ghi sự kiện `OBJECTIVE_CREATED`; gắn ghi chú rà soát                                                        | Rà soát KR mới                                                     | Người tạo tự quyết định sửa hay không                                |
-| UC09, UC10, UC11          | Tính lại tiến độ                                                                                                         | Không                                                              | Người sở hữu OKR                                                     |
-| UC12 Check-in             | Cộng dồn tiến độ; ghi sự kiện `CHECKIN_CREATED`; báo quản lý khi "Chệch hướng"; gắn nhãn, chuyển vướng mắc, nhắc xem lại | Phân loại vướng mắc; so mức tự tin với ghi chú                     | Người check-in tự quyết định mức tự tin và nội dung                  |
-| UC14 Phản hồi check-in    | Thông báo cho người check-in                                                                                             | Không                                                              | Manager viết bình luận                                               |
-| UC16 Mở đợt 360           | Chụp quan hệ báo cáo; sinh phiếu                                                                                         | Không                                                              | HR mở từng giai đoạn                                                 |
-| UC17 Đề cử                | Thông báo cho quản lý trực tiếp                                                                                          | Không                                                              | Nhân viên chọn người                                                 |
-| UC19 Điền phiếu           | Hiện cảnh báo chỉ cho người viết                                                                                         | Phát hiện câu dễ lộ người viết hoặc xúc phạm                       | Người viết sửa hoặc chọn "Vẫn nộp"                                   |
-| UC20 Đóng đợt             | Gửi nhắc; hủy phiếu chưa nộp; tách câu trả lời khỏi người chấm; ghi sự kiện `CAMPAIGN_CLOSED`                            | Không có bước trong UC này; việc đóng đợt kích hoạt "Bản nháp 1-1" | HR gửi nhắc và đóng đợt                                              |
-| UC21 Kết quả 360          | Gộp hoặc ẩn nhóm dưới ngưỡng ẩn danh                                                                                     | Không                                                              | Không có quyết định                                                  |
-| UC22 Kết quả cuối kỳ      | Tính điểm, xếp loại; gửi thông báo                                                                                       | Không; AI không tham gia chấm điểm                                 | HR xem trước và công bố                                              |
-| UC25 Thông báo, nhắc nhở  | Bộ lập lịch kiểm tra sự kiện đến hạn; tạo thông báo; gửi email                                                           | Không                                                              | Không có quyết định                                                  |
-| UC29 Vướng mắc chuyển đến | Thông báo; chuyển về quản lý trực tiếp khi bị từ chối; ghi lại lượt phân loại sai                                        | Có từ trước, ở luồng "Chuyển vướng mắc"                            | Người phụ trách đơn vị nhận xử lý hoặc từ chối                       |
-| UC30 Bản tin tuần         | Bộ lập lịch kích hoạt; đếm số liệu từ database; tạo bản tin; gửi thông báo, email                                        | Gom vướng mắc giống nhau, chọn tối đa 3 việc cần chú ý             | Manager đọc và tự quyết định xử lý                                   |
-| UC31 Bản nháp 1-1         | Lọc nhóm đủ ngưỡng; lưu bản nháp; thông báo khi gửi                                                                      | Tóm tắt điểm mạnh, điểm cần cải thiện                              | Manager hoặc HR sửa, gửi hoặc bỏ                                     |
-| UC32 Luồng AI             | Mọi bước trừ bước gọi dịch vụ AI                                                                                         | Xem bảng từng luồng ở UC32                                         | Không có quyết định trong UC32; người quyết định ở các use case trên |
+| UC06 Manage OKR Cycles    | Finalize progress upon cycle closure                                                                                     | None                                                               | Admin, HR activate and close cycles                                  |
+| UC08 Create/Edit Objective| Write audit log; record `OBJECTIVE_CREATED` event; attach review notes                                                   | Review newly created KRs                                           | Objective creator decides whether to edit or ignore                  |
+| UC09, UC10, UC11          | Recalculate progress                                                                                                     | None                                                               | OKR owner                                                            |
+| UC12 Check-in Key Result  | Roll up progress; record `CHECKIN_CREATED` event; notify manager on "Off track"; tag, route blocker, trigger review reminder | Classify blockers; detect confidence vs. notes mismatch           | Check-in submitter decides confidence level and content              |
+| UC14 Provide Check-in Feedback | Notify check-in owner                                                                                               | None                                                               | Manager writes comments                                              |
+| UC16 Create and Open Review Campaign | Snapshot reporting lines; generate review forms                                                               | None                                                               | HR opens each phase                                                  |
+| UC17 Nominate Peers       | Notify direct manager                                                                                                    | None                                                               | Employee selects nominees                                            |
+| UC19 Complete Review Form | Display alert only to author                                                                                             | Detect deanonymizing phrases or offensive language                 | Author edits or selects "Submit Anyway"                              |
+| UC20 Monitor and Close Campaign | Send reminders; cancel unsubmitted forms; dissociate responses from respondents; record `CAMPAIGN_CLOSED` event  | No step within this UC; campaign closure triggers "1-on-1 Draft"   | HR sends reminders and closes campaign                               |
+| UC21 View 360 Results     | Merge or mask groups below anonymity threshold                                                                           | None                                                               | No decision                                                          |
+| UC22 Aggregate and Publish Results | Compute scores, grades; dispatch notifications                                                                  | None; AI does not participate in scoring                           | HR previews and publishes                                            |
+| UC25 Notifications & Reminders | Scheduler checks due events; creates notifications; sends emails                                                    | None                                                               | No decision                                                          |
+| UC29 Handle Forwarded Blockers | Dispatch notification; reroute to direct manager when rejected; log misclassification                                   | Pre-generated in "Blocker Routing" flow                            | Assigned unit head accepts or rejects                                |
+| UC30 View Weekly Digest   | Scheduler triggers; counts DB metrics; generates digest; sends notifications and emails                                  | Cluster similar blockers, select top 3 attention items             | Manager reads and decides follow-up actions                          |
+| UC31 Review 1-on-1 Draft  | Filter groups meeting threshold; save draft; notify upon delivery                                                        | Summarize strengths and areas for improvement                      | Manager or HR edits, sends, or discards                              |
+| UC32 Execute AI Workflows | All steps except the AI API invocation                                                                                   | See per-workflow table in UC32                                     | No decision within UC32; decisions made in use cases above           |
 
-## Đặc tả use case
+## Use Case Specifications
 
-### UC01 Đăng nhập
+### UC01 Login
 
 <table border="1" cellpadding="6" style="border-collapse: collapse; width: 100%">
-  <tr><td width="16%"><b>Mã use case</b></td><td colspan="2" width="20%">UC01</td><td width="16%"><b>Tên use case</b></td><td width="48%">Đăng nhập</td></tr>
-  <tr><td valign="top"><b>Tác nhân</b></td><td colspan="4">Mọi vai trò</td></tr>
-  <tr><td valign="top"><b>Mô tả</b></td><td colspan="4">Người dùng đăng nhập bằng email và mật khẩu để vào phần việc mình được phép.</td></tr>
-  <tr><td valign="top"><b>Tiền điều kiện</b></td><td colspan="4">Tài khoản tồn tại và đang hoạt động</td></tr>
-  <tr><td rowspan="4" valign="top"><b>Luồng sự kiện chính (Thành công)</b></td><td><b>STT</b></td><td><b>Thực hiện bởi</b></td><td colspan="2"><b>Hành động</b></td></tr>
-  <tr><td>1.</td><td>Người dùng</td><td colspan="2">mở trang đăng nhập, nhập email và mật khẩu, bấm "Đăng nhập"</td></tr>
-  <tr><td>2.</td><td>Hệ thống</td><td colspan="2">kiểm tra thông tin và trạng thái tài khoản</td></tr>
-  <tr><td>3.</td><td>Hệ thống</td><td colspan="2">trả về token và hồ sơ an toàn, chuyển tới Dashboard</td></tr>
-  <tr><td rowspan="3" valign="top"><b>Luồng sự kiện thay thế</b></td><td><b>STT</b></td><td><b>Thực hiện bởi</b></td><td colspan="2"><b>Hành động</b></td></tr>
-  <tr><td>2a.</td><td>Hệ thống</td><td colspan="2">sai thông tin hoặc tài khoản bị khóa → báo lỗi chung, không cho biết tài khoản có tồn tại hay không; người dùng ở lại trang đăng nhập</td></tr>
-  <tr><td>2b.</td><td>Hệ thống</td><td colspan="2">sai quá 5 lần trong 15 phút → tạm khóa đăng nhập</td></tr>
-  <tr><td valign="top"><b>Quyền</b></td><td colspan="4">Công khai</td></tr>
-  <tr><td valign="top"><b>Hậu điều kiện</b></td><td colspan="4">Phiên làm việc có token hết hạn sau 30 phút</td></tr>
+  <tr><td width="16%"><b>Use Case ID</b></td><td colspan="2" width="20%">UC01</td><td width="16%"><b>Use Case Name</b></td><td width="48%">Login</td></tr>
+  <tr><td valign="top"><b>Actors</b></td><td colspan="4">All roles</td></tr>
+  <tr><td valign="top"><b>Description</b></td><td colspan="4">Users log in using email and password to access authorized features.</td></tr>
+  <tr><td valign="top"><b>Preconditions</b></td><td colspan="4">Account exists and is active</td></tr>
+  <tr><td rowspan="4" valign="top"><b>Main Flow (Success)</b></td><td><b>Step</b></td><td><b>Performed By</b></td><td colspan="2"><b>Action</b></td></tr>
+  <tr><td>1.</td><td>User</td><td colspan="2">opens login page, enters email and password, clicks "Login"</td></tr>
+  <tr><td>2.</td><td>System</td><td colspan="2">validates credentials and account status</td></tr>
+  <tr><td>3.</td><td>System</td><td colspan="2">returns token and safe profile, redirects to Dashboard</td></tr>
+  <tr><td rowspan="3" valign="top"><b>Alternative Flows</b></td><td><b>Step</b></td><td><b>Performed By</b></td><td colspan="2"><b>Action</b></td></tr>
+  <tr><td>2a.</td><td>System</td><td colspan="2">invalid credentials or account locked → displays generic error message without revealing whether account exists; user remains on login page</td></tr>
+  <tr><td>2b.</td><td>System</td><td colspan="2">more than 5 consecutive failed attempts within 15 minutes → temporarily locks login</td></tr>
+  <tr><td valign="top"><b>Permissions</b></td><td colspan="4">Public</td></tr>
+  <tr><td valign="top"><b>Postconditions</b></td><td colspan="4">Active session with token expiring after 30 minutes</td></tr>
 </table>
 
-### UC02 Đăng xuất
+### UC02 Logout
 
 <table border="1" cellpadding="6" style="border-collapse: collapse; width: 100%">
-  <tr><td width="16%"><b>Mã use case</b></td><td colspan="2" width="20%">UC02</td><td width="16%"><b>Tên use case</b></td><td width="48%">Đăng xuất</td></tr>
-  <tr><td valign="top"><b>Tác nhân</b></td><td colspan="4">Mọi vai trò</td></tr>
-  <tr><td valign="top"><b>Mô tả</b></td><td colspan="4">Người dùng kết thúc phiên làm việc trên thiết bị đang dùng.</td></tr>
-  <tr><td valign="top"><b>Tiền điều kiện</b></td><td colspan="4">Đã đăng nhập</td></tr>
-  <tr><td rowspan="4" valign="top"><b>Luồng sự kiện chính (Thành công)</b></td><td><b>STT</b></td><td><b>Thực hiện bởi</b></td><td colspan="2"><b>Hành động</b></td></tr>
-  <tr><td>1.</td><td>Người dùng</td><td colspan="2">bấm "Đăng xuất"</td></tr>
-  <tr><td>2.</td><td>Hệ thống</td><td colspan="2">xóa token và dữ liệu phiên phía client</td></tr>
-  <tr><td>3.</td><td>Hệ thống</td><td colspan="2">chuyển về trang đăng nhập</td></tr>
-  <tr><td valign="top"><b>Luồng sự kiện thay thế</b></td><td colspan="4">Không có</td></tr>
-  <tr><td valign="top"><b>Quyền</b></td><td colspan="4">Đã xác thực</td></tr>
-  <tr><td valign="top"><b>Hậu điều kiện</b></td><td colspan="4">Không truy cập được trang nội bộ từ thiết bị đã đăng xuất</td></tr>
+  <tr><td width="16%"><b>Use Case ID</b></td><td colspan="2" width="20%">UC02</td><td width="16%"><b>Use Case Name</b></td><td width="48%">Logout</td></tr>
+  <tr><td valign="top"><b>Actors</b></td><td colspan="4">All roles</td></tr>
+  <tr><td valign="top"><b>Description</b></td><td colspan="4">User terminates current session on current device.</td></tr>
+  <tr><td valign="top"><b>Preconditions</b></td><td colspan="4">Logged in</td></tr>
+  <tr><td rowspan="4" valign="top"><b>Main Flow (Success)</b></td><td><b>Step</b></td><td><b>Performed By</b></td><td colspan="2"><b>Action</b></td></tr>
+  <tr><td>1.</td><td>User</td><td colspan="2">clicks "Logout"</td></tr>
+  <tr><td>2.</td><td>System</td><td colspan="2">clears token and session data on client side</td></tr>
+  <tr><td>3.</td><td>System</td><td colspan="2">redirects to login page</td></tr>
+  <tr><td valign="top"><b>Alternative Flows</b></td><td colspan="4">None</td></tr>
+  <tr><td valign="top"><b>Permissions</b></td><td colspan="4">Authenticated</td></tr>
+  <tr><td valign="top"><b>Postconditions</b></td><td colspan="4">Cannot access internal pages from the logged-out device</td></tr>
 </table>
 
-### UC03 Quản lý hồ sơ cá nhân
+### UC03 Manage Personal Profile
 
 <table border="1" cellpadding="6" style="border-collapse: collapse; width: 100%">
-  <tr><td width="16%"><b>Mã use case</b></td><td colspan="2" width="20%">UC03</td><td width="16%"><b>Tên use case</b></td><td width="48%">Quản lý hồ sơ cá nhân</td></tr>
-  <tr><td valign="top"><b>Tác nhân</b></td><td colspan="4">Mọi vai trò</td></tr>
-  <tr><td valign="top"><b>Mô tả</b></td><td colspan="4">Người dùng cập nhật thông tin cá nhân, đổi mật khẩu và xem quyền của mình.</td></tr>
-  <tr><td valign="top"><b>Tiền điều kiện</b></td><td colspan="4">Đã đăng nhập</td></tr>
-  <tr><td rowspan="6" valign="top"><b>Luồng sự kiện chính (Thành công)</b></td><td><b>STT</b></td><td><b>Thực hiện bởi</b></td><td colspan="2"><b>Hành động</b></td></tr>
-  <tr><td>1.</td><td>Người dùng</td><td colspan="2">mở "Hồ sơ", tab Tài khoản: sửa họ tên, số điện thoại, ảnh đại diện (V1 lưu đường dẫn ảnh, chưa có tải file lên), bấm lưu</td></tr>
-  <tr><td>2.</td><td>Hệ thống</td><td colspan="2">lưu thông tin</td></tr>
-  <tr><td>3.</td><td>Người dùng</td><td colspan="2">tab Bảo mật: nhập mật khẩu cũ và mật khẩu mới (tối thiểu 8 ký tự)</td></tr>
-  <tr><td>4.</td><td>Hệ thống</td><td colspan="2">kiểm tra mật khẩu cũ, lưu mật khẩu mới</td></tr>
-  <tr><td>5.</td><td>Người dùng</td><td colspan="2">tab Quyền: xem ma trận quyền của mình</td></tr>
-  <tr><td rowspan="2" valign="top"><b>Luồng sự kiện thay thế</b></td><td><b>STT</b></td><td><b>Thực hiện bởi</b></td><td colspan="2"><b>Hành động</b></td></tr>
-  <tr><td>4a.</td><td>Hệ thống</td><td colspan="2">mật khẩu cũ sai hoặc mật khẩu mới ngắn hơn 8 ký tự → báo lỗi, không đổi mật khẩu</td></tr>
-  <tr><td valign="top"><b>Quyền</b></td><td colspan="4">Đã xác thực</td></tr>
-  <tr><td valign="top"><b>Hậu điều kiện</b></td><td colspan="4">Email, vai trò, phòng ban, quản lý trực tiếp chỉ được xem, không tự sửa được</td></tr>
+  <tr><td width="16%"><b>Use Case ID</b></td><td colspan="2" width="20%">UC03</td><td width="16%"><b>Use Case Name</b></td><td width="48%">Manage Personal Profile</td></tr>
+  <tr><td valign="top"><b>Actors</b></td><td colspan="4">All roles</td></tr>
+  <tr><td valign="top"><b>Description</b></td><td colspan="4">User updates personal profile information, changes password, and views assigned permissions.</td></tr>
+  <tr><td valign="top"><b>Preconditions</b></td><td colspan="4">Logged in</td></tr>
+  <tr><td rowspan="6" valign="top"><b>Main Flow (Success)</b></td><td><b>Step</b></td><td><b>Performed By</b></td><td colspan="2"><b>Action</b></td></tr>
+  <tr><td>1.</td><td>User</td><td colspan="2">opens "Profile", Account tab: edits full name, phone number, avatar URL (V1 stores image URL, file upload not yet supported), clicks save</td></tr>
+  <tr><td>2.</td><td>System</td><td colspan="2">saves information</td></tr>
+  <tr><td>3.</td><td>User</td><td colspan="2">Security tab: enters current password and new password (minimum 8 characters)</td></tr>
+  <tr><td>4.</td><td>System</td><td colspan="2">verifies current password, saves new password</td></tr>
+  <tr><td>5.</td><td>User</td><td colspan="2">Permissions tab: views assigned permission matrix</td></tr>
+  <tr><td rowspan="2" valign="top"><b>Alternative Flows</b></td><td><b>Step</b></td><td><b>Performed By</b></td><td colspan="2"><b>Action</b></td></tr>
+  <tr><td>4a.</td><td>System</td><td colspan="2">incorrect current password or new password shorter than 8 characters → displays error, does not change password</td></tr>
+  <tr><td valign="top"><b>Permissions</b></td><td colspan="4">Authenticated</td></tr>
+  <tr><td valign="top"><b>Postconditions</b></td><td colspan="4">Email, role, department, and direct manager are read-only and cannot be self-edited</td></tr>
 </table>
 
-### UC04 Quản lý phòng ban và team
+### UC04 Manage Departments and Teams
 
 <table border="1" cellpadding="6" style="border-collapse: collapse; width: 100%">
-  <tr><td width="16%"><b>Mã use case</b></td><td colspan="2" width="20%">UC04</td><td width="16%"><b>Tên use case</b></td><td width="48%">Quản lý phòng ban và team</td></tr>
-  <tr><td valign="top"><b>Tác nhân</b></td><td colspan="4">Admin, HR</td></tr>
-  <tr><td valign="top"><b>Mô tả</b></td><td colspan="4">Admin hoặc HR dựng sơ đồ tổ chức gồm phòng ban và team, làm nền cho cây OKR.</td></tr>
-  <tr><td valign="top"><b>Tiền điều kiện</b></td><td colspan="4">Đã đăng nhập với vai trò Admin hoặc HR</td></tr>
-  <tr><td rowspan="6" valign="top"><b>Luồng sự kiện chính (Thành công)</b></td><td><b>STT</b></td><td><b>Thực hiện bởi</b></td><td colspan="2"><b>Hành động</b></td></tr>
-  <tr><td>1.</td><td>Admin, HR</td><td colspan="2">xem cây tổ chức</td></tr>
-  <tr><td>2.</td><td>Admin, HR</td><td colspan="2">thêm hoặc sửa phòng ban: tên, phòng ban cha, trưởng phòng</td></tr>
-  <tr><td>3.</td><td>Admin, HR</td><td colspan="2">thêm hoặc sửa team trong một phòng ban: tên, team lead</td></tr>
-  <tr><td>4.</td><td>Hệ thống</td><td colspan="2">kiểm tra cấu trúc cây, lưu</td></tr>
-  <tr><td>5.</td><td>Admin, HR</td><td colspan="2">ngưng hoạt động phòng ban hoặc team khi cần</td></tr>
-  <tr><td rowspan="4" valign="top"><b>Luồng sự kiện thay thế</b></td><td><b>STT</b></td><td><b>Thực hiện bởi</b></td><td colspan="2"><b>Hành động</b></td></tr>
-  <tr><td>4a.</td><td>Hệ thống</td><td colspan="2">đơn vị cha tạo vòng lặp → từ chối</td></tr>
-  <tr><td>4b.</td><td>Hệ thống</td><td colspan="2">tạo team dưới một team khác hoặc team không thuộc phòng ban nào → từ chối</td></tr>
-  <tr><td>5a.</td><td>Hệ thống</td><td colspan="2">ngưng đơn vị còn nhân viên đang hoạt động → từ chối</td></tr>
-  <tr><td valign="top"><b>Quyền</b></td><td colspan="4"><code>orgManage</code></td></tr>
-  <tr><td valign="top"><b>Hậu điều kiện</b></td><td colspan="4">Sơ đồ tổ chức được cập nhật, là nền cho cây OKR</td></tr>
+  <tr><td width="16%"><b>Use Case ID</b></td><td colspan="2" width="20%">UC04</td><td width="16%"><b>Use Case Name</b></td><td width="48%">Manage Departments and Teams</td></tr>
+  <tr><td valign="top"><b>Actors</b></td><td colspan="4">System Admin, HR</td></tr>
+  <tr><td valign="top"><b>Description</b></td><td colspan="4">System Admin or HR builds the organizational hierarchy consisting of departments and teams as the foundation for the OKR tree.</td></tr>
+  <tr><td valign="top"><b>Preconditions</b></td><td colspan="4">Logged in with System Admin or HR role</td></tr>
+  <tr><td rowspan="6" valign="top"><b>Main Flow (Success)</b></td><td><b>Step</b></td><td><b>Performed By</b></td><td colspan="2"><b>Action</b></td></tr>
+  <tr><td>1.</td><td>System Admin, HR</td><td colspan="2">views organizational tree</td></tr>
+  <tr><td>2.</td><td>System Admin, HR</td><td colspan="2">adds or edits department: name, parent department, department head</td></tr>
+  <tr><td>3.</td><td>System Admin, HR</td><td colspan="2">adds or edits team within a department: name, team lead</td></tr>
+  <tr><td>4.</td><td>System</td><td colspan="2">validates tree hierarchy, saves</td></tr>
+  <tr><td>5.</td><td>System Admin, HR</td><td colspan="2">deactivates department or team when necessary</td></tr>
+  <tr><td rowspan="4" valign="top"><b>Alternative Flows</b></td><td><b>Step</b></td><td><b>Performed By</b></td><td colspan="2"><b>Action</b></td></tr>
+  <tr><td>4a.</td><td>System</td><td colspan="2">parent unit causes circular dependency → rejects</td></tr>
+  <tr><td>4b.</td><td>System</td><td colspan="2">creating team under another team or team without parent department → rejects</td></tr>
+  <tr><td>5a.</td><td>System</td><td colspan="2">deactivating unit that still has active employees → rejects</td></tr>
+  <tr><td valign="top"><b>Permissions</b></td><td colspan="4"><code>orgManage</code></td></tr>
+  <tr><td valign="top"><b>Postconditions</b></td><td colspan="4">Organizational structure updated, serving as baseline for OKR tree</td></tr>
 </table>
 
-### UC05 Quản lý người dùng
+### UC05 Manage Users
 
 <table border="1" cellpadding="6" style="border-collapse: collapse; width: 100%">
-  <tr><td width="16%"><b>Mã use case</b></td><td colspan="2" width="20%">UC05</td><td width="16%"><b>Tên use case</b></td><td width="48%">Quản lý người dùng</td></tr>
-  <tr><td valign="top"><b>Tác nhân</b></td><td colspan="4">Admin, HR</td></tr>
-  <tr><td valign="top"><b>Mô tả</b></td><td colspan="4">Admin hoặc HR quản lý tài khoản, vai trò, phòng ban và quản lý trực tiếp, để hệ thống biết ai báo cáo cho ai.</td></tr>
-  <tr><td valign="top"><b>Tiền điều kiện</b></td><td colspan="4">Đã đăng nhập với vai trò Admin hoặc HR</td></tr>
-  <tr><td rowspan="5" valign="top"><b>Luồng sự kiện chính (Thành công)</b></td><td><b>STT</b></td><td><b>Thực hiện bởi</b></td><td colspan="2"><b>Hành động</b></td></tr>
-  <tr><td>1.</td><td>Admin, HR</td><td colspan="2">xem danh sách người dùng</td></tr>
-  <tr><td>2.</td><td>Admin, HR</td><td colspan="2">thêm hoặc sửa: họ tên, email, mật khẩu ban đầu, vai trò, phòng ban, quản lý trực tiếp</td></tr>
-  <tr><td>3.</td><td>Hệ thống</td><td colspan="2">kiểm tra, lưu</td></tr>
-  <tr><td>4.</td><td>Admin, HR</td><td colspan="2">bật hoặc tắt tài khoản</td></tr>
-  <tr><td rowspan="4" valign="top"><b>Luồng sự kiện thay thế</b></td><td><b>STT</b></td><td><b>Thực hiện bởi</b></td><td colspan="2"><b>Hành động</b></td></tr>
-  <tr><td>3a.</td><td>Hệ thống</td><td colspan="2">email trùng → từ chối</td></tr>
-  <tr><td>3b.</td><td>Hệ thống</td><td colspan="2">gán quản lý tạo vòng lặp hoặc tự quản lý chính mình → từ chối</td></tr>
-  <tr><td>3c.</td><td>Hệ thống</td><td colspan="2">HR gán vai trò Admin → <code>403</code></td></tr>
-  <tr><td valign="top"><b>Quyền</b></td><td colspan="4"><code>userManage</code></td></tr>
-  <tr><td valign="top"><b>Hậu điều kiện</b></td><td colspan="4">Người dùng bị tắt không đăng nhập được và không được phân công làm người đánh giá mới</td></tr>
+  <tr><td width="16%"><b>Use Case ID</b></td><td colspan="2" width="20%">UC05</td><td width="16%"><b>Use Case Name</b></td><td width="48%">Manage Users</td></tr>
+  <tr><td valign="top"><b>Actors</b></td><td colspan="4">System Admin, HR</td></tr>
+  <tr><td valign="top"><b>Description</b></td><td colspan="4">System Admin or HR manages user accounts, roles, departments, and direct managers so the system knows reporting lines.</td></tr>
+  <tr><td valign="top"><b>Preconditions</b></td><td colspan="4">Logged in with System Admin or HR role</td></tr>
+  <tr><td rowspan="5" valign="top"><b>Main Flow (Success)</b></td><td><b>Step</b></td><td><b>Performed By</b></td><td colspan="2"><b>Action</b></td></tr>
+  <tr><td>1.</td><td>System Admin, HR</td><td colspan="2">views user list</td></tr>
+  <tr><td>2.</td><td>System Admin, HR</td><td colspan="2">adds or edits: full name, email, initial password, role, department, direct manager</td></tr>
+  <tr><td>3.</td><td>System</td><td colspan="2">validates, saves</td></tr>
+  <tr><td>4.</td><td>System Admin, HR</td><td colspan="2">activates or deactivates user account</td></tr>
+  <tr><td rowspan="4" valign="top"><b>Alternative Flows</b></td><td><b>Step</b></td><td><b>Performed By</b></td><td colspan="2"><b>Action</b></td></tr>
+  <tr><td>3a.</td><td>System</td><td colspan="2">duplicate email → rejects</td></tr>
+  <tr><td>3b.</td><td>System</td><td colspan="2">assigning manager creates circular reporting or self-management → rejects</td></tr>
+  <tr><td>3c.</td><td>System</td><td colspan="2">HR attempts to assign Admin role → <code>403</code></td></tr>
+  <tr><td valign="top"><b>Permissions</b></td><td colspan="4"><code>userManage</code></td></tr>
+  <tr><td valign="top"><b>Postconditions</b></td><td colspan="4">Deactivated user cannot log in and cannot be assigned as a new reviewer</td></tr>
 </table>
 
-### UC06 Quản lý chu kỳ OKR
+### UC06 Manage OKR Cycles
 
 <table border="1" cellpadding="6" style="border-collapse: collapse; width: 100%">
-  <tr><td width="16%"><b>Mã use case</b></td><td colspan="2" width="20%">UC06</td><td width="16%"><b>Tên use case</b></td><td width="48%">Quản lý chu kỳ OKR</td></tr>
-  <tr><td valign="top"><b>Tác nhân</b></td><td colspan="4">Admin, HR</td></tr>
-  <tr><td valign="top"><b>Mô tả</b></td><td colspan="4">Admin hoặc HR mở và đóng một kỳ làm việc chung cho cả công ty, thường là một quý.</td></tr>
-  <tr><td valign="top"><b>Tiền điều kiện</b></td><td colspan="4">Đã đăng nhập với vai trò Admin hoặc HR</td></tr>
-  <tr><td rowspan="7" valign="top"><b>Luồng sự kiện chính (Thành công)</b></td><td><b>STT</b></td><td><b>Thực hiện bởi</b></td><td colspan="2"><b>Hành động</b></td></tr>
-  <tr><td>1.</td><td>Admin, HR</td><td colspan="2">tạo chu kỳ: tên, ngày bắt đầu, ngày kết thúc, hạn chốt lập mục tiêu, số Objective tối đa, tỷ trọng OKR/360</td></tr>
-  <tr><td>2.</td><td>Hệ thống</td><td colspan="2">lưu chu kỳ ở trạng thái <code>DRAFT</code></td></tr>
-  <tr><td>3.</td><td>Admin, HR</td><td colspan="2">kích hoạt chu kỳ</td></tr>
-  <tr><td>4.</td><td>Hệ thống</td><td colspan="2">chuyển sang <code>ACTIVE</code></td></tr>
-  <tr><td>5.</td><td>Admin, HR</td><td colspan="2">hết quý thì đóng chu kỳ</td></tr>
-  <tr><td>6.</td><td>Hệ thống</td><td colspan="2">chuyển sang <code>CLOSED</code>, chốt tiến độ cuối kỳ của mọi Objective</td></tr>
-  <tr><td rowspan="3" valign="top"><b>Luồng sự kiện thay thế</b></td><td><b>STT</b></td><td><b>Thực hiện bởi</b></td><td colspan="2"><b>Hành động</b></td></tr>
-  <tr><td>2a.</td><td>Hệ thống</td><td colspan="2">ngày kết thúc trước ngày bắt đầu → báo lỗi</td></tr>
-  <tr><td>4a.</td><td>Hệ thống</td><td colspan="2">đã có chu kỳ <code>ACTIVE</code> khác → từ chối</td></tr>
-  <tr><td valign="top"><b>Quyền</b></td><td colspan="4"><code>cycleManage</code></td></tr>
-  <tr><td valign="top"><b>Hậu điều kiện</b></td><td colspan="4">Khi đóng, tiến độ được chốt và mọi OKR của chu kỳ chỉ còn xem được</td></tr>
+  <tr><td width="16%"><b>Use Case ID</b></td><td colspan="2" width="20%">UC06</td><td width="16%"><b>Use Case Name</b></td><td width="48%">Manage OKR Cycles</td></tr>
+  <tr><td valign="top"><b>Actors</b></td><td colspan="4">System Admin, HR</td></tr>
+  <tr><td valign="top"><b>Description</b></td><td colspan="4">System Admin or HR opens and closes a shared company-wide working period, typically a quarter.</td></tr>
+  <tr><td valign="top"><b>Preconditions</b></td><td colspan="4">Logged in with System Admin or HR role</td></tr>
+  <tr><td rowspan="7" valign="top"><b>Main Flow (Success)</b></td><td><b>Step</b></td><td><b>Performed By</b></td><td colspan="2"><b>Action</b></td></tr>
+  <tr><td>1.</td><td>System Admin, HR</td><td colspan="2">creates cycle: name, start date, end date, goal setting deadline, max objectives per user, OKR/360 weight ratio</td></tr>
+  <tr><td>2.</td><td>System</td><td colspan="2">saves cycle in <code>DRAFT</code> status</td></tr>
+  <tr><td>3.</td><td>System Admin, HR</td><td colspan="2">activates cycle</td></tr>
+  <tr><td>4.</td><td>System</td><td colspan="2">transitions status to <code>ACTIVE</code></td></tr>
+  <tr><td>5.</td><td>System Admin, HR</td><td colspan="2">closes cycle at end of quarter</td></tr>
+  <tr><td>6.</td><td>System</td><td colspan="2">transitions status to <code>CLOSED</code>, finalizes end-of-cycle progress for all Objectives</td></tr>
+  <tr><td rowspan="3" valign="top"><b>Alternative Flows</b></td><td><b>Step</b></td><td><b>Performed By</b></td><td colspan="2"><b>Action</b></td></tr>
+  <tr><td>2a.</td><td>System</td><td colspan="2">end date earlier than start date → displays error</td></tr>
+  <tr><td>4a.</td><td>System</td><td colspan="2">another cycle is already <code>ACTIVE</code> → rejects</td></tr>
+  <tr><td valign="top"><b>Permissions</b></td><td colspan="4"><code>cycleManage</code></td></tr>
+  <tr><td valign="top"><b>Postconditions</b></td><td colspan="4">Upon closure, progress is locked and all OKRs in cycle become read-only</td></tr>
 </table>
 
-### UC07 Xem cây OKR
+### UC07 View OKR Tree
 
 <table border="1" cellpadding="6" style="border-collapse: collapse; width: 100%">
-  <tr><td width="16%"><b>Mã use case</b></td><td colspan="2" width="20%">UC07</td><td width="16%"><b>Tên use case</b></td><td width="48%">Xem cây OKR</td></tr>
-  <tr><td valign="top"><b>Tác nhân</b></td><td colspan="4">Mọi vai trò</td></tr>
-  <tr><td valign="top"><b>Mô tả</b></td><td colspan="4">Người dùng xem mục tiêu toàn công ty để biết mục tiêu của mình đóng góp vào đâu.</td></tr>
-  <tr><td valign="top"><b>Tiền điều kiện</b></td><td colspan="4">Đã đăng nhập; có ít nhất một chu kỳ</td></tr>
-  <tr><td rowspan="5" valign="top"><b>Luồng sự kiện chính (Thành công)</b></td><td><b>STT</b></td><td><b>Thực hiện bởi</b></td><td colspan="2"><b>Hành động</b></td></tr>
-  <tr><td>1.</td><td>Người dùng</td><td colspan="2">chọn chu kỳ</td></tr>
-  <tr><td>2.</td><td>Hệ thống</td><td colspan="2">hiển thị cây công ty → phòng ban → team → cá nhân</td></tr>
-  <tr><td>3.</td><td>Người dùng</td><td colspan="2">mở rộng, thu gọn, lọc theo phòng ban hoặc team, người, cấp, mức tự tin</td></tr>
-  <tr><td>4.</td><td>Người dùng</td><td colspan="2">mở chi tiết một Objective</td></tr>
-  <tr><td valign="top"><b>Luồng sự kiện thay thế</b></td><td colspan="4">Không có</td></tr>
-  <tr><td valign="top"><b>Quyền</b></td><td colspan="4"><code>okrRead</code></td></tr>
-  <tr><td valign="top"><b>Hậu điều kiện</b></td><td colspan="4">Mỗi nút hiện tiêu đề, người sở hữu, % tiến độ, màu mức tự tin; OKR đã xóa mềm không hiện</td></tr>
+  <tr><td width="16%"><b>Use Case ID</b></td><td colspan="2" width="20%">UC07</td><td width="16%"><b>Use Case Name</b></td><td width="48%">View OKR Tree</td></tr>
+  <tr><td valign="top"><b>Actors</b></td><td colspan="4">All roles</td></tr>
+  <tr><td valign="top"><b>Description</b></td><td colspan="4">Users view company-wide objectives to understand how their own goals contribute to the organization.</td></tr>
+  <tr><td valign="top"><b>Preconditions</b></td><td colspan="4">Logged in; at least one cycle exists</td></tr>
+  <tr><td rowspan="5" valign="top"><b>Main Flow (Success)</b></td><td><b>Step</b></td><td><b>Performed By</b></td><td colspan="2"><b>Action</b></td></tr>
+  <tr><td>1.</td><td>User</td><td colspan="2">selects cycle</td></tr>
+  <tr><td>2.</td><td>System</td><td colspan="2">displays hierarchy: company → department → team → personal</td></tr>
+  <tr><td>3.</td><td>User</td><td colspan="2">expands, collapses, filters by department or team, user, level, confidence level</td></tr>
+  <tr><td>4.</td><td>User</td><td colspan="2">opens details of an Objective</td></tr>
+  <tr><td valign="top"><b>Alternative Flows</b></td><td colspan="4">None</td></tr>
+  <tr><td valign="top"><b>Permissions</b></td><td colspan="4"><code>okrRead</code></td></tr>
+  <tr><td valign="top"><b>Postconditions</b></td><td colspan="4">Each node displays title, owner, % progress, confidence color; soft-deleted OKRs are not displayed</td></tr>
 </table>
 
-### UC08 Tạo/sửa Objective
+### UC08 Create/Edit Objective
 
 <table border="1" cellpadding="6" style="border-collapse: collapse; width: 100%">
-  <tr><td width="16%"><b>Mã use case</b></td><td colspan="2" width="20%">UC08</td><td width="16%"><b>Tên use case</b></td><td width="48%">Tạo/sửa Objective</td></tr>
-  <tr><td valign="top"><b>Tác nhân</b></td><td colspan="4">Nhân viên (OKR cá nhân của bản thân); Manager (trưởng phòng: OKR phòng ban và OKR các team trong phòng; team lead: OKR team mình; cả hai: OKR cá nhân của nhân viên dưới quyền trực tiếp); Admin (mọi cấp)</td></tr>
-  <tr><td valign="top"><b>Mô tả</b></td><td colspan="4">Người dùng tạo hoặc sửa Objective ở cấp mình được phép trong chu kỳ.</td></tr>
-  <tr><td valign="top"><b>Tiền điều kiện</b></td><td colspan="4">Có chu kỳ <code>DRAFT</code> hoặc <code>ACTIVE</code></td></tr>
-  <tr><td rowspan="5" valign="top"><b>Luồng sự kiện chính (Thành công)</b></td><td><b>STT</b></td><td><b>Thực hiện bởi</b></td><td colspan="2"><b>Hành động</b></td></tr>
-  <tr><td>1.</td><td>Người dùng</td><td colspan="2">chọn chu kỳ, bấm "Thêm Objective"</td></tr>
-  <tr><td>2.</td><td>Hệ thống</td><td colspan="2">chỉ hiện các cấp người dùng được phép tạo</td></tr>
-  <tr><td>3.</td><td>Người dùng</td><td colspan="2">chọn cấp, nhập tiêu đề, mô tả, người sở hữu; thêm Key Result (UC09); tùy chọn liên kết cấp trên (UC10); bấm lưu</td></tr>
-  <tr><td>4.</td><td>Hệ thống</td><td colspan="2">kiểm tra, lưu, ghi nhật ký; với Objective mới, ghi sự kiện <code>OBJECTIVE_CREATED</code> trong cùng lần lưu</td></tr>
-  <tr><td rowspan="3" valign="top"><b>Luồng sự kiện thay thế</b></td><td><b>STT</b></td><td><b>Thực hiện bởi</b></td><td colspan="2"><b>Hành động</b></td></tr>
-  <tr><td>4a.</td><td>Hệ thống</td><td colspan="2">vượt số Objective tối đa → báo lỗi</td></tr>
-  <tr><td>4b.</td><td>Hệ thống</td><td colspan="2">chu kỳ đã <code>CLOSED</code> → từ chối</td></tr>
-  <tr><td rowspan="4" valign="top"><b>Luồng AI</b></td><td><b>STT</b></td><td><b>Thực hiện bởi</b></td><td colspan="2"><b>Hành động</b></td></tr>
-  <tr><td>A1.</td><td>AI</td><td colspan="2">chạy nền sau khi Objective mới đã lưu, luồng "Rà soát OKR mới tạo" (UC32): kiểm tra KR có đo được không, có trùng KR của người cùng phòng không, có khớp Objective cấp trên không</td></tr>
-  <tr><td>A2.</td><td>Hệ thống</td><td colspan="2">gắn ghi chú rà soát vào Objective, ví dụ "KR2 chưa có con số đo được"</td></tr>
-  <tr><td>A3.</td><td>Người tạo</td><td colspan="2">tự quyết định sửa hay bỏ qua ghi chú</td></tr>
-  <tr><td valign="top"><b>Quyền</b></td><td colspan="4"><code>okrWrite</code> + kiểm tra cấp OKR và quan hệ báo cáo</td></tr>
-  <tr><td valign="top"><b>Hậu điều kiện</b></td><td colspan="4">Objective xuất hiện trong cây</td></tr>
+  <tr><td width="16%"><b>Use Case ID</b></td><td colspan="2" width="20%">UC08</td><td width="16%"><b>Use Case Name</b></td><td width="48%">Create/Edit Objective</td></tr>
+  <tr><td valign="top"><b>Actors</b></td><td colspan="4">Employee (own personal OKRs); Manager (department heads: department OKRs and team OKRs within the department; team leads: own team OKRs; both: personal OKRs of direct subordinates); System Admin (all levels)</td></tr>
+  <tr><td valign="top"><b>Description</b></td><td colspan="4">Users create or edit Objectives at their authorized level within the cycle.</td></tr>
+  <tr><td valign="top"><b>Preconditions</b></td><td colspan="4">Cycle in <code>DRAFT</code> or <code>ACTIVE</code> status</td></tr>
+  <tr><td rowspan="5" valign="top"><b>Main Flow (Success)</b></td><td><b>Step</b></td><td><b>Performed By</b></td><td colspan="2"><b>Action</b></td></tr>
+  <tr><td>1.</td><td>User</td><td colspan="2">selects cycle, clicks "Add Objective"</td></tr>
+  <tr><td>2.</td><td>System</td><td colspan="2">displays only levels the user is authorized to create</td></tr>
+  <tr><td>3.</td><td>User</td><td colspan="2">selects level, enters title, description, owner; adds Key Results (UC09); optionally aligns to parent objective (UC10); clicks save</td></tr>
+  <tr><td>4.</td><td>System</td><td colspan="2">validates, saves, records audit log; for new Objectives, records <code>OBJECTIVE_CREATED</code> event within the same transaction</td></tr>
+  <tr><td rowspan="3" valign="top"><b>Alternative Flows</b></td><td><b>Step</b></td><td><b>Performed By</b></td><td colspan="2"><b>Action</b></td></tr>
+  <tr><td>4a.</td><td>System</td><td colspan="2">exceeds maximum allowed Objectives → displays error</td></tr>
+  <tr><td>4b.</td><td>System</td><td colspan="2">cycle is <code>CLOSED</code> → rejects</td></tr>
+  <tr><td rowspan="4" valign="top"><b>AI Flow</b></td><td><b>Step</b></td><td><b>Performed By</b></td><td colspan="2"><b>Action</b></td></tr>
+  <tr><td>A1.</td><td>AI</td><td colspan="2">runs in the background after new Objective is saved, "Review Newly Created OKRs" workflow (UC32): checks if KRs are measurable, checks for duplicates among departmental peers, checks alignment with parent Objective</td></tr>
+  <tr><td>A2.</td><td>System</td><td colspan="2">attaches review notes to Objective, e.g., "KR2 lacks a measurable metric"</td></tr>
+  <tr><td>A3.</td><td>Creator</td><td colspan="2">decides whether to edit or dismiss the note</td></tr>
+  <tr><td valign="top"><b>Permissions</b></td><td colspan="4"><code>okrWrite</code> + level check and reporting relationship verification</td></tr>
+  <tr><td valign="top"><b>Postconditions</b></td><td colspan="4">Objective appears in the tree</td></tr>
 </table>
 
-### UC09 Quản lý Key Result
+### UC09 Manage Key Result
 
 <table border="1" cellpadding="6" style="border-collapse: collapse; width: 100%">
-  <tr><td width="16%"><b>Mã use case</b></td><td colspan="2" width="20%">UC09</td><td width="16%"><b>Tên use case</b></td><td width="48%">Quản lý Key Result</td></tr>
-  <tr><td valign="top"><b>Tác nhân</b></td><td colspan="4">Người sở hữu Objective</td></tr>
-  <tr><td valign="top"><b>Mô tả</b></td><td colspan="4">Người sở hữu định nghĩa cách đo mục tiêu bằng 1 đến 5 Key Result.</td></tr>
-  <tr><td valign="top"><b>Tiền điều kiện</b></td><td colspan="4">Objective tồn tại; chu kỳ chưa <code>CLOSED</code></td></tr>
-  <tr><td rowspan="3" valign="top"><b>Luồng sự kiện chính (Thành công)</b></td><td><b>STT</b></td><td><b>Thực hiện bởi</b></td><td colspan="2"><b>Hành động</b></td></tr>
-  <tr><td>1.</td><td>Người sở hữu</td><td colspan="2">thêm hoặc sửa Key Result: tiêu đề, kiểu đo (Số / Phần trăm / Hoàn thành), giá trị ban đầu, giá trị đích, đơn vị, người phụ trách check-in</td></tr>
-  <tr><td>2.</td><td>Hệ thống</td><td colspan="2">kiểm tra, lưu; nếu sửa giá trị đầu hoặc đích của KR đã có check-in thì tính lại tiến độ, giữ nguyên lịch sử check-in</td></tr>
-  <tr><td rowspan="3" valign="top"><b>Luồng sự kiện thay thế</b></td><td><b>STT</b></td><td><b>Thực hiện bởi</b></td><td colspan="2"><b>Hành động</b></td></tr>
-  <tr><td>2a.</td><td>Hệ thống</td><td colspan="2">thêm KR thứ 6 → từ chối</td></tr>
-  <tr><td>2b.</td><td>Hệ thống</td><td colspan="2">giá trị ban đầu bằng giá trị đích → báo lỗi</td></tr>
-  <tr><td valign="top"><b>Quyền</b></td><td colspan="4"><code>okrWrite</code></td></tr>
-  <tr><td valign="top"><b>Hậu điều kiện</b></td><td colspan="4">Objective có 1–5 Key Result đo được</td></tr>
+  <tr><td width="16%"><b>Use Case ID</b></td><td colspan="2" width="20%">UC09</td><td width="16%"><b>Use Case Name</b></td><td width="48%">Manage Key Result</td></tr>
+  <tr><td valign="top"><b>Actors</b></td><td colspan="4">Objective owner</td></tr>
+  <tr><td valign="top"><b>Description</b></td><td colspan="4">Owner defines how the objective is measured using 1 to 5 Key Results.</td></tr>
+  <tr><td valign="top"><b>Preconditions</b></td><td colspan="4">Objective exists; cycle is not <code>CLOSED</code></td></tr>
+  <tr><td rowspan="3" valign="top"><b>Main Flow (Success)</b></td><td><b>Step</b></td><td><b>Performed By</b></td><td colspan="2"><b>Action</b></td></tr>
+  <tr><td>1.</td><td>Owner</td><td colspan="2">adds or edits Key Result: title, metric type (Numeric / Percentage / Milestone), starting value, target value, unit, assigned check-in owner</td></tr>
+  <tr><td>2.</td><td>System</td><td colspan="2">validates, saves; if modifying start or target value of a KR with existing check-ins, recalculates progress while preserving check-in history</td></tr>
+  <tr><td rowspan="3" valign="top"><b>Alternative Flows</b></td><td><b>Step</b></td><td><b>Performed By</b></td><td colspan="2"><b>Action</b></td></tr>
+  <tr><td>2a.</td><td>System</td><td colspan="2">adding 6th KR → rejects</td></tr>
+  <tr><td>2b.</td><td>System</td><td colspan="2">starting value equals target value → displays error</td></tr>
+  <tr><td valign="top"><b>Permissions</b></td><td colspan="4"><code>okrWrite</code></td></tr>
+  <tr><td valign="top"><b>Postconditions</b></td><td colspan="4">Objective has 1–5 measurable Key Results</td></tr>
 </table>
 
-### UC10 Liên kết lên mục tiêu cấp trên
+### UC10 Align to Parent Objective
 
 <table border="1" cellpadding="6" style="border-collapse: collapse; width: 100%">
-  <tr><td width="16%"><b>Mã use case</b></td><td colspan="2" width="20%">UC10</td><td width="16%"><b>Tên use case</b></td><td width="48%">Liên kết lên mục tiêu cấp trên</td></tr>
-  <tr><td valign="top"><b>Tác nhân</b></td><td colspan="4">Người sở hữu Objective</td></tr>
-  <tr><td valign="top"><b>Mô tả</b></td><td colspan="4">Người sở hữu nối Objective vào mục tiêu cấp trên, để tiến độ của mình đóng góp vào mục tiêu chung.</td></tr>
-  <tr><td valign="top"><b>Tiền điều kiện</b></td><td colspan="4">Objective tồn tại; chu kỳ chưa <code>CLOSED</code></td></tr>
-  <tr><td rowspan="4" valign="top"><b>Luồng sự kiện chính (Thành công)</b></td><td><b>STT</b></td><td><b>Thực hiện bởi</b></td><td colspan="2"><b>Hành động</b></td></tr>
-  <tr><td>1.</td><td>Người sở hữu</td><td colspan="2">mở Objective, bấm "Liên kết", chọn Objective cha cùng chu kỳ</td></tr>
-  <tr><td>2.</td><td>Hệ thống</td><td colspan="2">kiểm tra cấp và vòng lặp, lưu</td></tr>
-  <tr><td>3.</td><td>Hệ thống</td><td colspan="2">tính lại tiến độ Objective cha</td></tr>
-  <tr><td rowspan="3" valign="top"><b>Luồng sự kiện thay thế</b></td><td><b>STT</b></td><td><b>Thực hiện bởi</b></td><td colspan="2"><b>Hành động</b></td></tr>
-  <tr><td>2a.</td><td>Hệ thống</td><td colspan="2">sai cấp → báo lỗi. Cấp hợp lệ: OKR phòng ban nối lên OKR công ty; OKR team nối lên OKR phòng ban hoặc công ty; OKR cá nhân nối lên OKR team, phòng ban hoặc công ty</td></tr>
-  <tr><td>2b.</td><td>Hệ thống</td><td colspan="2">liên kết tạo vòng lặp → từ chối</td></tr>
-  <tr><td valign="top"><b>Quyền</b></td><td colspan="4"><code>okrWrite</code></td></tr>
-  <tr><td valign="top"><b>Hậu điều kiện</b></td><td colspan="4">Objective nằm đúng nhánh trong cây; OKR chưa liên kết được đánh dấu "Chưa liên kết"</td></tr>
+  <tr><td width="16%"><b>Use Case ID</b></td><td colspan="2" width="20%">UC10</td><td width="16%"><b>Use Case Name</b></td><td width="48%">Align to Parent Objective</td></tr>
+  <tr><td valign="top"><b>Actors</b></td><td colspan="4">Objective owner</td></tr>
+  <tr><td valign="top"><b>Description</b></td><td colspan="4">Owner connects Objective to a parent objective so that personal/team progress rolls up into broader company goals.</td></tr>
+  <tr><td valign="top"><b>Preconditions</b></td><td colspan="4">Objective exists; cycle is not <code>CLOSED</code></td></tr>
+  <tr><td rowspan="4" valign="top"><b>Main Flow (Success)</b></td><td><b>Step</b></td><td><b>Performed By</b></td><td colspan="2"><b>Action</b></td></tr>
+  <tr><td>1.</td><td>Owner</td><td colspan="2">opens Objective, clicks "Align", selects parent Objective in the same cycle</td></tr>
+  <tr><td>2.</td><td>System</td><td colspan="2">checks level hierarchy and circular dependencies, saves</td></tr>
+  <tr><td>3.</td><td>System</td><td colspan="2">recalculates progress of parent Objective</td></tr>
+  <tr><td rowspan="3" valign="top"><b>Alternative Flows</b></td><td><b>Step</b></td><td><b>Performed By</b></td><td colspan="2"><b>Action</b></td></tr>
+  <tr><td>2a.</td><td>System</td><td colspan="2">invalid hierarchy level → displays error. Valid hierarchy: Department OKR aligns to Company OKR; Team OKR aligns to Department or Company OKR; Personal OKR aligns to Team, Department, or Company OKR</td></tr>
+  <tr><td>2b.</td><td>System</td><td colspan="2">alignment creates circular loop → rejects</td></tr>
+  <tr><td valign="top"><b>Permissions</b></td><td colspan="4"><code>okrWrite</code></td></tr>
+  <tr><td valign="top"><b>Postconditions</b></td><td colspan="4">Objective is placed in the correct branch of the tree; unaligned OKRs are marked "Unaligned"</td></tr>
 </table>
 
-### UC11 Xóa mềm OKR
+### UC11 Soft Delete OKR
 
 <table border="1" cellpadding="6" style="border-collapse: collapse; width: 100%">
-  <tr><td width="16%"><b>Mã use case</b></td><td colspan="2" width="20%">UC11</td><td width="16%"><b>Tên use case</b></td><td width="48%">Xóa mềm OKR</td></tr>
-  <tr><td valign="top"><b>Tác nhân</b></td><td colspan="4">Người sở hữu OKR; Manager với OKR thuộc đơn vị mình phụ trách; Admin</td></tr>
-  <tr><td valign="top"><b>Mô tả</b></td><td colspan="4">Người dùng gỡ OKR đặt sai khỏi cây và báo cáo nhưng vẫn truy vết được.</td></tr>
-  <tr><td valign="top"><b>Tiền điều kiện</b></td><td colspan="4">OKR tồn tại; chu kỳ chưa <code>CLOSED</code></td></tr>
-  <tr><td rowspan="4" valign="top"><b>Luồng sự kiện chính (Thành công)</b></td><td><b>STT</b></td><td><b>Thực hiện bởi</b></td><td colspan="2"><b>Hành động</b></td></tr>
-  <tr><td>1.</td><td>Người dùng</td><td colspan="2">bấm xóa, xác nhận</td></tr>
-  <tr><td>2.</td><td>Hệ thống</td><td colspan="2">đặt <code>deletedAt</code>, <code>deletedBy</code>, không xóa vật lý</td></tr>
-  <tr><td>3.</td><td>Hệ thống</td><td colspan="2">tính lại tiến độ Objective cha</td></tr>
-  <tr><td rowspan="2" valign="top"><b>Luồng sự kiện thay thế</b></td><td><b>STT</b></td><td><b>Thực hiện bởi</b></td><td colspan="2"><b>Hành động</b></td></tr>
-  <tr><td>2a.</td><td>Hệ thống</td><td colspan="2">Objective còn Objective con đang liên kết → từ chối, yêu cầu gỡ liên kết trước</td></tr>
-  <tr><td valign="top"><b>Quyền</b></td><td colspan="4"><code>okrDelete</code></td></tr>
-  <tr><td valign="top"><b>Hậu điều kiện</b></td><td colspan="4">OKR biến mất khỏi cây, dashboard, báo cáo; lịch sử vẫn còn</td></tr>
+  <tr><td width="16%"><b>Use Case ID</b></td><td colspan="2" width="20%">UC11</td><td width="16%"><b>Use Case Name</b></td><td width="48%">Soft Delete OKR</td></tr>
+  <tr><td valign="top"><b>Actors</b></td><td colspan="4">OKR owner; Manager for OKRs within their assigned unit; System Admin</td></tr>
+  <tr><td valign="top"><b>Description</b></td><td colspan="4">User removes an improperly set OKR from tree and reports while preserving traceability.</td></tr>
+  <tr><td valign="top"><b>Preconditions</b></td><td colspan="4">OKR exists; cycle is not <code>CLOSED</code></td></tr>
+  <tr><td rowspan="4" valign="top"><b>Main Flow (Success)</b></td><td><b>Step</b></td><td><b>Performed By</b></td><td colspan="2"><b>Action</b></td></tr>
+  <tr><td>1.</td><td>User</td><td colspan="2">clicks delete, confirms</td></tr>
+  <tr><td>2.</td><td>System</td><td colspan="2">sets <code>deletedAt</code>, <code>deletedBy</code>, does not physically delete</td></tr>
+  <tr><td>3.</td><td>System</td><td colspan="2">recalculates progress of parent Objective</td></tr>
+  <tr><td rowspan="2" valign="top"><b>Alternative Flows</b></td><td><b>Step</b></td><td><b>Performed By</b></td><td colspan="2"><b>Action</b></td></tr>
+  <tr><td>2a.</td><td>System</td><td colspan="2">Objective still has active child Objectives aligned to it → rejects, requires unlinking child objectives first</td></tr>
+  <tr><td valign="top"><b>Permissions</b></td><td colspan="4"><code>okrDelete</code></td></tr>
+  <tr><td valign="top"><b>Postconditions</b></td><td colspan="4">OKR disappears from tree, dashboard, reports; history is preserved</td></tr>
 </table>
 
 ### UC12 Check-in Key Result
 
 <table border="1" cellpadding="6" style="border-collapse: collapse; width: 100%">
-  <tr><td width="16%"><b>Mã use case</b></td><td colspan="2" width="20%">UC12</td><td width="16%"><b>Tên use case</b></td><td width="48%">Check-in Key Result</td></tr>
-  <tr><td valign="top"><b>Tác nhân</b></td><td colspan="4">Người phụ trách Key Result</td></tr>
-  <tr><td valign="top"><b>Mô tả</b></td><td colspan="4">Người phụ trách cập nhật giá trị hiện tại và mức tự tin, để mọi người thấy tiến độ thật ngay lập tức.</td></tr>
-  <tr><td valign="top"><b>Tiền điều kiện</b></td><td colspan="4">Chu kỳ <code>ACTIVE</code>; KR chưa bị xóa</td></tr>
-  <tr><td rowspan="5" valign="top"><b>Luồng sự kiện chính (Thành công)</b></td><td><b>STT</b></td><td><b>Thực hiện bởi</b></td><td colspan="2"><b>Hành động</b></td></tr>
-  <tr><td>1.</td><td>Người phụ trách</td><td colspan="2">mở KR từ dashboard hoặc cây OKR, bấm "Check-in"</td></tr>
-  <tr><td>2.</td><td>Người phụ trách</td><td colspan="2">nhập giá trị hiện tại (hoặc đánh dấu hoàn thành), chọn mức tự tin (Đúng hướng / Có rủi ro / Chệch hướng), ghi chú, vướng mắc; bấm lưu</td></tr>
-  <tr><td>3.</td><td>Hệ thống</td><td colspan="2">lưu bản ghi check-in mới</td></tr>
-  <tr><td>4.</td><td>Hệ thống</td><td colspan="2">tính lại tiến độ KR → Objective → các Objective cấp trên và ghi sự kiện <code>CHECKIN_CREATED</code> trong cùng lần lưu</td></tr>
-  <tr><td rowspan="3" valign="top"><b>Luồng sự kiện thay thế</b></td><td><b>STT</b></td><td><b>Thực hiện bởi</b></td><td colspan="2"><b>Hành động</b></td></tr>
-  <tr><td>3a.</td><td>Hệ thống</td><td colspan="2">giá trị sai kiểu → báo lỗi tại ô nhập</td></tr>
-  <tr><td>4a.</td><td>Hệ thống</td><td colspan="2">chọn "Chệch hướng" → báo quản lý trực tiếp, theo luật, không dùng AI</td></tr>
-  <tr><td rowspan="6" valign="top"><b>Luồng AI</b></td><td><b>STT</b></td><td><b>Thực hiện bởi</b></td><td colspan="2"><b>Hành động</b></td></tr>
-  <tr><td>A1.</td><td>AI</td><td colspan="2">chạy nền khi check-in có vướng mắc, luồng "Chuyển vướng mắc" (UC32): phân loại vướng mắc, chỉ ra đơn vị liên quan và mức nghiêm trọng</td></tr>
-  <tr><td>A2.</td><td>Hệ thống</td><td colspan="2">gắn nhãn vào check-in; nếu là phụ thuộc đơn vị khác thì báo người phụ trách đơn vị đó (UC29)</td></tr>
-  <tr><td>A3.</td><td>AI</td><td colspan="2">chạy nền khi check-in có ghi chú, luồng "Phát hiện check-in không khớp" (UC32): so mức tự tin với ghi chú</td></tr>
-  <tr><td>A4.</td><td>Hệ thống</td><td colspan="2">nếu mâu thuẫn thì nhắc người check-in xem lại; 3 lần mâu thuẫn liên tiếp trên cùng KR thì báo quản lý trực tiếp</td></tr>
-  <tr><td>A5.</td><td>Người phụ trách</td><td colspan="2">tự quyết định có check-in lại hay không</td></tr>
-  <tr><td valign="top"><b>Quyền</b></td><td colspan="4"><code>checkinWrite</code> (chỉ người phụ trách KR)</td></tr>
-  <tr><td valign="top"><b>Hậu điều kiện</b></td><td colspan="4">Tiến độ các cấp phản ánh ngay; bản check-in cũ không bị sửa hay xóa</td></tr>
+  <tr><td width="16%"><b>Use Case ID</b></td><td colspan="2" width="20%">UC12</td><td width="16%"><b>Use Case Name</b></td><td width="48%">Check-in Key Result</td></tr>
+  <tr><td valign="top"><b>Actors</b></td><td colspan="4">Key Result assignee</td></tr>
+  <tr><td valign="top"><b>Description</b></td><td colspan="4">Assignee updates current metric value and confidence level, providing immediate visibility into actual progress.</td></tr>
+  <tr><td valign="top"><b>Preconditions</b></td><td colspan="4">Cycle is <code>ACTIVE</code>; KR is not deleted</td></tr>
+  <tr><td rowspan="5" valign="top"><b>Main Flow (Success)</b></td><td><b>Step</b></td><td><b>Performed By</b></td><td colspan="2"><b>Action</b></td></tr>
+  <tr><td>1.</td><td>Assignee</td><td colspan="2">opens KR from dashboard or OKR tree, clicks "Check-in"</td></tr>
+  <tr><td>2.</td><td>Assignee</td><td colspan="2">enters current value (or marks complete), selects confidence level (On track / At risk / Off track), notes, blockers; clicks save</td></tr>
+  <tr><td>3.</td><td>System</td><td colspan="2">saves new check-in record</td></tr>
+  <tr><td>4.</td><td>System</td><td colspan="2">recalculates progress KR → Objective → parent Objectives and records <code>CHECKIN_CREATED</code> event within the same transaction</td></tr>
+  <tr><td rowspan="3" valign="top"><b>Alternative Flows</b></td><td><b>Step</b></td><td><b>Performed By</b></td><td colspan="2"><b>Action</b></td></tr>
+  <tr><td>3a.</td><td>System</td><td colspan="2">value of invalid type → displays field error</td></tr>
+  <tr><td>4a.</td><td>System</td><td colspan="2">selects "Off track" → notifies direct manager based on rule, without calling AI</td></tr>
+  <tr><td rowspan="6" valign="top"><b>AI Flow</b></td><td><b>Step</b></td><td><b>Performed By</b></td><td colspan="2"><b>Action</b></td></tr>
+  <tr><td>A1.</td><td>AI</td><td colspan="2">runs in the background when check-in includes blockers, "Blocker Routing" workflow (UC32): classifies blocker, identifies related organizational unit and severity</td></tr>
+  <tr><td>A2.</td><td>System</td><td colspan="2">tags check-in; if external dependency identified, alerts the head of that unit (UC29)</td></tr>
+  <tr><td>A3.</td><td>AI</td><td colspan="2">runs in the background when check-in has notes, "Check-in Mismatch Detection" workflow (UC32): compares confidence level against notes</td></tr>
+  <tr><td>A4.</td><td>System</td><td colspan="2">if contradictory, reminds submitter to review; 3 consecutive contradictions on the same KR alerts direct manager</td></tr>
+  <tr><td>A5.</td><td>Assignee</td><td colspan="2">decides whether to re-check-in</td></tr>
+  <tr><td valign="top"><b>Permissions</b></td><td colspan="4"><code>checkinWrite</code> (KR assignee only)</td></tr>
+  <tr><td valign="top"><b>Postconditions</b></td><td colspan="4">Progress at all levels reflects update immediately; previous check-in records are neither edited nor deleted</td></tr>
 </table>
 
-### UC13 Xem lịch sử check-in và biểu đồ tiến độ
+### UC13 View Check-in History and Progress Chart
 
 <table border="1" cellpadding="6" style="border-collapse: collapse; width: 100%">
-  <tr><td width="16%"><b>Mã use case</b></td><td colspan="2" width="20%">UC13</td><td width="16%"><b>Tên use case</b></td><td width="48%">Xem lịch sử check-in và biểu đồ tiến độ</td></tr>
-  <tr><td valign="top"><b>Tác nhân</b></td><td colspan="4">Mọi vai trò</td></tr>
-  <tr><td valign="top"><b>Mô tả</b></td><td colspan="4">Người dùng xem lịch sử của một KR để biết nó bị chững lại từ khi nào.</td></tr>
-  <tr><td valign="top"><b>Tiền điều kiện</b></td><td colspan="4">KR tồn tại</td></tr>
-  <tr><td rowspan="4" valign="top"><b>Luồng sự kiện chính (Thành công)</b></td><td><b>STT</b></td><td><b>Thực hiện bởi</b></td><td colspan="2"><b>Hành động</b></td></tr>
-  <tr><td>1.</td><td>Người dùng</td><td colspan="2">mở một KR</td></tr>
-  <tr><td>2.</td><td>Hệ thống</td><td colspan="2">hiển thị danh sách check-in, mới nhất trước, kèm bình luận và nhãn AI</td></tr>
-  <tr><td>3.</td><td>Hệ thống</td><td colspan="2">hiển thị biểu đồ tiến độ thực tế so với đường kỳ vọng</td></tr>
-  <tr><td valign="top"><b>Luồng sự kiện thay thế</b></td><td colspan="4">Không có</td></tr>
-  <tr><td valign="top"><b>Quyền</b></td><td colspan="4"><code>okrRead</code></td></tr>
-  <tr><td valign="top"><b>Hậu điều kiện</b></td><td colspan="4">Thấy được KR bị chững lại từ khi nào</td></tr>
+  <tr><td width="16%"><b>Use Case ID</b></td><td colspan="2" width="20%">UC13</td><td width="16%"><b>Use Case Name</b></td><td width="48%">View Check-in History and Progress Chart</td></tr>
+  <tr><td valign="top"><b>Actors</b></td><td colspan="4">All roles</td></tr>
+  <tr><td valign="top"><b>Description</b></td><td colspan="4">User views historical timeline of a KR to identify when and why progress stalled.</td></tr>
+  <tr><td valign="top"><b>Preconditions</b></td><td colspan="4">KR exists</td></tr>
+  <tr><td rowspan="4" valign="top"><b>Main Flow (Success)</b></td><td><b>Step</b></td><td><b>Performed By</b></td><td colspan="2"><b>Action</b></td></tr>
+  <tr><td>1.</td><td>User</td><td colspan="2">opens a KR</td></tr>
+  <tr><td>2.</td><td>System</td><td colspan="2">displays check-in history, newest first, including comments and AI tags</td></tr>
+  <tr><td>3.</td><td>System</td><td colspan="2">displays actual progress chart against target trajectory line</td></tr>
+  <tr><td valign="top"><b>Alternative Flows</b></td><td colspan="4">None</td></tr>
+  <tr><td valign="top"><b>Permissions</b></td><td colspan="4"><code>okrRead</code></td></tr>
+  <tr><td valign="top"><b>Postconditions</b></td><td colspan="4">Visibility into when and where KR progress slowed down</td></tr>
 </table>
 
-### UC14 Phản hồi check-in
+### UC14 Provide Check-in Feedback
 
 <table border="1" cellpadding="6" style="border-collapse: collapse; width: 100%">
-  <tr><td width="16%"><b>Mã use case</b></td><td colspan="2" width="20%">UC14</td><td width="16%"><b>Tên use case</b></td><td width="48%">Phản hồi check-in</td></tr>
-  <tr><td valign="top"><b>Tác nhân</b></td><td colspan="4">Manager</td></tr>
-  <tr><td valign="top"><b>Mô tả</b></td><td colspan="4">Quản lý trực tiếp góp ý vào check-in của cấp dưới để hỗ trợ kịp thời.</td></tr>
-  <tr><td valign="top"><b>Tiền điều kiện</b></td><td colspan="4">Check-in thuộc nhân viên dưới quyền trực tiếp</td></tr>
-  <tr><td rowspan="4" valign="top"><b>Luồng sự kiện chính (Thành công)</b></td><td><b>STT</b></td><td><b>Thực hiện bởi</b></td><td colspan="2"><b>Hành động</b></td></tr>
-  <tr><td>1.</td><td>Manager</td><td colspan="2">mở check-in của một nhân viên dưới quyền trực tiếp</td></tr>
-  <tr><td>2.</td><td>Manager</td><td colspan="2">viết bình luận, bấm gửi</td></tr>
-  <tr><td>3.</td><td>Hệ thống</td><td colspan="2">lưu bình luận, thông báo cho người check-in</td></tr>
-  <tr><td rowspan="2" valign="top"><b>Luồng sự kiện thay thế</b></td><td><b>STT</b></td><td><b>Thực hiện bởi</b></td><td colspan="2"><b>Hành động</b></td></tr>
-  <tr><td>3a.</td><td>Hệ thống</td><td colspan="2">người gửi không phải quản lý trực tiếp → <code>403</code></td></tr>
-  <tr><td valign="top"><b>Quyền</b></td><td colspan="4"><code>checkinComment</code> (chỉ quản lý trực tiếp)</td></tr>
-  <tr><td valign="top"><b>Hậu điều kiện</b></td><td colspan="4">Chỉ có bình luận, check-in không bị sửa</td></tr>
+  <tr><td width="16%"><b>Use Case ID</b></td><td colspan="2" width="20%">UC14</td><td width="16%"><b>Use Case Name</b></td><td width="48%">Provide Check-in Feedback</td></tr>
+  <tr><td valign="top"><b>Actors</b></td><td colspan="4">Manager</td></tr>
+  <tr><td valign="top"><b>Description</b></td><td colspan="4">Direct manager provides comments on subordinate's check-in to offer timely support.</td></tr>
+  <tr><td valign="top"><b>Preconditions</b></td><td colspan="4">Check-in belongs to direct subordinate</td></tr>
+  <tr><td rowspan="4" valign="top"><b>Main Flow (Success)</b></td><td><b>Step</b></td><td><b>Performed By</b></td><td colspan="2"><b>Action</b></td></tr>
+  <tr><td>1.</td><td>Manager</td><td colspan="2">opens check-in of a direct subordinate</td></tr>
+  <tr><td>2.</td><td>Manager</td><td colspan="2">writes comment, clicks send</td></tr>
+  <tr><td>3.</td><td>System</td><td colspan="2">saves comment, notifies check-in owner</td></tr>
+  <tr><td rowspan="2" valign="top"><b>Alternative Flows</b></td><td><b>Step</b></td><td><b>Performed By</b></td><td colspan="2"><b>Action</b></td></tr>
+  <tr><td>3a.</td><td>System</td><td colspan="2">sender is not direct manager → <code>403</code></td></tr>
+  <tr><td valign="top"><b>Permissions</b></td><td colspan="4"><code>checkinComment</code> (direct manager only)</td></tr>
+  <tr><td valign="top"><b>Postconditions</b></td><td colspan="4">Comment is appended; original check-in data remains unmodified</td></tr>
 </table>
 
-### UC15 Quản lý bộ tiêu chí đánh giá
+### UC15 Manage Evaluation Criteria
 
 <table border="1" cellpadding="6" style="border-collapse: collapse; width: 100%">
-  <tr><td width="16%"><b>Mã use case</b></td><td colspan="2" width="20%">UC15</td><td width="16%"><b>Tên use case</b></td><td width="48%">Quản lý bộ tiêu chí đánh giá</td></tr>
-  <tr><td valign="top"><b>Tác nhân</b></td><td colspan="4">HR</td></tr>
-  <tr><td valign="top"><b>Mô tả</b></td><td colspan="4">HR tạo mẫu phiếu để các đợt 360 dùng chung một chuẩn.</td></tr>
-  <tr><td valign="top"><b>Tiền điều kiện</b></td><td colspan="4">Đã đăng nhập với vai trò HR</td></tr>
-  <tr><td rowspan="5" valign="top"><b>Luồng sự kiện chính (Thành công)</b></td><td><b>STT</b></td><td><b>Thực hiện bởi</b></td><td colspan="2"><b>Hành động</b></td></tr>
-  <tr><td>1.</td><td>HR</td><td colspan="2">tạo mẫu phiếu</td></tr>
-  <tr><td>2.</td><td>HR</td><td colspan="2">thêm tiêu chí: tên, mô tả, bắt buộc hay không, thang 1–5</td></tr>
-  <tr><td>3.</td><td>HR</td><td colspan="2">thêm câu hỏi mở</td></tr>
-  <tr><td>4.</td><td>Hệ thống</td><td colspan="2">lưu mẫu phiếu</td></tr>
-  <tr><td rowspan="3" valign="top"><b>Luồng sự kiện thay thế</b></td><td><b>STT</b></td><td><b>Thực hiện bởi</b></td><td colspan="2"><b>Hành động</b></td></tr>
-  <tr><td>4a.</td><td>Hệ thống</td><td colspan="2">mẫu không có tiêu chí chấm điểm nào → báo lỗi</td></tr>
-  <tr><td>4b.</td><td>Hệ thống</td><td colspan="2">sửa mẫu đang được đợt đánh giá dùng → từ chối, chỉ được nhân bản thành mẫu mới</td></tr>
-  <tr><td valign="top"><b>Quyền</b></td><td colspan="4"><code>reviewTemplateManage</code></td></tr>
-  <tr><td valign="top"><b>Hậu điều kiện</b></td><td colspan="4">Mẫu phiếu dùng chung cho các đợt đánh giá</td></tr>
+  <tr><td width="16%"><b>Use Case ID</b></td><td colspan="2" width="20%">UC15</td><td width="16%"><b>Use Case Name</b></td><td width="48%">Manage Evaluation Criteria</td></tr>
+  <tr><td valign="top"><b>Actors</b></td><td colspan="4">HR</td></tr>
+  <tr><td valign="top"><b>Description</b></td><td colspan="4">HR creates review templates to ensure 360 review campaigns follow unified standards.</td></tr>
+  <tr><td valign="top"><b>Preconditions</b></td><td colspan="4">Logged in with HR role</td></tr>
+  <tr><td rowspan="5" valign="top"><b>Main Flow (Success)</b></td><td><b>Step</b></td><td><b>Performed By</b></td><td colspan="2"><b>Action</b></td></tr>
+  <tr><td>1.</td><td>HR</td><td colspan="2">creates review template</td></tr>
+  <tr><td>2.</td><td>HR</td><td colspan="2">adds criteria: title, description, required flag, 1–5 scale</td></tr>
+  <tr><td>3.</td><td>HR</td><td colspan="2">adds open-ended questions</td></tr>
+  <tr><td>4.</td><td>System</td><td colspan="2">saves review template</td></tr>
+  <tr><td rowspan="3" valign="top"><b>Alternative Flows</b></td><td><b>Step</b></td><td><b>Performed By</b></td><td colspan="2"><b>Action</b></td></tr>
+  <tr><td>4a.</td><td>System</td><td colspan="2">template contains no scored criteria → displays error</td></tr>
+  <tr><td>4b.</td><td>System</td><td colspan="2">editing template currently in use by an active campaign → rejects, allows duplicating into new template</td></tr>
+  <tr><td valign="top"><b>Permissions</b></td><td colspan="4"><code>reviewTemplateManage</code></td></tr>
+  <tr><td valign="top"><b>Postconditions</b></td><td colspan="4">Standard review template available for campaigns</td></tr>
 </table>
 
-### UC16 Tạo và mở đợt đánh giá 360
+### UC16 Create and Open 360 Review Campaign
 
 <table border="1" cellpadding="6" style="border-collapse: collapse; width: 100%">
-  <tr><td width="16%"><b>Mã use case</b></td><td colspan="2" width="20%">UC16</td><td width="16%"><b>Tên use case</b></td><td width="48%">Tạo và mở đợt đánh giá 360</td></tr>
-  <tr><td valign="top"><b>Tác nhân</b></td><td colspan="4">HR</td></tr>
-  <tr><td valign="top"><b>Mô tả</b></td><td colspan="4">HR tổ chức một đợt đánh giá 360 gắn với chu kỳ, đúng thời điểm.</td></tr>
-  <tr><td valign="top"><b>Tiền điều kiện</b></td><td colspan="4">Có chu kỳ và mẫu phiếu</td></tr>
-  <tr><td rowspan="7" valign="top"><b>Luồng sự kiện chính (Thành công)</b></td><td><b>STT</b></td><td><b>Thực hiện bởi</b></td><td colspan="2"><b>Hành động</b></td></tr>
-  <tr><td>1.</td><td>HR</td><td colspan="2">tạo đợt gắn với chu kỳ: chọn mẫu phiếu, người được đánh giá, hạn đề cử, hạn nộp phiếu</td></tr>
-  <tr><td>2.</td><td>Hệ thống</td><td colspan="2">kiểm tra, lưu đợt ở <code>DRAFT</code></td></tr>
-  <tr><td>3.</td><td>HR</td><td colspan="2">mở giai đoạn đề cử</td></tr>
-  <tr><td>4.</td><td>Hệ thống</td><td colspan="2">chuyển sang <code>NOMINATION</code></td></tr>
-  <tr><td>5.</td><td>HR</td><td colspan="2">khi đủ người đánh giá, mở giai đoạn thu phiếu</td></tr>
-  <tr><td>6.</td><td>Hệ thống</td><td colspan="2">chuyển sang <code>COLLECTING</code>; chụp lại quan hệ báo cáo; sinh phiếu tự đánh giá, quản lý trực tiếp, đồng nghiệp đã duyệt, mọi cấp dưới trực tiếp; khóa tỷ trọng OKR/360 của chu kỳ</td></tr>
-  <tr><td rowspan="3" valign="top"><b>Luồng sự kiện thay thế</b></td><td><b>STT</b></td><td><b>Thực hiện bởi</b></td><td colspan="2"><b>Hành động</b></td></tr>
-  <tr><td>2a.</td><td>Hệ thống</td><td colspan="2">hạn đề cử sau hạn nộp → báo lỗi</td></tr>
-  <tr><td>2b.</td><td>Hệ thống</td><td colspan="2">chu kỳ đã có đợt 360 → từ chối</td></tr>
-  <tr><td valign="top"><b>Quyền</b></td><td colspan="4"><code>reviewCampaignManage</code></td></tr>
-  <tr><td valign="top"><b>Hậu điều kiện</b></td><td colspan="4">Mọi người được đánh giá có đủ phiếu theo bản chụp quan hệ báo cáo</td></tr>
+  <tr><td width="16%"><b>Use Case ID</b></td><td colspan="2" width="20%">UC16</td><td width="16%"><b>Use Case Name</b></td><td width="48%">Create and Open 360 Review Campaign</td></tr>
+  <tr><td valign="top"><b>Actors</b></td><td colspan="4">HR</td></tr>
+  <tr><td valign="top"><b>Description</b></td><td colspan="4">HR organizes a 360 review campaign linked to a cycle at the appropriate time.</td></tr>
+  <tr><td valign="top"><b>Preconditions</b></td><td colspan="4">Cycle and review template exist</td></tr>
+  <tr><td rowspan="7" valign="top"><b>Main Flow (Success)</b></td><td><b>Step</b></td><td><b>Performed By</b></td><td colspan="2"><b>Action</b></td></tr>
+  <tr><td>1.</td><td>HR</td><td colspan="2">creates campaign linked to cycle: selects template, reviewees, nomination deadline, submission deadline</td></tr>
+  <tr><td>2.</td><td>System</td><td colspan="2">validates, saves campaign in <code>DRAFT</code> status</td></tr>
+  <tr><td>3.</td><td>HR</td><td colspan="2">opens nomination phase</td></tr>
+  <tr><td>4.</td><td>System</td><td colspan="2">transitions status to <code>NOMINATION</code></td></tr>
+  <tr><td>5.</td><td>HR</td><td colspan="2">upon finalizing reviewers, opens collection phase</td></tr>
+  <tr><td>6.</td><td>System</td><td colspan="2">transitions status to <code>COLLECTING</code>; snapshots reporting lines; generates self-review, direct manager review, approved peer reviews, and all direct subordinate reviews; locks OKR/360 weight ratio of cycle</td></tr>
+  <tr><td rowspan="3" valign="top"><b>Alternative Flows</b></td><td><b>Step</b></td><td><b>Performed By</b></td><td colspan="2"><b>Action</b></td></tr>
+  <tr><td>2a.</td><td>System</td><td colspan="2">nomination deadline after submission deadline → displays error</td></tr>
+  <tr><td>2b.</td><td>System</td><td colspan="2">cycle already has an existing 360 campaign → rejects</td></tr>
+  <tr><td valign="top"><b>Permissions</b></td><td colspan="4"><code>reviewCampaignManage</code></td></tr>
+  <tr><td valign="top"><b>Postconditions</b></td><td colspan="4">All reviewees have complete review forms generated based on snapshotted reporting hierarchy</td></tr>
 </table>
 
-### UC17 Đề cử đồng nghiệp
+### UC17 Nominate Peers
 
 <table border="1" cellpadding="6" style="border-collapse: collapse; width: 100%">
-  <tr><td width="16%"><b>Mã use case</b></td><td colspan="2" width="20%">UC17</td><td width="16%"><b>Tên use case</b></td><td width="48%">Đề cử đồng nghiệp</td></tr>
-  <tr><td valign="top"><b>Tác nhân</b></td><td colspan="4">Người được đánh giá (mọi vai trò)</td></tr>
-  <tr><td valign="top"><b>Mô tả</b></td><td colspan="4">Người được đánh giá chọn 3–5 đồng nghiệp hiểu công việc của mình để nhận góp ý sát thực tế.</td></tr>
-  <tr><td valign="top"><b>Tiền điều kiện</b></td><td colspan="4">Đợt ở <code>NOMINATION</code></td></tr>
-  <tr><td rowspan="4" valign="top"><b>Luồng sự kiện chính (Thành công)</b></td><td><b>STT</b></td><td><b>Thực hiện bởi</b></td><td colspan="2"><b>Hành động</b></td></tr>
-  <tr><td>1.</td><td>Người được đánh giá</td><td colspan="2">mở "Đề cử", chọn 3–5 đồng nghiệp, bấm gửi</td></tr>
-  <tr><td>2.</td><td>Hệ thống</td><td colspan="2">kiểm tra, lưu danh sách chờ duyệt</td></tr>
-  <tr><td>3.</td><td>Hệ thống</td><td colspan="2">thông báo cho quản lý trực tiếp để duyệt</td></tr>
-  <tr><td rowspan="3" valign="top"><b>Luồng sự kiện thay thế</b></td><td><b>STT</b></td><td><b>Thực hiện bởi</b></td><td colspan="2"><b>Hành động</b></td></tr>
-  <tr><td>2a.</td><td>Hệ thống</td><td colspan="2">chọn chính mình, quản lý trực tiếp, cấp dưới trực tiếp hoặc người bị khóa → báo lỗi</td></tr>
-  <tr><td>2b.</td><td>Hệ thống</td><td colspan="2">số người ngoài khoảng 3–5 → báo lỗi</td></tr>
-  <tr><td valign="top"><b>Quyền</b></td><td colspan="4"><code>nominate</code></td></tr>
-  <tr><td valign="top"><b>Hậu điều kiện</b></td><td colspan="4">Danh sách chờ quản lý duyệt</td></tr>
+  <tr><td width="16%"><b>Use Case ID</b></td><td colspan="2" width="20%">UC17</td><td width="16%"><b>Use Case Name</b></td><td width="48%">Nominate Peers</td></tr>
+  <tr><td valign="top"><b>Actors</b></td><td colspan="4">Reviewee (all roles)</td></tr>
+  <tr><td valign="top"><b>Description</b></td><td colspan="4">Reviewee selects 3–5 peers familiar with their work to receive actionable, practical feedback.</td></tr>
+  <tr><td valign="top"><b>Preconditions</b></td><td colspan="4">Campaign in <code>NOMINATION</code> status</td></tr>
+  <tr><td rowspan="4" valign="top"><b>Main Flow (Success)</b></td><td><b>Step</b></td><td><b>Performed By</b></td><td colspan="2"><b>Action</b></td></tr>
+  <tr><td>1.</td><td>Reviewee</td><td colspan="2">opens "Nomination", selects 3–5 peers, clicks submit</td></tr>
+  <tr><td>2.</td><td>System</td><td colspan="2">validates, saves pending approval list</td></tr>
+  <tr><td>3.</td><td>System</td><td colspan="2">notifies direct manager for approval</td></tr>
+  <tr><td rowspan="3" valign="top"><b>Alternative Flows</b></td><td><b>Step</b></td><td><b>Performed By</b></td><td colspan="2"><b>Action</b></td></tr>
+  <tr><td>2a.</td><td>System</td><td colspan="2">selects self, direct manager, direct subordinate, or locked user → displays error</td></tr>
+  <tr><td>2b.</td><td>System</td><td colspan="2">peer count outside 3–5 range → displays error</td></tr>
+  <tr><td valign="top"><b>Permissions</b></td><td colspan="4"><code>nominate</code></td></tr>
+  <tr><td valign="top"><b>Postconditions</b></td><td colspan="4">Nominee list awaiting manager approval</td></tr>
 </table>
 
-### UC18 Duyệt người đánh giá
+### UC18 Approve Reviewers
 
 <table border="1" cellpadding="6" style="border-collapse: collapse; width: 100%">
-  <tr><td width="16%"><b>Mã use case</b></td><td colspan="2" width="20%">UC18</td><td width="16%"><b>Tên use case</b></td><td width="48%">Duyệt người đánh giá</td></tr>
-  <tr><td valign="top"><b>Tác nhân</b></td><td colspan="4">Manager (cho nhân viên dưới quyền trực tiếp); HR (cho nhân viên không có quản lý trực tiếp)</td></tr>
-  <tr><td valign="top"><b>Mô tả</b></td><td colspan="4">Người duyệt chốt danh sách đồng nghiệp đánh giá cho từng người, tránh chọn toàn người thân quen.</td></tr>
-  <tr><td valign="top"><b>Tiền điều kiện</b></td><td colspan="4">Đợt ở <code>NOMINATION</code></td></tr>
-  <tr><td rowspan="4" valign="top"><b>Luồng sự kiện chính (Thành công)</b></td><td><b>STT</b></td><td><b>Thực hiện bởi</b></td><td colspan="2"><b>Hành động</b></td></tr>
-  <tr><td>1.</td><td>Manager, HR</td><td colspan="2">xem danh sách đề cử của từng nhân viên</td></tr>
-  <tr><td>2.</td><td>Manager, HR</td><td colspan="2">giữ, thêm hoặc bớt người, bấm duyệt</td></tr>
-  <tr><td>3.</td><td>Hệ thống</td><td colspan="2">kiểm tra danh sách có 3–5 đồng nghiệp, lưu</td></tr>
-  <tr><td rowspan="3" valign="top"><b>Luồng sự kiện thay thế</b></td><td><b>STT</b></td><td><b>Thực hiện bởi</b></td><td colspan="2"><b>Hành động</b></td></tr>
-  <tr><td>1a.</td><td>Manager, HR</td><td colspan="2">nhân viên đến hạn chưa đề cử → người duyệt tự chọn đủ số người</td></tr>
-  <tr><td>3a.</td><td>Hệ thống</td><td colspan="2">số người ngoài khoảng 3–5 → báo lỗi</td></tr>
-  <tr><td valign="top"><b>Quyền</b></td><td colspan="4"><code>reviewerApprove</code> + kiểm tra quan hệ báo cáo</td></tr>
-  <tr><td valign="top"><b>Hậu điều kiện</b></td><td colspan="4">Danh sách sau duyệt có 3–5 đồng nghiệp</td></tr>
+  <tr><td width="16%"><b>Use Case ID</b></td><td colspan="2" width="20%">UC18</td><td width="16%"><b>Use Case Name</b></td><td width="48%">Approve Reviewers</td></tr>
+  <tr><td valign="top"><b>Actors</b></td><td colspan="4">Manager (for direct subordinates); HR (for employees without direct manager)</td></tr>
+  <tr><td valign="top"><b>Description</b></td><td colspan="4">Approver finalizes the peer reviewer list for each employee to prevent biased selections.</td></tr>
+  <tr><td valign="top"><b>Preconditions</b></td><td colspan="4">Campaign in <code>NOMINATION</code> status</td></tr>
+  <tr><td rowspan="4" valign="top"><b>Main Flow (Success)</b></td><td><b>Step</b></td><td><b>Performed By</b></td><td colspan="2"><b>Action</b></td></tr>
+  <tr><td>1.</td><td>Manager, HR</td><td colspan="2">views nomination list of each employee</td></tr>
+  <tr><td>2.</td><td>Manager, HR</td><td colspan="2">retains, adds, or removes reviewers, clicks approve</td></tr>
+  <tr><td>3.</td><td>System</td><td colspan="2">validates list contains 3–5 peers, saves</td></tr>
+  <tr><td rowspan="3" valign="top"><b>Alternative Flows</b></td><td><b>Step</b></td><td><b>Performed By</b></td><td colspan="2"><b>Action</b></td></tr>
+  <tr><td>1a.</td><td>Manager, HR</td><td colspan="2">employee missed nomination deadline → approver directly selects required number of peers</td></tr>
+  <tr><td>3a.</td><td>System</td><td colspan="2">peer count outside 3–5 range → displays error</td></tr>
+  <tr><td valign="top"><b>Permissions</b></td><td colspan="4"><code>reviewerApprove</code> + reporting line check</td></tr>
+  <tr><td valign="top"><b>Postconditions</b></td><td colspan="4">Approved reviewer list contains 3–5 peers</td></tr>
 </table>
 
-### UC19 Điền phiếu đánh giá
+### UC19 Complete Review Form
 
 <table border="1" cellpadding="6" style="border-collapse: collapse; width: 100%">
-  <tr><td width="16%"><b>Mã use case</b></td><td colspan="2" width="20%">UC19</td><td width="16%"><b>Tên use case</b></td><td width="48%">Điền phiếu đánh giá</td></tr>
-  <tr><td valign="top"><b>Tác nhân</b></td><td colspan="4">Người đánh giá được phân công (mọi vai trò)</td></tr>
-  <tr><td valign="top"><b>Mô tả</b></td><td colspan="4">Người đánh giá chấm điểm và nhận xét, lưu nháp và nộp mà không bị lộ danh tính.</td></tr>
-  <tr><td valign="top"><b>Tiền điều kiện</b></td><td colspan="4">Đợt ở <code>COLLECTING</code></td></tr>
-  <tr><td rowspan="5" valign="top"><b>Luồng sự kiện chính (Thành công)</b></td><td><b>STT</b></td><td><b>Thực hiện bởi</b></td><td colspan="2"><b>Hành động</b></td></tr>
-  <tr><td>1.</td><td>Người đánh giá</td><td colspan="2">mở "Phiếu cần điền", chọn một phiếu; thấy tên người được đánh giá và vai trò của mình trong phiếu</td></tr>
-  <tr><td>2.</td><td>Người đánh giá</td><td colspan="2">chấm 1–5 hoặc "Không đủ thông tin" cho từng tiêu chí, trả lời câu hỏi mở</td></tr>
-  <tr><td>3.</td><td>Người đánh giá</td><td colspan="2">bấm lưu nháp hoặc nộp</td></tr>
-  <tr><td>4.</td><td>Hệ thống</td><td colspan="2">kiểm tra đủ tiêu chí bắt buộc khi nộp, lưu phiếu</td></tr>
-  <tr><td rowspan="4" valign="top"><b>Luồng sự kiện thay thế</b></td><td><b>STT</b></td><td><b>Thực hiện bởi</b></td><td colspan="2"><b>Hành động</b></td></tr>
-  <tr><td>1a.</td><td>Hệ thống</td><td colspan="2">đợt đã <code>CLOSED</code> → người chấm chỉ thấy phiếu đã nộp hay chưa, không xem lại được nội dung vì câu trả lời đã tách khỏi người chấm</td></tr>
-  <tr><td>3a.</td><td>Người đánh giá</td><td colspan="2">đã nộp mà muốn sửa khi đợt còn <code>COLLECTING</code> → mở lại phiếu, sửa và nộp lại</td></tr>
-  <tr><td>4a.</td><td>Hệ thống</td><td colspan="2">còn tiêu chí bắt buộc chưa chấm → không cho nộp</td></tr>
-  <tr><td rowspan="5" valign="top"><b>Luồng AI</b></td><td><b>STT</b></td><td><b>Thực hiện bởi</b></td><td colspan="2"><b>Hành động</b></td></tr>
-  <tr><td>A1.</td><td>AI</td><td colspan="2">khi bấm nộp, trước bước 4, chạy ngay chứ không qua UC32, chờ tối đa 5 giây: kiểm tra nhận xét mở</td></tr>
-  <tr><td>A2.</td><td>Hệ thống</td><td colspan="2">có câu dễ làm lộ người viết hoặc lời lẽ xúc phạm → hiện cảnh báo chỉ cho người viết, kèm câu bị đánh dấu</td></tr>
-  <tr><td>A3.</td><td>Người đánh giá</td><td colspan="2">sửa nhận xét hoặc chọn "Vẫn nộp"</td></tr>
-  <tr><td>A4.</td><td>Hệ thống</td><td colspan="2">không có gì cần cảnh báo, AI lỗi hoặc quá giờ → nộp bình thường</td></tr>
-  <tr><td valign="top"><b>Quyền</b></td><td colspan="4"><code>reviewSubmit</code> (chỉ phiếu được giao cho mình)</td></tr>
-  <tr><td valign="top"><b>Hậu điều kiện</b></td><td colspan="4">Phiếu của nhóm Đồng nghiệp và Cấp dưới được giữ ẩn danh</td></tr>
+  <tr><td width="16%"><b>Use Case ID</b></td><td colspan="2" width="20%">UC19</td><td width="16%"><b>Use Case Name</b></td><td width="48%">Complete Review Form</td></tr>
+  <tr><td valign="top"><b>Actors</b></td><td colspan="4">Assigned reviewer (all roles)</td></tr>
+  <tr><td valign="top"><b>Description</b></td><td colspan="4">Reviewer scores and comments on feedback form, saves drafts, and submits without compromising anonymity.</td></tr>
+  <tr><td valign="top"><b>Preconditions</b></td><td colspan="4">Campaign in <code>COLLECTING</code> status</td></tr>
+  <tr><td rowspan="5" valign="top"><b>Main Flow (Success)</b></td><td><b>Step</b></td><td><b>Performed By</b></td><td colspan="2"><b>Action</b></td></tr>
+  <tr><td>1.</td><td>Reviewer</td><td colspan="2">opens "Assigned Reviews", selects a form; views reviewee name and reviewer relationship role</td></tr>
+  <tr><td>2.</td><td>Reviewer</td><td colspan="2">rates 1–5 or "Insufficient information" for each criterion, answers open-ended questions</td></tr>
+  <tr><td>3.</td><td>Reviewer</td><td colspan="2">clicks save draft or submit</td></tr>
+  <tr><td>4.</td><td>System</td><td colspan="2">validates all mandatory criteria are scored upon submission, saves form</td></tr>
+  <tr><td rowspan="4" valign="top"><b>Alternative Flows</b></td><td><b>Step</b></td><td><b>Performed By</b></td><td colspan="2"><b>Action</b></td></tr>
+  <tr><td>1a.</td><td>System</td><td colspan="2">campaign is <code>CLOSED</code> → reviewer only sees submission status (submitted or not), cannot view submitted content because responses are detached from respondent</td></tr>
+  <tr><td>3a.</td><td>Reviewer</td><td colspan="2">wishes to update submitted review while campaign is still <code>COLLECTING</code> → reopens form, edits, and resubmits</td></tr>
+  <tr><td>4a.</td><td>System</td><td colspan="2">mandatory criteria remain unrated → blocks submission</td></tr>
+  <tr><td rowspan="5" valign="top"><b>AI Flow</b></td><td><b>Step</b></td><td><b>Performed By</b></td><td colspan="2"><b>Action</b></td></tr>
+  <tr><td>A1.</td><td>AI</td><td colspan="2">upon clicking submit, before step 4, executes synchronously without going through UC32, waiting up to 5 seconds: scans open-ended comments</td></tr>
+  <tr><td>A2.</td><td>System</td><td colspan="2">identifies phrases likely revealing identity or offensive language → displays warning only to author with flagged sentences highlighted</td></tr>
+  <tr><td>A3.</td><td>Reviewer</td><td colspan="2">revises comments or selects "Submit Anyway"</td></tr>
+  <tr><td>A4.</td><td>System</td><td colspan="2">no warning triggered, or AI errors / times out → proceeds with submission normally</td></tr>
+  <tr><td valign="top"><b>Permissions</b></td><td colspan="4"><code>reviewSubmit</code> (assigned forms only)</td></tr>
+  <tr><td valign="top"><b>Postconditions</b></td><td colspan="4">Peer and Subordinate submissions remain strictly anonymous</td></tr>
 </table>
 
-### UC20 Theo dõi tiến độ nộp phiếu và đóng đợt
+### UC20 Monitor Submission Progress and Close Campaign
 
 <table border="1" cellpadding="6" style="border-collapse: collapse; width: 100%">
-  <tr><td width="16%"><b>Mã use case</b></td><td colspan="2" width="20%">UC20</td><td width="16%"><b>Tên use case</b></td><td width="48%">Theo dõi tiến độ nộp phiếu và đóng đợt</td></tr>
-  <tr><td valign="top"><b>Tác nhân</b></td><td colspan="4">HR</td></tr>
-  <tr><td valign="top"><b>Mô tả</b></td><td colspan="4">HR theo dõi tỷ lệ nộp phiếu, nhắc người chưa nộp và đóng đợt đúng hạn.</td></tr>
-  <tr><td valign="top"><b>Tiền điều kiện</b></td><td colspan="4">Đợt ở <code>COLLECTING</code></td></tr>
-  <tr><td rowspan="6" valign="top"><b>Luồng sự kiện chính (Thành công)</b></td><td><b>STT</b></td><td><b>Thực hiện bởi</b></td><td colspan="2"><b>Hành động</b></td></tr>
-  <tr><td>1.</td><td>HR</td><td colspan="2">xem tỷ lệ nộp theo phòng ban và số phiếu còn thiếu của từng người chấm</td></tr>
-  <tr><td>2.</td><td>HR</td><td colspan="2">bấm gửi nhắc người chưa nộp</td></tr>
-  <tr><td>3.</td><td>Hệ thống</td><td colspan="2">gửi nhắc</td></tr>
-  <tr><td>4.</td><td>HR</td><td colspan="2">đến hạn thì đóng đợt</td></tr>
-  <tr><td>5.</td><td>Hệ thống</td><td colspan="2">chuyển sang <code>CLOSED</code>; hủy phiếu chưa nộp; tách câu trả lời khỏi người chấm; ghi sự kiện <code>CAMPAIGN_CLOSED</code>, kích hoạt luồng "Bản nháp 1-1" (UC32)</td></tr>
-  <tr><td valign="top"><b>Luồng sự kiện thay thế</b></td><td colspan="4">Không có</td></tr>
-  <tr><td valign="top"><b>Quyền</b></td><td colspan="4"><code>reviewCampaignManage</code></td></tr>
-  <tr><td valign="top"><b>Hậu điều kiện</b></td><td colspan="4">HR chỉ thấy mỗi người còn thiếu bao nhiêu phiếu, không thấy họ còn thiếu phiếu cho ai; sau khi đóng, không ai nối được điểm với người chấm</td></tr>
+  <tr><td width="16%"><b>Use Case ID</b></td><td colspan="2" width="20%">UC20</td><td width="16%"><b>Use Case Name</b></td><td width="48%">Monitor Submission Progress and Close Campaign</td></tr>
+  <tr><td valign="top"><b>Actors</b></td><td colspan="4">HR</td></tr>
+  <tr><td valign="top"><b>Description</b></td><td colspan="4">HR tracks submission rates, reminds delinquent reviewers, and closes campaign on time.</td></tr>
+  <tr><td valign="top"><b>Preconditions</b></td><td colspan="4">Campaign in <code>COLLECTING</code> status</td></tr>
+  <tr><td rowspan="6" valign="top"><b>Main Flow (Success)</b></td><td><b>Step</b></td><td><b>Performed By</b></td><td colspan="2"><b>Action</b></td></tr>
+  <tr><td>1.</td><td>HR</td><td colspan="2">views submission rates by department and count of missing forms per reviewer</td></tr>
+  <tr><td>2.</td><td>HR</td><td colspan="2">clicks send reminder to non-respondents</td></tr>
+  <tr><td>3.</td><td>System</td><td colspan="2">sends reminders</td></tr>
+  <tr><td>4.</td><td>HR</td><td colspan="2">closes campaign upon reaching deadline</td></tr>
+  <tr><td>5.</td><td>System</td><td colspan="2">transitions status to <code>CLOSED</code>; cancels unsubmitted forms; dissociates responses from respondents; records <code>CAMPAIGN_CLOSED</code> event, triggering "1-on-1 Draft" workflow (UC32)</td></tr>
+  <tr><td valign="top"><b>Alternative Flows</b></td><td colspan="4">None</td></tr>
+  <tr><td valign="top"><b>Permissions</b></td><td colspan="4"><code>reviewCampaignManage</code></td></tr>
+  <tr><td valign="top"><b>Postconditions</b></td><td colspan="4">HR only sees how many forms each reviewer owes, not whom they owe them for; after closure, no one can associate scores with reviewers</td></tr>
 </table>
 
-### UC21 Xem kết quả 360
+### UC21 View 360 Results
 
 <table border="1" cellpadding="6" style="border-collapse: collapse; width: 100%">
-  <tr><td width="16%"><b>Mã use case</b></td><td colspan="2" width="20%">UC21</td><td width="16%"><b>Tên use case</b></td><td width="48%">Xem kết quả 360</td></tr>
-  <tr><td valign="top"><b>Tác nhân</b></td><td colspan="4">Nhân viên (kết quả của bản thân, sau khi công bố); Manager (kết quả của nhân viên dưới quyền trực tiếp, từ khi đóng đợt); HR (kết quả của mọi người)</td></tr>
-  <tr><td valign="top"><b>Mô tả</b></td><td colspan="4">Người dùng xem kết quả 360 theo tiêu chí, theo nhóm người đánh giá và chênh lệch với tự đánh giá, để biết điểm cần cải thiện.</td></tr>
-  <tr><td valign="top"><b>Tiền điều kiện</b></td><td colspan="4">Đợt đã <code>CLOSED</code> (Manager, HR) hoặc <code>PUBLISHED</code> (nhân viên)</td></tr>
-  <tr><td rowspan="4" valign="top"><b>Luồng sự kiện chính (Thành công)</b></td><td><b>STT</b></td><td><b>Thực hiện bởi</b></td><td colspan="2"><b>Hành động</b></td></tr>
-  <tr><td>1.</td><td>Người dùng</td><td colspan="2">mở kết quả 360 của mình, hoặc chọn một nhân viên mình được xem</td></tr>
-  <tr><td>2.</td><td>Hệ thống</td><td colspan="2">kiểm tra quyền và trạng thái đợt</td></tr>
-  <tr><td>3.</td><td>Hệ thống</td><td colspan="2">hiển thị điểm theo tiêu chí, theo nhóm người đánh giá, chênh lệch tự đánh giá so với người khác, nhận xét không kèm tên; nếu quản lý đã gửi bản tóm tắt 1-1 (UC31) thì thêm khối "Tóm tắt từ quản lý"</td></tr>
-  <tr><td rowspan="3" valign="top"><b>Luồng sự kiện thay thế</b></td><td><b>STT</b></td><td><b>Thực hiện bởi</b></td><td colspan="2"><b>Hành động</b></td></tr>
-  <tr><td>2a.</td><td>Hệ thống</td><td colspan="2">nhân viên xem khi đợt chưa công bố → <code>403</code></td></tr>
-  <tr><td>3a.</td><td>Hệ thống</td><td colspan="2">nhóm Đồng nghiệp hoặc Cấp dưới dưới 3 phiếu → gộp hai nhóm; gộp rồi vẫn dưới 3 → ẩn và không tính vào điểm</td></tr>
-  <tr><td valign="top"><b>Quyền</b></td><td colspan="4"><code>reviewResultRead</code> + kiểm tra quan hệ báo cáo</td></tr>
-  <tr><td valign="top"><b>Hậu điều kiện</b></td><td colspan="4">Không ai suy ra được ai đã chấm điểm nào</td></tr>
+  <tr><td width="16%"><b>Use Case ID</b></td><td colspan="2" width="20%">UC21</td><td width="16%"><b>Use Case Name</b></td><td width="48%">View 360 Results</td></tr>
+  <tr><td valign="top"><b>Actors</b></td><td colspan="4">Employee (own results, after publication); Manager (direct subordinates' results, from campaign closure); HR (everyone's results)</td></tr>
+  <tr><td valign="top"><b>Description</b></td><td colspan="4">User views 360 feedback breakdown by criteria, reviewer relationship group, and self-vs-others gaps to identify areas for growth.</td></tr>
+  <tr><td valign="top"><b>Preconditions</b></td><td colspan="4">Campaign in <code>CLOSED</code> (Manager, HR) or <code>PUBLISHED</code> (Employee) status</td></tr>
+  <tr><td rowspan="4" valign="top"><b>Main Flow (Success)</b></td><td><b>Step</b></td><td><b>Performed By</b></td><td colspan="2"><b>Action</b></td></tr>
+  <tr><td>1.</td><td>User</td><td colspan="2">opens own 360 results, or selects an authorized subordinate</td></tr>
+  <tr><td>2.</td><td>System</td><td colspan="2">verifies permissions and campaign status</td></tr>
+  <tr><td>3.</td><td>System</td><td colspan="2">displays scores by criteria, by reviewer group, gap between self-evaluation and others, comments without author names; if manager has sent a 1-on-1 summary (UC31), appends "Summary from Manager" section</td></tr>
+  <tr><td rowspan="3" valign="top"><b>Alternative Flows</b></td><td><b>Step</b></td><td><b>Performed By</b></td><td colspan="2"><b>Action</b></td></tr>
+  <tr><td>2a.</td><td>System</td><td colspan="2">employee views unpublished campaign results → <code>403</code></td></tr>
+  <tr><td>3a.</td><td>System</td><td colspan="2">Peer or Subordinate group has fewer than 3 submissions → merges the two groups; if combined count is still under 3 → masks comments and excludes from group score calculations</td></tr>
+  <tr><td valign="top"><b>Permissions</b></td><td colspan="4"><code>reviewResultRead</code> + reporting relationship check</td></tr>
+  <tr><td valign="top"><b>Postconditions</b></td><td colspan="4">No user can deduce who submitted which rating or comment</td></tr>
 </table>
 
-### UC22 Tổng hợp và công bố kết quả cuối kỳ
+### UC22 Aggregate and Publish Final Results
 
 <table border="1" cellpadding="6" style="border-collapse: collapse; width: 100%">
-  <tr><td width="16%"><b>Mã use case</b></td><td colspan="2" width="20%">UC22</td><td width="16%"><b>Tên use case</b></td><td width="48%">Tổng hợp và công bố kết quả cuối kỳ</td></tr>
-  <tr><td valign="top"><b>Tác nhân</b></td><td colspan="4">HR</td></tr>
-  <tr><td valign="top"><b>Mô tả</b></td><td colspan="4">HR tổng hợp điểm OKR và 360 theo tỷ trọng rồi công bố, để có dữ liệu cuối kỳ cho quyết định nhân sự.</td></tr>
-  <tr><td valign="top"><b>Tiền điều kiện</b></td><td colspan="4">Chu kỳ và đợt đánh giá đều đã <code>CLOSED</code></td></tr>
-  <tr><td rowspan="6" valign="top"><b>Luồng sự kiện chính (Thành công)</b></td><td><b>STT</b></td><td><b>Thực hiện bởi</b></td><td colspan="2"><b>Hành động</b></td></tr>
-  <tr><td>1.</td><td>HR</td><td colspan="2">mở màn hình kết quả cuối kỳ, bấm tổng hợp</td></tr>
-  <tr><td>2.</td><td>Hệ thống</td><td colspan="2">tính điểm OKR, điểm 360, điểm cuối kỳ theo tỷ trọng và xếp loại, không dùng AI</td></tr>
-  <tr><td>3.</td><td>HR</td><td colspan="2">xem trước, xuất file nếu cần</td></tr>
-  <tr><td>4.</td><td>HR</td><td colspan="2">bấm "Công bố"</td></tr>
-  <tr><td>5.</td><td>Hệ thống</td><td colspan="2">chuyển đợt sang <code>PUBLISHED</code>, gửi thông báo cho từng người</td></tr>
-  <tr><td rowspan="4" valign="top"><b>Luồng sự kiện thay thế</b></td><td><b>STT</b></td><td><b>Thực hiện bởi</b></td><td colspan="2"><b>Hành động</b></td></tr>
-  <tr><td>1a.</td><td>Hệ thống</td><td colspan="2">chu kỳ hoặc đợt chưa <code>CLOSED</code> → từ chối</td></tr>
-  <tr><td>2a.</td><td>Hệ thống</td><td colspan="2">người thiếu điểm OKR hoặc điểm 360 → ghi "Thiếu dữ liệu", không cho 0 điểm</td></tr>
-  <tr><td>3a.</td><td>HR</td><td colspan="2">dữ liệu thay đổi trước khi công bố → tổng hợp lại; hệ thống ghi đè kết quả cũ</td></tr>
-  <tr><td valign="top"><b>Quyền</b></td><td colspan="4"><code>finalResultManage</code></td></tr>
-  <tr><td valign="top"><b>Hậu điều kiện</b></td><td colspan="4">Mỗi nhân viên chỉ thấy kết quả của chính mình; sau khi công bố, kết quả không đổi</td></tr>
+  <tr><td width="16%"><b>Use Case ID</b></td><td colspan="2" width="20%">UC22</td><td width="16%"><b>Use Case Name</b></td><td width="48%">Aggregate and Publish Final Results</td></tr>
+  <tr><td valign="top"><b>Actors</b></td><td colspan="4">HR</td></tr>
+  <tr><td valign="top"><b>Description</b></td><td colspan="4">HR aggregates OKR and 360 scores according to configured weights and publishes them, providing final period data for HR decisions.</td></tr>
+  <tr><td valign="top"><b>Preconditions</b></td><td colspan="4">Both cycle and review campaign are <code>CLOSED</code></td></tr>
+  <tr><td rowspan="6" valign="top"><b>Main Flow (Success)</b></td><td><b>Step</b></td><td><b>Performed By</b></td><td colspan="2"><b>Action</b></td></tr>
+  <tr><td>1.</td><td>HR</td><td colspan="2">opens final results screen, clicks aggregate</td></tr>
+  <tr><td>2.</td><td>System</td><td colspan="2">computes OKR score, 360 score, final weighted score and performance rating, without using AI</td></tr>
+  <tr><td>3.</td><td>HR</td><td colspan="2">previews results, exports file if needed</td></tr>
+  <tr><td>4.</td><td>HR</td><td colspan="2">clicks "Publish"</td></tr>
+  <tr><td>5.</td><td>System</td><td colspan="2">transitions campaign to <code>PUBLISHED</code>, sends notifications to individual employees</td></tr>
+  <tr><td rowspan="4" valign="top"><b>Alternative Flows</b></td><td><b>Step</b></td><td><b>Performed By</b></td><td colspan="2"><b>Action</b></td></tr>
+  <tr><td>1a.</td><td>System</td><td colspan="2">cycle or campaign not <code>CLOSED</code> → rejects</td></tr>
+  <tr><td>2a.</td><td>System</td><td colspan="2">user missing OKR score or 360 score → records "Missing Data", does not assign 0 points</td></tr>
+  <tr><td>3a.</td><td>HR</td><td colspan="2">data changes prior to publishing → re-aggregates; system overwrites previous results</td></tr>
+  <tr><td valign="top"><b>Permissions</b></td><td colspan="4"><code>finalResultManage</code></td></tr>
+  <tr><td valign="top"><b>Postconditions</b></td><td colspan="4">Each employee can only view their own final results; once published, results are locked</td></tr>
 </table>
 
-### UC23 Xem dashboard
+### UC23 View Dashboard
 
 <table border="1" cellpadding="6" style="border-collapse: collapse; width: 100%">
-  <tr><td width="16%"><b>Mã use case</b></td><td colspan="2" width="20%">UC23</td><td width="16%"><b>Tên use case</b></td><td width="48%">Xem dashboard</td></tr>
-  <tr><td valign="top"><b>Tác nhân</b></td><td colspan="4">Mọi vai trò</td></tr>
-  <tr><td valign="top"><b>Mô tả</b></td><td colspan="4">Người dùng thấy ngay việc cần làm và tình hình mục tiêu theo vai trò của mình.</td></tr>
-  <tr><td valign="top"><b>Tiền điều kiện</b></td><td colspan="4">Đã đăng nhập</td></tr>
-  <tr><td rowspan="3" valign="top"><b>Luồng sự kiện chính (Thành công)</b></td><td><b>STT</b></td><td><b>Thực hiện bởi</b></td><td colspan="2"><b>Hành động</b></td></tr>
-  <tr><td>1.</td><td>Người dùng</td><td colspan="2">mở trang chủ, chọn chu kỳ</td></tr>
-  <tr><td>2.</td><td>Hệ thống</td><td colspan="2">hiển thị dashboard theo vai trò: cá nhân (mọi người), đội nhóm (Manager), công ty (Admin, HR)</td></tr>
-  <tr><td valign="top"><b>Luồng sự kiện thay thế</b></td><td colspan="4">Không có</td></tr>
-  <tr><td valign="top"><b>Quyền</b></td><td colspan="4"><code>dashboard</code></td></tr>
-  <tr><td valign="top"><b>Hậu điều kiện</b></td><td colspan="4">Số liệu khớp với báo cáo cùng bộ lọc</td></tr>
+  <tr><td width="16%"><b>Use Case ID</b></td><td colspan="2" width="20%">UC23</td><td width="16%"><b>Use Case Name</b></td><td width="48%">View Dashboard</td></tr>
+  <tr><td valign="top"><b>Actors</b></td><td colspan="4">All roles</td></tr>
+  <tr><td valign="top"><b>Description</b></td><td colspan="4">User immediately sees action items and objective progress according to their assigned role.</td></tr>
+  <tr><td valign="top"><b>Preconditions</b></td><td colspan="4">Logged in</td></tr>
+  <tr><td rowspan="3" valign="top"><b>Main Flow (Success)</b></td><td><b>Step</b></td><td><b>Performed By</b></td><td colspan="2"><b>Action</b></td></tr>
+  <tr><td>1.</td><td>User</td><td colspan="2">opens home page, selects cycle</td></tr>
+  <tr><td>2.</td><td>System</td><td colspan="2">displays role-specific dashboard: personal (all roles), team (Manager), company (System Admin, HR)</td></tr>
+  <tr><td valign="top"><b>Alternative Flows</b></td><td colspan="4">None</td></tr>
+  <tr><td valign="top"><b>Permissions</b></td><td colspan="4"><code>dashboard</code></td></tr>
+  <tr><td valign="top"><b>Postconditions</b></td><td colspan="4">Metrics match reports using identical filters</td></tr>
 </table>
 
-### UC24 Xem và xuất báo cáo
+### UC24 View and Export Reports
 
 <table border="1" cellpadding="6" style="border-collapse: collapse; width: 100%">
-  <tr><td width="16%"><b>Mã use case</b></td><td colspan="2" width="20%">UC24</td><td width="16%"><b>Tên use case</b></td><td width="48%">Xem và xuất báo cáo</td></tr>
-  <tr><td valign="top"><b>Tác nhân</b></td><td colspan="4">Admin, HR, Manager</td></tr>
-  <tr><td valign="top"><b>Mô tả</b></td><td colspan="4">Người dùng xem và xuất báo cáo theo bộ lọc để phân tích và chia sẻ.</td></tr>
-  <tr><td valign="top"><b>Tiền điều kiện</b></td><td colspan="4">Đã đăng nhập với vai trò Admin, HR hoặc Manager</td></tr>
-  <tr><td rowspan="6" valign="top"><b>Luồng sự kiện chính (Thành công)</b></td><td><b>STT</b></td><td><b>Thực hiện bởi</b></td><td colspan="2"><b>Hành động</b></td></tr>
-  <tr><td>1.</td><td>Người dùng</td><td colspan="2">chọn loại báo cáo: tiến độ OKR, tỷ lệ check-in, kết quả cuối kỳ</td></tr>
-  <tr><td>2.</td><td>Người dùng</td><td colspan="2">chọn chu kỳ, phòng ban</td></tr>
-  <tr><td>3.</td><td>Hệ thống</td><td colspan="2">hiển thị báo cáo trong phạm vi quyền của người xem</td></tr>
-  <tr><td>4.</td><td>Người dùng</td><td colspan="2">bấm xuất Excel hoặc PDF</td></tr>
-  <tr><td>5.</td><td>Hệ thống</td><td colspan="2">tạo file đúng với bộ lọc đang chọn</td></tr>
-  <tr><td rowspan="3" valign="top"><b>Luồng sự kiện thay thế</b></td><td><b>STT</b></td><td><b>Thực hiện bởi</b></td><td colspan="2"><b>Hành động</b></td></tr>
-  <tr><td>3a.</td><td>Hệ thống</td><td colspan="2">Admin chọn báo cáo kết quả cuối kỳ → từ chối, vì có điểm 360</td></tr>
-  <tr><td>3b.</td><td>Hệ thống</td><td colspan="2">Manager: chỉ thấy đơn vị mình phụ trách; riêng báo cáo kết quả cuối kỳ chỉ gồm nhân viên dưới quyền trực tiếp</td></tr>
-  <tr><td valign="top"><b>Quyền</b></td><td colspan="4"><code>reportRead</code></td></tr>
-  <tr><td valign="top"><b>Hậu điều kiện</b></td><td colspan="4">Báo cáo 360 tổng hợp áp ngưỡng ẩn danh; file xuất khớp số liệu đang hiển thị</td></tr>
+  <tr><td width="16%"><b>Use Case ID</b></td><td colspan="2" width="20%">UC24</td><td width="16%"><b>Use Case Name</b></td><td width="48%">View and Export Reports</td></tr>
+  <tr><td valign="top"><b>Actors</b></td><td colspan="4">System Admin, HR, Manager</td></tr>
+  <tr><td valign="top"><b>Description</b></td><td colspan="4">Users view and export reports using filters for analysis and sharing.</td></tr>
+  <tr><td valign="top"><b>Preconditions</b></td><td colspan="4">Logged in with System Admin, HR, or Manager role</td></tr>
+  <tr><td rowspan="6" valign="top"><b>Main Flow (Success)</b></td><td><b>Step</b></td><td><b>Performed By</b></td><td colspan="2"><b>Action</b></td></tr>
+  <tr><td>1.</td><td>User</td><td colspan="2">selects report type: OKR progress, check-in rate, final results</td></tr>
+  <tr><td>2.</td><td>User</td><td colspan="2">selects cycle, department</td></tr>
+  <tr><td>3.</td><td>System</td><td colspan="2">displays report within viewer's authorized scope</td></tr>
+  <tr><td>4.</td><td>User</td><td colspan="2">clicks export Excel or PDF</td></tr>
+  <tr><td>5.</td><td>System</td><td colspan="2">generates file matching currently selected filters</td></tr>
+  <tr><td rowspan="3" valign="top"><b>Alternative Flows</b></td><td><b>Step</b></td><td><b>Performed By</b></td><td colspan="2"><b>Action</b></td></tr>
+  <tr><td>3a.</td><td>System</td><td colspan="2">System Admin selects final results report → rejects, as it includes 360 scores</td></tr>
+  <tr><td>3b.</td><td>System</td><td colspan="2">Manager: sees assigned unit only; final results report is strictly restricted to direct subordinates</td></tr>
+  <tr><td valign="top"><b>Permissions</b></td><td colspan="4"><code>reportRead</code></td></tr>
+  <tr><td valign="top"><b>Postconditions</b></td><td colspan="4">Aggregated 360 reports enforce anonymity thresholds; exported file matches currently displayed data</td></tr>
 </table>
 
-### UC25 Nhận thông báo và nhắc nhở
+### UC25 Receive Notifications and Reminders
 
 <table border="1" cellpadding="6" style="border-collapse: collapse; width: 100%">
-  <tr><td width="16%"><b>Mã use case</b></td><td colspan="2" width="20%">UC25</td><td width="16%"><b>Tên use case</b></td><td width="48%">Nhận thông báo và nhắc nhở</td></tr>
-  <tr><td valign="top"><b>Tác nhân</b></td><td colspan="4">Mọi vai trò; Bộ lập lịch</td></tr>
-  <tr><td valign="top"><b>Mô tả</b></td><td colspan="4">Người dùng nhận thông báo và nhắc nhở đúng lúc để không quên check-in hay nộp phiếu.</td></tr>
-  <tr><td valign="top"><b>Tiền điều kiện</b></td><td colspan="4">Đã đăng nhập</td></tr>
-  <tr><td rowspan="4" valign="top"><b>Luồng sự kiện chính (Thành công)</b></td><td><b>STT</b></td><td><b>Thực hiện bởi</b></td><td colspan="2"><b>Hành động</b></td></tr>
-  <tr><td>1.</td><td>Bộ lập lịch</td><td colspan="2">kiểm tra các việc đến hạn: KR chưa check-in 7 ngày, chưa đề cử, còn phiếu chưa nộp</td></tr>
-  <tr><td>2.</td><td>Hệ thống</td><td colspan="2">tạo thông báo trong ứng dụng và gửi email, không dùng AI</td></tr>
-  <tr><td>3.</td><td>Người dùng</td><td colspan="2">xem thông báo, đánh dấu đã đọc hoặc đánh dấu tất cả</td></tr>
-  <tr><td valign="top"><b>Luồng sự kiện thay thế</b></td><td colspan="4">Không có</td></tr>
-  <tr><td valign="top"><b>Quyền</b></td><td colspan="4">Đã xác thực</td></tr>
-  <tr><td valign="top"><b>Hậu điều kiện</b></td><td colspan="4">Mỗi người nhận tối đa một lần nhắc cho mỗi sự kiện mỗi ngày</td></tr>
+  <tr><td width="16%"><b>Use Case ID</b></td><td colspan="2" width="20%">UC25</td><td width="16%"><b>Use Case Name</b></td><td width="48%">Receive Notifications and Reminders</td></tr>
+  <tr><td valign="top"><b>Actors</b></td><td colspan="4">All roles; Scheduler</td></tr>
+  <tr><td valign="top"><b>Description</b></td><td colspan="4">Users receive timely notifications and reminders so they do not miss check-ins or form submissions.</td></tr>
+  <tr><td valign="top"><b>Preconditions</b></td><td colspan="4">Logged in</td></tr>
+  <tr><td rowspan="4" valign="top"><b>Main Flow (Success)</b></td><td><b>Step</b></td><td><b>Performed By</b></td><td colspan="2"><b>Action</b></td></tr>
+  <tr><td>1.</td><td>Scheduler</td><td colspan="2">scans for due events: KR without check-in for 7 days, unsubmitted nominations, unsubmitted review forms</td></tr>
+  <tr><td>2.</td><td>System</td><td colspan="2">generates in-app notifications and sends emails, without using AI</td></tr>
+  <tr><td>3.</td><td>User</td><td colspan="2">views notifications, marks as read or marks all as read</td></tr>
+  <tr><td valign="top"><b>Alternative Flows</b></td><td colspan="4">None</td></tr>
+  <tr><td valign="top"><b>Permissions</b></td><td colspan="4">Authenticated</td></tr>
+  <tr><td valign="top"><b>Postconditions</b></td><td colspan="4">Each user receives at most one reminder per event per day</td></tr>
 </table>
 
-### UC26 Xem nhật ký hoạt động
+### UC26 View Audit Logs
 
 <table border="1" cellpadding="6" style="border-collapse: collapse; width: 100%">
-  <tr><td width="16%"><b>Mã use case</b></td><td colspan="2" width="20%">UC26</td><td width="16%"><b>Tên use case</b></td><td width="48%">Xem nhật ký hoạt động</td></tr>
-  <tr><td valign="top"><b>Tác nhân</b></td><td colspan="4">Admin, HR</td></tr>
-  <tr><td valign="top"><b>Mô tả</b></td><td colspan="4">Admin hoặc HR truy vết các thay đổi quan trọng trong hệ thống.</td></tr>
-  <tr><td valign="top"><b>Tiền điều kiện</b></td><td colspan="4">Đã đăng nhập với vai trò Admin hoặc HR</td></tr>
-  <tr><td rowspan="4" valign="top"><b>Luồng sự kiện chính (Thành công)</b></td><td><b>STT</b></td><td><b>Thực hiện bởi</b></td><td colspan="2"><b>Hành động</b></td></tr>
-  <tr><td>1.</td><td>Admin, HR</td><td colspan="2">mở nhật ký</td></tr>
-  <tr><td>2.</td><td>Admin, HR</td><td colspan="2">lọc theo người, phân hệ, hành động, thời gian</td></tr>
-  <tr><td>3.</td><td>Hệ thống</td><td colspan="2">hiển thị bản ghi: người thực hiện, hành động, phân hệ, đối tượng, thời điểm</td></tr>
-  <tr><td valign="top"><b>Luồng sự kiện thay thế</b></td><td colspan="4">Không có</td></tr>
-  <tr><td valign="top"><b>Quyền</b></td><td colspan="4"><code>auditRead</code></td></tr>
-  <tr><td valign="top"><b>Hậu điều kiện</b></td><td colspan="4">Nhật ký không chứa nội dung phiếu đánh giá và không ghi ai đánh giá ai trong nhóm ẩn danh</td></tr>
+  <tr><td width="16%"><b>Use Case ID</b></td><td colspan="2" width="20%">UC26</td><td width="16%"><b>Use Case Name</b></td><td width="48%">View Audit Logs</td></tr>
+  <tr><td valign="top"><b>Actors</b></td><td colspan="4">System Admin, HR</td></tr>
+  <tr><td valign="top"><b>Description</b></td><td colspan="4">System Admin or HR traces critical system changes.</td></tr>
+  <tr><td valign="top"><b>Preconditions</b></td><td colspan="4">Logged in with System Admin or HR role</td></tr>
+  <tr><td rowspan="4" valign="top"><b>Main Flow (Success)</b></td><td><b>Step</b></td><td><b>Performed By</b></td><td colspan="2"><b>Action</b></td></tr>
+  <tr><td>1.</td><td>System Admin, HR</td><td colspan="2">opens audit log</td></tr>
+  <tr><td>2.</td><td>System Admin, HR</td><td colspan="2">filters by actor, subsystem, action, date range</td></tr>
+  <tr><td>3.</td><td>System</td><td colspan="2">displays log entries: actor, action, subsystem, target object, timestamp</td></tr>
+  <tr><td valign="top"><b>Alternative Flows</b></td><td colspan="4">None</td></tr>
+  <tr><td valign="top"><b>Permissions</b></td><td colspan="4"><code>auditRead</code></td></tr>
+  <tr><td valign="top"><b>Postconditions</b></td><td colspan="4">Audit logs do not contain review form answers and do not log reviewer-reviewee mappings for anonymous groups</td></tr>
 </table>
 
-### UC27 Cấu hình luồng tự động
+### UC27 Configure Automated Workflows
 
 <table border="1" cellpadding="6" style="border-collapse: collapse; width: 100%">
-  <tr><td width="16%"><b>Mã use case</b></td><td colspan="2" width="20%">UC27</td><td width="16%"><b>Tên use case</b></td><td width="48%">Cấu hình luồng tự động</td></tr>
-  <tr><td valign="top"><b>Tác nhân</b></td><td colspan="4">Admin</td></tr>
-  <tr><td valign="top"><b>Mô tả</b></td><td colspan="4">Admin bật/tắt từng luồng, đặt lịch chạy và hạn mức gọi AI để kiểm soát chi phí và tắt ngay luồng chạy sai.</td></tr>
-  <tr><td valign="top"><b>Tiền điều kiện</b></td><td colspan="4">Đã đăng nhập với vai trò Admin</td></tr>
-  <tr><td rowspan="5" valign="top"><b>Luồng sự kiện chính (Thành công)</b></td><td><b>STT</b></td><td><b>Thực hiện bởi</b></td><td colspan="2"><b>Hành động</b></td></tr>
-  <tr><td>1.</td><td>Admin</td><td colspan="2">mở "Tự động hóa"</td></tr>
-  <tr><td>2.</td><td>Hệ thống</td><td colspan="2">hiển thị danh sách luồng dựng sẵn: tên, mô tả, khi nào chạy, trạng thái bật/tắt, số lần chạy hôm nay so với hạn mức</td></tr>
-  <tr><td>3.</td><td>Admin</td><td colspan="2">bật/tắt một luồng, sửa lịch chạy (luồng theo lịch) và hạn mức gọi AI mỗi ngày, bấm lưu</td></tr>
-  <tr><td>4.</td><td>Hệ thống</td><td colspan="2">kiểm tra, lưu, ghi nhật ký</td></tr>
-  <tr><td rowspan="3" valign="top"><b>Luồng sự kiện thay thế</b></td><td><b>STT</b></td><td><b>Thực hiện bởi</b></td><td colspan="2"><b>Hành động</b></td></tr>
-  <tr><td>4a.</td><td>Hệ thống</td><td colspan="2">hạn mức ≤ 0 hoặc lịch chạy sai định dạng → báo lỗi</td></tr>
-  <tr><td>4b.</td><td>Hệ thống</td><td colspan="2">dịch vụ AI chưa cấu hình khóa truy cập → không cho bật luồng, hiện hướng dẫn</td></tr>
-  <tr><td valign="top"><b>Quyền</b></td><td colspan="4"><code>automationManage</code></td></tr>
-  <tr><td valign="top"><b>Hậu điều kiện</b></td><td colspan="4">Tắt một luồng thì sự kiện mới của luồng đó được đánh dấu "Bỏ qua"; luồng khác và mọi tính năng không dùng AI vẫn chạy bình thường</td></tr>
+  <tr><td width="16%"><b>Use Case ID</b></td><td colspan="2" width="20%">UC27</td><td width="16%"><b>Use Case Name</b></td><td width="48%">Configure Automated Workflows</td></tr>
+  <tr><td valign="top"><b>Actors</b></td><td colspan="4">System Admin</td></tr>
+  <tr><td valign="top"><b>Description</b></td><td colspan="4">System Admin enables/disables workflows, sets execution schedules and AI call quotas to control costs and instantly stop misbehaving flows.</td></tr>
+  <tr><td valign="top"><b>Preconditions</b></td><td colspan="4">Logged in with System Admin role</td></tr>
+  <tr><td rowspan="5" valign="top"><b>Main Flow (Success)</b></td><td><b>Step</b></td><td><b>Performed By</b></td><td colspan="2"><b>Action</b></td></tr>
+  <tr><td>1.</td><td>System Admin</td><td colspan="2">opens "Automation"</td></tr>
+  <tr><td>2.</td><td>System</td><td colspan="2">displays list of built-in workflows: name, description, trigger condition, enabled/disabled status, daily execution count vs quota</td></tr>
+  <tr><td>3.</td><td>System Admin</td><td colspan="2">toggles workflow on/off, modifies schedule (scheduled workflows) and daily AI call quota, clicks save</td></tr>
+  <tr><td>4.</td><td>System</td><td colspan="2">validates, saves, records audit log</td></tr>
+  <tr><td rowspan="3" valign="top"><b>Alternative Flows</b></td><td><b>Step</b></td><td><b>Performed By</b></td><td colspan="2"><b>Action</b></td></tr>
+  <tr><td>4a.</td><td>System</td><td colspan="2">quota ≤ 0 or invalid cron format → displays error</td></tr>
+  <tr><td>4b.</td><td>System</td><td colspan="2">AI service API key not configured → blocks enabling workflow, displays setup instructions</td></tr>
+  <tr><td valign="top"><b>Permissions</b></td><td colspan="4"><code>automationManage</code></td></tr>
+  <tr><td valign="top"><b>Postconditions</b></td><td colspan="4">When a workflow is disabled, new events for that workflow are marked "Skipped"; other workflows and all non-AI features continue running normally</td></tr>
 </table>
 
-### UC28 Xem lịch sử chạy tự động
+### UC28 View Automated Execution History
 
 <table border="1" cellpadding="6" style="border-collapse: collapse; width: 100%">
-  <tr><td width="16%"><b>Mã use case</b></td><td colspan="2" width="20%">UC28</td><td width="16%"><b>Tên use case</b></td><td width="48%">Xem lịch sử chạy tự động</td></tr>
-  <tr><td valign="top"><b>Tác nhân</b></td><td colspan="4">Admin, HR</td></tr>
-  <tr><td valign="top"><b>Mô tả</b></td><td colspan="4">Admin hoặc HR biết luồng nào đang hỏng và chạy lại lần bị lỗi.</td></tr>
-  <tr><td valign="top"><b>Tiền điều kiện</b></td><td colspan="4">Đã đăng nhập với vai trò Admin hoặc HR</td></tr>
-  <tr><td rowspan="7" valign="top"><b>Luồng sự kiện chính (Thành công)</b></td><td><b>STT</b></td><td><b>Thực hiện bởi</b></td><td colspan="2"><b>Hành động</b></td></tr>
-  <tr><td>1.</td><td>Admin, HR</td><td colspan="2">mở tab "Lịch sử chạy", lọc theo luồng, trạng thái (Đang chờ / Thành công / Lỗi / Bỏ qua), thời gian</td></tr>
-  <tr><td>2.</td><td>Hệ thống</td><td colspan="2">hiển thị danh sách lần chạy</td></tr>
-  <tr><td>3.</td><td>Admin, HR</td><td colspan="2">mở một lần chạy</td></tr>
-  <tr><td>4.</td><td>Hệ thống</td><td colspan="2">hiển thị sự kiện kích hoạt, số lần thử, thời gian chạy, số token, lỗi</td></tr>
-  <tr><td>5.</td><td>Admin</td><td colspan="2">chạy lại lần chạy bị lỗi</td></tr>
-  <tr><td>6.</td><td>Hệ thống</td><td colspan="2">đưa lần chạy vào hàng đợi để chạy lại</td></tr>
-  <tr><td rowspan="2" valign="top"><b>Luồng sự kiện thay thế</b></td><td><b>STT</b></td><td><b>Thực hiện bởi</b></td><td colspan="2"><b>Hành động</b></td></tr>
-  <tr><td>5a.</td><td>Hệ thống</td><td colspan="2">HR bấm chạy lại → không có quyền; HR chỉ xem</td></tr>
-  <tr><td valign="top"><b>Quyền</b></td><td colspan="4"><code>automationRead</code>; chạy lại cần <code>automationManage</code></td></tr>
-  <tr><td valign="top"><b>Hậu điều kiện</b></td><td colspan="4">Lịch sử không chứa nội dung gửi cho AI hay nội dung AI trả về, nên không lộ ghi chú check-in hay nhận xét 360</td></tr>
+  <tr><td width="16%"><b>Use Case ID</b></td><td colspan="2" width="20%">UC28</td><td width="16%"><b>Use Case Name</b></td><td width="48%">View Automated Execution History</td></tr>
+  <tr><td valign="top"><b>Actors</b></td><td colspan="4">System Admin, HR</td></tr>
+  <tr><td valign="top"><b>Description</b></td><td colspan="4">System Admin or HR identifies failed workflows and retries failed executions.</td></tr>
+  <tr><td valign="top"><b>Preconditions</b></td><td colspan="4">Logged in with System Admin or HR role</td></tr>
+  <tr><td rowspan="7" valign="top"><b>Main Flow (Success)</b></td><td><b>Step</b></td><td><b>Performed By</b></td><td colspan="2"><b>Action</b></td></tr>
+  <tr><td>1.</td><td>System Admin, HR</td><td colspan="2">opens "Run History" tab, filters by workflow, status (Pending / Success / Error / Skipped), date range</td></tr>
+  <tr><td>2.</td><td>System</td><td colspan="2">displays list of runs</td></tr>
+  <tr><td>3.</td><td>System Admin, HR</td><td colspan="2">opens an execution run</td></tr>
+  <tr><td>4.</td><td>System</td><td colspan="2">displays trigger event, retry count, execution duration, token usage, error details</td></tr>
+  <tr><td>5.</td><td>System Admin</td><td colspan="2">retries a failed run</td></tr>
+  <tr><td>6.</td><td>System</td><td colspan="2">enqueues run for retry</td></tr>
+  <tr><td rowspan="2" valign="top"><b>Alternative Flows</b></td><td><b>Step</b></td><td><b>Performed By</b></td><td colspan="2"><b>Action</b></td></tr>
+  <tr><td>5a.</td><td>System</td><td colspan="2">HR clicks retry → forbidden; HR has read-only access</td></tr>
+  <tr><td valign="top"><b>Permissions</b></td><td colspan="4"><code>automationRead</code>; retrying requires <code>automationManage</code></td></tr>
+  <tr><td valign="top"><b>Postconditions</b></td><td colspan="4">Run history contains neither input payloads sent to AI nor output received from AI, thereby preventing exposure of check-in notes or 360 review comments</td></tr>
 </table>
 
-### UC29 Xử lý vướng mắc được chuyển đến
+### UC29 Handle Forwarded Blockers
 
 <table border="1" cellpadding="6" style="border-collapse: collapse; width: 100%">
-  <tr><td width="16%"><b>Mã use case</b></td><td colspan="2" width="20%">UC29</td><td width="16%"><b>Tên use case</b></td><td width="48%">Xử lý vướng mắc được chuyển đến</td></tr>
-  <tr><td valign="top"><b>Tác nhân</b></td><td colspan="4">Người phụ trách đơn vị được chuyển đến: trưởng phòng hoặc team lead (thường là Manager)</td></tr>
-  <tr><td valign="top"><b>Mô tả</b></td><td colspan="4">Người phụ trách nhận ngay các vướng mắc mà đơn vị khác đang chờ đơn vị mình, để gỡ việc trước khi KR của họ bị trễ.</td></tr>
-  <tr><td valign="top"><b>Tiền điều kiện</b></td><td colspan="4">AI đã phân loại một vướng mắc là "phụ thuộc phòng khác" và chỉ ra đơn vị (phòng ban hoặc team) mình phụ trách; hệ thống đã kiểm tra đơn vị đó và chuyển vướng mắc đến người phụ trách (UC12, UC32)</td></tr>
-  <tr><td rowspan="5" valign="top"><b>Luồng sự kiện chính (Thành công)</b></td><td><b>STT</b></td><td><b>Thực hiện bởi</b></td><td colspan="2"><b>Hành động</b></td></tr>
-  <tr><td>1.</td><td>Hệ thống</td><td colspan="2">gửi thông báo cho người phụ trách</td></tr>
-  <tr><td>2.</td><td>Người phụ trách</td><td colspan="2">mở "Vướng mắc chuyển đến", xem KR, người check-in, nội dung vướng mắc, nhãn AI, mức nghiêm trọng</td></tr>
-  <tr><td>3.</td><td>Người phụ trách</td><td colspan="2">chọn "Đã nhận xử lý" kèm ghi chú</td></tr>
-  <tr><td>4.</td><td>Hệ thống</td><td colspan="2">lưu, báo cho người check-in</td></tr>
-  <tr><td rowspan="3" valign="top"><b>Luồng sự kiện thay thế</b></td><td><b>STT</b></td><td><b>Thực hiện bởi</b></td><td colspan="2"><b>Hành động</b></td></tr>
-  <tr><td>3a.</td><td>Người phụ trách</td><td colspan="2">AI chỉ nhầm đơn vị → chọn "Không liên quan phòng tôi"</td></tr>
-  <tr><td>3a.1.</td><td>Hệ thống</td><td colspan="2">chuyển vướng mắc về quản lý trực tiếp của người check-in, ghi lại lượt phản hồi để đo độ chính xác của luồng</td></tr>
-  <tr><td valign="top"><b>Quyền</b></td><td colspan="4"><code>blockerHandle</code> + chỉ vướng mắc chuyển tới đơn vị mình phụ trách</td></tr>
-  <tr><td valign="top"><b>Hậu điều kiện</b></td><td colspan="4">Người check-in biết vướng mắc đã có người nhận; người phụ trách không sửa được check-in</td></tr>
+  <tr><td width="16%"><b>Use Case ID</b></td><td colspan="2" width="20%">UC29</td><td width="16%"><b>Use Case Name</b></td><td width="48%">Handle Forwarded Blockers</td></tr>
+  <tr><td valign="top"><b>Actors</b></td><td colspan="4">Head of the recipient unit: department head or team lead (typically a Manager)</td></tr>
+  <tr><td valign="top"><b>Description</b></td><td colspan="4">Unit lead immediately receives blockers where other units depend on their team, resolving impediments before external KRs fall behind schedule.</td></tr>
+  <tr><td valign="top"><b>Preconditions</b></td><td colspan="4">AI classified a blocker as "cross-department dependency" and identified the assigned unit (department or team) managed by this user; system verified the unit and forwarded blocker to the unit lead (UC12, UC32)</td></tr>
+  <tr><td rowspan="5" valign="top"><b>Main Flow (Success)</b></td><td><b>Step</b></td><td><b>Performed By</b></td><td colspan="2"><b>Action</b></td></tr>
+  <tr><td>1.</td><td>System</td><td colspan="2">sends notification to unit lead</td></tr>
+  <tr><td>2.</td><td>Unit lead</td><td colspan="2">opens "Forwarded Blockers", views KR, check-in author, blocker content, AI tags, severity level</td></tr>
+  <tr><td>3.</td><td>Unit lead</td><td colspan="2">selects "Acknowledge and Resolve" with notes</td></tr>
+  <tr><td>4.</td><td>System</td><td colspan="2">saves, notifies check-in author</td></tr>
+  <tr><td rowspan="3" valign="top"><b>Alternative Flows</b></td><td><b>Step</b></td><td><b>Performed By</b></td><td colspan="2"><b>Action</b></td></tr>
+  <tr><td>3a.</td><td>Unit lead</td><td colspan="2">AI misidentified unit → selects "Not Related to My Unit"</td></tr>
+  <tr><td>3a.1.</td><td>System</td><td colspan="2">reroutes blocker to check-in author's direct manager, records feedback to measure workflow accuracy</td></tr>
+  <tr><td valign="top"><b>Permissions</b></td><td colspan="4"><code>blockerHandle</code> + restricted to blockers forwarded to assigned unit</td></tr>
+  <tr><td valign="top"><b>Postconditions</b></td><td colspan="4">Check-in author is notified that blocker has an owner; unit lead cannot modify the original check-in</td></tr>
 </table>
 
-### UC30 Xem bản tin tuần
+### UC30 View Weekly Digest
 
 <table border="1" cellpadding="6" style="border-collapse: collapse; width: 100%">
-  <tr><td width="16%"><b>Mã use case</b></td><td colspan="2" width="20%">UC30</td><td width="16%"><b>Tên use case</b></td><td width="48%">Xem bản tin tuần</td></tr>
-  <tr><td valign="top"><b>Tác nhân</b></td><td colspan="4">Manager; Bộ lập lịch</td></tr>
-  <tr><td valign="top"><b>Mô tả</b></td><td colspan="4">Manager nhận bản tin tóm tắt check-in và vướng mắc của đội vào sáng thứ Hai, để không phải đọc từng check-in trước buổi họp.</td></tr>
-  <tr><td valign="top"><b>Tiền điều kiện</b></td><td colspan="4">Manager có nhân viên dưới quyền trực tiếp</td></tr>
-  <tr><td rowspan="7" valign="top"><b>Luồng sự kiện chính (Thành công)</b></td><td><b>STT</b></td><td><b>Thực hiện bởi</b></td><td colspan="2"><b>Hành động</b></td></tr>
-  <tr><td>1.</td><td>Bộ lập lịch</td><td colspan="2">8h sáng thứ Hai, kích hoạt luồng bản tin tuần cho từng Manager</td></tr>
-  <tr><td>2.</td><td>Hệ thống</td><td colspan="2">đếm số liệu từ database: đã check-in, chưa check-in, KR Có rủi ro, KR Chệch hướng</td></tr>
-  <tr><td>3.</td><td>AI</td><td colspan="2">gom vướng mắc giống nhau, chọn tối đa 3 việc cần chú ý</td></tr>
-  <tr><td>4.</td><td>Hệ thống</td><td colspan="2">tạo bản tin, gửi thông báo và email</td></tr>
-  <tr><td>5.</td><td>Manager</td><td colspan="2">mở bản tin, xem số liệu và các việc cần chú ý</td></tr>
-  <tr><td>6.</td><td>Manager</td><td colspan="2">bấm vào từng mục để mở KR</td></tr>
-  <tr><td rowspan="2" valign="top"><b>Luồng sự kiện thay thế</b></td><td><b>STT</b></td><td><b>Thực hiện bởi</b></td><td colspan="2"><b>Hành động</b></td></tr>
-  <tr><td>3a.</td><td>Hệ thống</td><td colspan="2">tuần không có ghi chú hay vướng mắc nào → không gọi AI, bản tin chỉ có số liệu</td></tr>
-  <tr><td valign="top"><b>Quyền</b></td><td colspan="4"><code>digestRead</code> + chỉ nhân viên dưới quyền trực tiếp</td></tr>
-  <tr><td valign="top"><b>Hậu điều kiện</b></td><td colspan="4">Các con số trong bản tin lấy từ database, AI chỉ viết phần tóm tắt vướng mắc</td></tr>
+  <tr><td width="16%"><b>Use Case ID</b></td><td colspan="2" width="20%">UC30</td><td width="16%"><b>Use Case Name</b></td><td width="48%">View Weekly Digest</td></tr>
+  <tr><td valign="top"><b>Actors</b></td><td colspan="4">Manager; Scheduler</td></tr>
+  <tr><td valign="top"><b>Description</b></td><td colspan="4">Manager receives a digest summarizing team check-ins and blockers on Monday morning, eliminating the need to read every individual check-in before team meetings.</td></tr>
+  <tr><td valign="top"><b>Preconditions</b></td><td colspan="4">Manager has direct subordinates</td></tr>
+  <tr><td rowspan="7" valign="top"><b>Main Flow (Success)</b></td><td><b>Step</b></td><td><b>Performed By</b></td><td colspan="2"><b>Action</b></td></tr>
+  <tr><td>1.</td><td>Scheduler</td><td colspan="2">at 8:00 AM every Monday, triggers weekly digest workflow for each Manager</td></tr>
+  <tr><td>2.</td><td>System</td><td colspan="2">aggregates database metrics: checked in, not checked in, KRs At risk, KRs Off track</td></tr>
+  <tr><td>3.</td><td>AI</td><td colspan="2">clusters similar blockers, selects up to 3 priority attention items</td></tr>
+  <tr><td>4.</td><td>System</td><td colspan="2">generates digest, sends in-app notification and email</td></tr>
+  <tr><td>5.</td><td>Manager</td><td colspan="2">opens digest, views metrics and key attention items</td></tr>
+  <tr><td>6.</td><td>Manager</td><td colspan="2">clicks on items to open corresponding KRs</td></tr>
+  <tr><td rowspan="2" valign="top"><b>Alternative Flows</b></td><td><b>Step</b></td><td><b>Performed By</b></td><td colspan="2"><b>Action</b></td></tr>
+  <tr><td>3a.</td><td>System</td><td colspan="2">no notes or blockers in the week → skips AI call, digest contains metrics only</td></tr>
+  <tr><td valign="top"><b>Permissions</b></td><td colspan="4"><code>digestRead</code> + direct subordinates only</td></tr>
+  <tr><td valign="top"><b>Postconditions</b></td><td colspan="4">Digest numbers are queried directly from database; AI only synthesizes the blocker summary</td></tr>
 </table>
 
-### UC31 Duyệt bản nháp 1-1
+### UC31 Review 1-on-1 Draft
 
 <table border="1" cellpadding="6" style="border-collapse: collapse; width: 100%">
-  <tr><td width="16%"><b>Mã use case</b></td><td colspan="2" width="20%">UC31</td><td width="16%"><b>Tên use case</b></td><td width="48%">Duyệt bản nháp 1-1</td></tr>
-  <tr><td valign="top"><b>Tác nhân</b></td><td colspan="4">Manager (cho nhân viên dưới quyền trực tiếp); HR (cho nhân viên không có quản lý trực tiếp)</td></tr>
-  <tr><td valign="top"><b>Mô tả</b></td><td colspan="4">Người duyệt có sẵn bản nháp tóm tắt nhận xét 360 của từng nhân viên để sửa rồi gửi, chuẩn bị buổi 1-1 nhanh hơn.</td></tr>
-  <tr><td valign="top"><b>Tiền điều kiện</b></td><td colspan="4">Đợt 360 đã <code>CLOSED</code></td></tr>
-  <tr><td rowspan="8" valign="top"><b>Luồng sự kiện chính (Thành công)</b></td><td><b>STT</b></td><td><b>Thực hiện bởi</b></td><td colspan="2"><b>Hành động</b></td></tr>
-  <tr><td>1.</td><td>Hệ thống</td><td colspan="2">sau khi đóng đợt, lọc nhận xét của các nhóm đủ ngưỡng ẩn danh</td></tr>
-  <tr><td>2.</td><td>AI</td><td colspan="2">tóm tắt thành điểm mạnh và điểm cần cải thiện</td></tr>
-  <tr><td>3.</td><td>Hệ thống</td><td colspan="2">kiểm tra không có câu trích nguyên văn, lưu bản nháp "Chờ duyệt", thông báo cho người duyệt</td></tr>
-  <tr><td>4.</td><td>Manager, HR</td><td colspan="2">mở "Bản nháp AI", chọn một nhân viên, xem đề xuất của AI cạnh kết quả 360</td></tr>
-  <tr><td>5.</td><td>Manager, HR</td><td colspan="2">sửa nội dung</td></tr>
-  <tr><td>6.</td><td>Manager, HR</td><td colspan="2">bấm "Gửi cho nhân viên" hoặc "Bỏ bản nháp"</td></tr>
-  <tr><td>7.</td><td>Hệ thống</td><td colspan="2">gửi bản đã sửa; nhân viên thấy khối "Tóm tắt từ quản lý" trong kết quả 360 (UC21)</td></tr>
-  <tr><td rowspan="3" valign="top"><b>Luồng sự kiện thay thế</b></td><td><b>STT</b></td><td><b>Thực hiện bởi</b></td><td colspan="2"><b>Hành động</b></td></tr>
-  <tr><td>1a.</td><td>Hệ thống</td><td colspan="2">nhân viên không có nhóm nào đủ ngưỡng ẩn danh, hoặc các nhóm đủ ngưỡng không có nhận xét mở → không gọi AI, không có bản nháp, hiện lý do</td></tr>
-  <tr><td>6a.</td><td>Hệ thống</td><td colspan="2">đợt chưa công bố → chỉ lưu bản sửa, chưa gửi được</td></tr>
-  <tr><td valign="top"><b>Quyền</b></td><td colspan="4"><code>aiDraftReview</code> + kiểm tra quan hệ báo cáo (theo bản chụp lúc mở thu phiếu)</td></tr>
-  <tr><td valign="top"><b>Hậu điều kiện</b></td><td colspan="4">Nhân viên chỉ thấy nội dung đã được duyệt; bản nháp AI gốc không bao giờ được gửi thẳng</td></tr>
+  <tr><td width="16%"><b>Use Case ID</b></td><td colspan="2" width="20%">UC31</td><td width="16%"><b>Use Case Name</b></td><td width="48%">Review 1-on-1 Draft</td></tr>
+  <tr><td valign="top"><b>Actors</b></td><td colspan="4">Manager (for direct subordinates); HR (for employees without direct manager)</td></tr>
+  <tr><td valign="top"><b>Description</b></td><td colspan="4">Reviewer receives an AI-synthesized draft of 360 comments for each employee to edit and finalize, accelerating 1-on-1 preparation.</td></tr>
+  <tr><td valign="top"><b>Preconditions</b></td><td colspan="4">360 review campaign is <code>CLOSED</code></td></tr>
+  <tr><td rowspan="8" valign="top"><b>Main Flow (Success)</b></td><td><b>Step</b></td><td><b>Performed By</b></td><td colspan="2"><b>Action</b></td></tr>
+  <tr><td>1.</td><td>System</td><td colspan="2">following campaign closure, filters comments from groups meeting anonymity thresholds</td></tr>
+  <tr><td>2.</td><td>AI</td><td colspan="2">synthesizes comments into strengths and areas for improvement</td></tr>
+  <tr><td>3.</td><td>System</td><td colspan="2">verifies no verbatim quotes, saves draft with "Pending Review" status, notifies reviewer</td></tr>
+  <tr><td>4.</td><td>Manager, HR</td><td colspan="2">opens "AI Drafts", selects an employee, reviews AI proposals alongside 360 results</td></tr>
+  <tr><td>5.</td><td>Manager, HR</td><td colspan="2">edits content</td></tr>
+  <tr><td>6.</td><td>Manager, HR</td><td colspan="2">clicks "Send to Employee" or "Discard Draft"</td></tr>
+  <tr><td>7.</td><td>System</td><td colspan="2">sends edited draft; employee views "Summary from Manager" section in 360 results (UC21)</td></tr>
+  <tr><td rowspan="3" valign="top"><b>Alternative Flows</b></td><td><b>Step</b></td><td><b>Performed By</b></td><td colspan="2"><b>Action</b></td></tr>
+  <tr><td>1a.</td><td>System</td><td colspan="2">employee has no groups meeting anonymity threshold, or qualifying groups have no open-ended comments → skips AI call, generates no draft, displays explanatory message</td></tr>
+  <tr><td>6a.</td><td>System</td><td colspan="2">campaign not yet published → saves edits only, delivery deferred until publication</td></tr>
+  <tr><td valign="top"><b>Permissions</b></td><td colspan="4"><code>aiDraftReview</code> + reporting relationship check (based on snapshot at start of collection phase)</td></tr>
+  <tr><td valign="top"><b>Postconditions</b></td><td colspan="4">Employee only sees human-approved content; raw AI draft is never sent directly</td></tr>
 </table>
 
-### UC32 Chạy luồng tự động AI
+### UC32 Execute AI Automated Workflows
 
 <table border="1" cellpadding="6" style="border-collapse: collapse; width: 100%">
-  <tr><td width="16%"><b>Mã use case</b></td><td colspan="2" width="20%">UC32</td><td width="16%"><b>Tên use case</b></td><td width="48%">Chạy luồng tự động AI</td></tr>
-  <tr><td valign="top"><b>Tác nhân</b></td><td colspan="4">Bộ xử lý AI; Bộ lập lịch (với luồng chạy theo lịch)</td></tr>
-  <tr><td valign="top"><b>Mô tả</b></td><td colspan="4">Hệ thống chạy nền năm luồng AI, đổi tên người thành mã, kiểm tra kết quả và không bao giờ sửa điểm.</td></tr>
-  <tr><td valign="top"><b>Tiền điều kiện</b></td><td colspan="4">Luồng đang bật, chưa vượt hạn mức trong ngày</td></tr>
-  <tr><td rowspan="11" valign="top"><b>Luồng sự kiện chính (Thành công)</b></td><td><b>STT</b></td><td><b>Thực hiện bởi</b></td><td colspan="2"><b>Hành động</b></td></tr>
-  <tr><td>1.</td><td>Hệ thống, Bộ lập lịch</td><td colspan="2">nhận sự kiện (check-in mới, Objective mới, đợt 360 đóng) hoặc tới lịch (bản tin tuần)</td></tr>
-  <tr><td>2.</td><td>Hệ thống</td><td colspan="2">kiểm tra sự kiện chưa được xử lý</td></tr>
-  <tr><td>3.</td><td>Hệ thống</td><td colspan="2">lấy dữ liệu cần thiết</td></tr>
-  <tr><td>4.</td><td>Hệ thống</td><td colspan="2">đổi tên người thành mã, đơn vị thành mã kèm danh bạ</td></tr>
-  <tr><td>5.</td><td>Hệ thống</td><td colspan="2">gửi cho dịch vụ AI</td></tr>
-  <tr><td>6.</td><td>AI</td><td colspan="2">đọc văn bản, trả về JSON</td></tr>
-  <tr><td>7.</td><td>Hệ thống</td><td colspan="2">kiểm tra kết quả đúng khuôn</td></tr>
-  <tr><td>8.</td><td>Hệ thống</td><td colspan="2">đổi mã về tên</td></tr>
-  <tr><td>9.</td><td>Hệ thống</td><td colspan="2">thực hiện hành động: gắn nhãn, tạo thông báo, tạo ghi chú rà soát, tạo bản tin, tạo bản nháp</td></tr>
-  <tr><td>10.</td><td>Hệ thống</td><td colspan="2">ghi lịch sử chạy</td></tr>
-  <tr><td rowspan="4" valign="top"><b>Luồng sự kiện thay thế</b></td><td><b>STT</b></td><td><b>Thực hiện bởi</b></td><td colspan="2"><b>Hành động</b></td></tr>
-  <tr><td>1a.</td><td>Hệ thống</td><td colspan="2">luồng bị tắt hoặc vượt hạn mức → đánh dấu Bỏ qua, không gọi AI</td></tr>
-  <tr><td>6a.</td><td>Hệ thống</td><td colspan="2">dịch vụ AI lỗi hoặc quá giờ → thử lại sau 1, 5, 15 phút; vẫn lỗi → đánh dấu Lỗi, không hành động</td></tr>
-  <tr><td>7a.</td><td>Hệ thống</td><td colspan="2">kết quả sai khuôn → đánh dấu Lỗi, không hành động</td></tr>
-  <tr><td valign="top"><b>Quyền</b></td><td colspan="4">Tài khoản hệ thống, chỉ ghi được nhãn, thông báo, ghi chú rà soát, bản tin, bản nháp và lịch sử chạy</td></tr>
-  <tr><td valign="top"><b>Hậu điều kiện</b></td><td colspan="4">Không luồng nào thay đổi điểm, tiến độ, check-in hay phiếu đánh giá</td></tr>
+  <tr><td width="16%"><b>Use Case ID</b></td><td colspan="2" width="20%">UC32</td><td width="16%"><b>Use Case Name</b></td><td width="48%">Execute AI Automated Workflows</td></tr>
+  <tr><td valign="top"><b>Actors</b></td><td colspan="4">AI Processor; Scheduler (for scheduled workflows)</td></tr>
+  <tr><td valign="top"><b>Description</b></td><td colspan="4">System executes five AI workflows in the background, pseudonymizing names, validating outputs, and never modifying scores.</td></tr>
+  <tr><td valign="top"><b>Preconditions</b></td><td colspan="4">Workflow enabled, daily quota not exceeded</td></tr>
+  <tr><td rowspan="11" valign="top"><b>Main Flow (Success)</b></td><td><b>Step</b></td><td><b>Performed By</b></td><td colspan="2"><b>Action</b></td></tr>
+  <tr><td>1.</td><td>System, Scheduler</td><td colspan="2">receives event (new check-in, new Objective, 360 campaign closed) or reaches schedule (weekly digest)</td></tr>
+  <tr><td>2.</td><td>System</td><td colspan="2">verifies event has not been processed</td></tr>
+  <tr><td>3.</td><td>System</td><td colspan="2">fetches required data</td></tr>
+  <tr><td>4.</td><td>System</td><td colspan="2">pseudonymizes user names to identifiers, replaces unit names with IDs and mapping directory</td></tr>
+  <tr><td>5.</td><td>System</td><td colspan="2">dispatches request to AI service</td></tr>
+  <tr><td>6.</td><td>AI</td><td colspan="2">parses text, returns JSON</td></tr>
+  <tr><td>7.</td><td>System</td><td colspan="2">validates JSON schema</td></tr>
+  <tr><td>8.</td><td>System</td><td colspan="2">translates IDs back to names</td></tr>
+  <tr><td>9.</td><td>System</td><td colspan="2">executes action: attaches tag, creates notification, attaches review note, creates digest, creates draft</td></tr>
+  <tr><td>10.</td><td>System</td><td colspan="2">logs execution history</td></tr>
+  <tr><td rowspan="4" valign="top"><b>Alternative Flows</b></td><td><b>Step</b></td><td><b>Performed By</b></td><td colspan="2"><b>Action</b></td></tr>
+  <tr><td>1a.</td><td>System</td><td colspan="2">workflow disabled or quota exceeded → marks as Skipped, does not call AI</td></tr>
+  <tr><td>6a.</td><td>System</td><td colspan="2">AI service error or timeout → retries after 1, 5, 15 minutes; if still failing → marks as Error, takes no action</td></tr>
+  <tr><td>7a.</td><td>System</td><td colspan="2">schema validation failure → marks as Error, takes no action</td></tr>
+  <tr><td valign="top"><b>Permissions</b></td><td colspan="4">System service account, restricted to writing tags, notifications, review notes, digests, drafts, and execution history</td></tr>
+  <tr><td valign="top"><b>Postconditions</b></td><td colspan="4">No workflow alters scores, progress percentages, check-ins, or review forms</td></tr>
 </table>
 
-Phần riêng của từng luồng:
+Individual workflow details:
 
-| Luồng                                                | Kích hoạt [Tự động]                                             | Tự động trước khi gọi AI                                  | AI                                                                   | Tự động sau khi có kết quả                                                                                                   | Người                                          |
+| Workflow                                             | Trigger [Automated]                                             | Automated Pre-Processing                                  | AI                                                                   | Automated Post-Processing                                                                                                     | Human                                          |
 | ---------------------------------------------------- | --------------------------------------------------------------- | --------------------------------------------------------- | -------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------- |
-| Chuyển vướng mắc (`BLOCKER_ROUTING`)                 | Sự kiện `CHECKIN_CREATED`, có ghi vướng mắc                     | Đổi tên thành mã; lấy danh bạ đơn vị đã đổi mã            | Phân loại vướng mắc, chỉ ra đơn vị liên quan, mức nghiêm trọng       | Gắn nhãn; kiểm tra đơn vị không phải đơn vị của người báo hay phòng ban chứa team của họ; tìm người phụ trách; gửi thông báo | Người phụ trách nhận xử lý hoặc từ chối (UC29) |
-| Phát hiện check-in không khớp (`CHECKIN_MISMATCH`)   | Sự kiện `CHECKIN_CREATED`, có ghi chú                           | Đổi tên thành mã                                          | So mức tự tin với ghi chú                                            | Gắn nhãn và nhắc người check-in; đếm 3 lần mâu thuẫn liên tiếp thì báo quản lý trực tiếp                                     | Người check-in tự quyết định (UC12)            |
-| Rà soát OKR mới tạo (`OKR_REVIEW`)                   | Sự kiện `OBJECTIVE_CREATED`                                     | Đổi tên thành mã; lấy KR cùng phòng và Objective cấp trên | Đánh giá KR có đo được không, có trùng không, có khớp cấp trên không | Gắn ghi chú rà soát vào Objective                                                                                            | Người tạo sửa hoặc bỏ qua (UC08)               |
-| Bản tin tuần (`WEEKLY_DIGEST`)                       | Bộ lập lịch, 8h sáng thứ Hai                                    | Đếm số liệu từ database; đổi tên thành mã                 | Gom vướng mắc giống nhau, chọn tối đa 3 việc cần chú ý               | Ghép số liệu và phần AI viết thành bản tin; gửi thông báo và email                                                           | Manager đọc và tự quyết định xử lý (UC30)      |
-| Bản nháp 1-1 (`ONE_ON_ONE_DRAFT`)                    | Sự kiện `CAMPAIGN_CLOSED`, mỗi người được đánh giá một lần chạy | Lọc nhóm đủ ngưỡng ẩn danh; đổi tên thành mã              | Tóm tắt nhận xét mở thành điểm mạnh và điểm cần cải thiện            | Lưu bản nháp "Chờ duyệt" cho người duyệt                                                                                     | Manager hoặc HR sửa, gửi hoặc bỏ (UC31)        |
-| Cảnh báo nhận xét 360 (`REVIEW_COMMENT_GUARD`), UC19 | Người viết bấm nộp, không qua hộp thư sự kiện                   | Đổi tên thành mã                                          | Phát hiện câu dễ lộ người viết hoặc xúc phạm                         | Hiện cảnh báo chỉ cho người viết; cộng số lần gọi AI; không lưu cảnh báo, không ghi lịch sử chạy                             | Người viết sửa hoặc chọn "Vẫn nộp" (UC19)      |
+| Blocker Routing (`BLOCKER_ROUTING`)                  | `CHECKIN_CREATED` event, blocker recorded                       | Pseudonymize names; retrieve directory of pseudonymized units | Classify blocker, identify related unit and severity level           | Attach tag; verify unit is not author's own unit or parent department; locate unit lead; send notification                   | Recipient unit lead accepts or rejects (UC29)  |
+| Check-in Mismatch Detection (`CHECKIN_MISMATCH`)    | `CHECKIN_CREATED` event, notes recorded                         | Pseudonymize names                                        | Compare confidence level against notes                               | Tag and alert check-in submitter; count 3 consecutive contradictions to alert direct manager                                  | Submitter decides next action (UC12)           |
+| Review Newly Created OKRs (`OKR_REVIEW`)             | `OBJECTIVE_CREATED` event                                       | Pseudonymize names; retrieve departmental peer KRs and parent Objective | Evaluate if KRs are measurable, check for duplicates, verify alignment with parent | Attach review notes to Objective                                                                                             | Creator edits or ignores (UC08)                |
+| Weekly Digest (`WEEKLY_DIGEST`)                      | Scheduler, 8:00 AM Monday                                       | Query database metrics; pseudonymize names                 | Cluster similar blockers, select top 3 attention items               | Combine metrics and AI narrative into digest; dispatch notifications and emails                                              | Manager reads and decides actions (UC30)       |
+| 1-on-1 Draft (`ONE_ON_ONE_DRAFT`)                     | `CAMPAIGN_CLOSED` event, one run per reviewee                   | Filter groups meeting anonymity threshold; pseudonymize names | Synthesize open comments into strengths and areas for improvement    | Save draft as "Pending Review" for approver                                                                                  | Manager or HR edits, sends, or discards (UC31) |
+| 360 Review Comment Guard (`REVIEW_COMMENT_GUARD`), UC19 | Reviewer clicks submit, does not pass through event outbox      | Pseudonymize names                                        | Detect deanonymizing phrases or offensive language                   | Display warning only to author; increment AI call count; no alert stored, no history logged                                   | Reviewer edits or selects "Submit Anyway" (UC19)|

@@ -1,142 +1,142 @@
-# Phân rã chức năng
+# Functional breakdown
 
-> Trạng thái thiết kế: TARGET V1 — Phân rã chức năng hệ thống
+> Design status: TARGET V1 — System functional breakdown
 
-## Các cấp phân rã
+## Breakdown levels
 
-Hệ thống được phân rã theo 4 cấp, mỗi cấp chi tiết hơn cấp trên. Ví dụ dưới đây là cây OKR 4 cấp: công ty → phòng ban → team → cá nhân. Phòng ban chưa chia team thì OKR cá nhân nối thẳng lên OKR phòng ban.
+The system is broken down into 4 levels, each more detailed than the one above. The example below is a 4-level OKR tree: company → department → team → individual. If a department is not divided into teams, individual OKRs link directly to the department OKR.
 
 ```text
-[Công ty]    Nâng cao chất lượng sản phẩm
-               KR: Giảm lỗi khách hàng báo từ 50 xuống 20 lỗi/tháng
-               KR: Tăng điểm hài lòng khách hàng từ 7,0 lên 8,5
-  └ [Phòng Dev]  Cải thiện quy trình kiểm thử
-                   KR: Tăng độ phủ test từ 40% lên 70%
-                   KR: 100% pull request được review trước khi merge
-      └ [Team Thanh toán]  Ổn định module thanh toán
-                             KR: Giảm lỗi production từ 12 xuống 3 lỗi/tháng
-          └ [Cá nhân]  Viết test cho module thanh toán
-                         KR: Viết 50 test case
+[Company]    Improve product quality
+               KR: Reduce customer-reported bugs from 50 to 20 bugs/month
+               KR: Increase customer satisfaction score from 7.0 to 8.5
+  └ [Dev Department]  Improve the testing process
+                   KR: Increase test coverage from 40% to 70%
+                   KR: 100% of pull requests reviewed before merge
+      └ [Payments Team]  Stabilize the payments module
+                             KR: Reduce production bugs from 12 to 3 bugs/month
+          └ [Individual]  Write tests for the payments module
+                         KR: Write 50 test cases
 ```
 
-## F05 Check-in và tiến độ
+## F05 Check-in and progress
 
-Cập nhật tiến độ Key Result hằng tuần; hệ thống tự tính và cộng dồn tiến độ lên các cấp trên.
+Update Key Result progress weekly; the system automatically calculates and rolls progress up to the higher levels.
 
-- **F05.1 Check-in Key Result**
-- **F05.2 Tự tính và cộng dồn tiến độ**
-- F05.3 Lịch sử check-in và biểu đồ tiến độ
-- F05.4 Phản hồi check-in
+- **F05.1 Key Result check-in**
+- **F05.2 Automatic progress calculation and roll-up**
+- F05.3 Check-in history and progress chart
+- F05.4 Check-in feedback
 
-Check-in: giá trị hiện tại, mức tự tin (Đúng hướng / Có rủi ro / Chệch hướng), ghi chú, vướng mắc, người check-in, thời điểm. Mỗi lần check-in là một bản ghi mới; bản cũ được giữ nguyên làm lịch sử.
+Check-in: current value, confidence level (On track / At risk / Off track), notes, blockers, person who checked in, time. Each check-in is a new record; old records are kept unchanged as history.
 
-Tiến độ Key Result tính theo công thức (hiện tại − ban đầu) / (đích − ban đầu), giới hạn từ 0% đến 100%.
+Key Result progress is calculated by the formula (current − initial) / (target − initial), clamped between 0% and 100%.
 
-## F06 Đánh giá 360 độ
+## F06 360-degree review
 
-Thu thập đánh giá từ quản lý, đồng nghiệp, cấp dưới và tự đánh giá; nhóm đồng nghiệp và cấp dưới được ẩn danh.
+Collect reviews from managers, peers, subordinates, and self-assessment; the peer and subordinate groups are anonymous.
 
-- F06.1 Quản lý bộ tiêu chí (mẫu phiếu)
-- **F06.2 Tạo và mở đợt đánh giá**
-- F06.3 Đề cử đồng nghiệp
-- F06.4 Duyệt người đánh giá
-- **F06.5 Điền phiếu đánh giá**
-- F06.6 Theo dõi và đóng đợt
-- **F06.7 Kết quả 360 cá nhân**
+- F06.1 Manage the criteria set (review form template)
+- **F06.2 Create and open a review round**
+- F06.3 Nominate peers
+- F06.4 Approve reviewers
+- **F06.5 Fill in the review form**
+- F06.6 Track and close the round
+- **F06.7 Individual 360 result**
 
-Mẫu phiếu: danh sách tiêu chí (tên, mô tả, bắt buộc hay không, thang 1–5) và câu hỏi mở.
+Form template: list of criteria (name, description, required or not, scale 1–5) and open questions.
 
-Đợt đánh giá: tên, chu kỳ, mẫu phiếu, người được đánh giá, hạn đề cử, hạn nộp phiếu, trạng thái.
+Review round: name, cycle, form template, reviewees, nomination deadline, submission deadline, status.
 
-Phiếu đánh giá: người được đánh giá, nhóm người đánh giá (Tự đánh giá / Quản lý / Đồng nghiệp / Cấp dưới), điểm từng tiêu chí (1–5 hoặc "Không đủ thông tin"), câu trả lời mở, trạng thái (Nháp / Đã nộp).
+Review form: reviewee, reviewer group (Self / Manager / Peer / Subordinate), score per criterion (1–5 or "Not enough information"), open answers, status (Draft / Submitted).
 
-Kết quả 360: điểm theo tiêu chí, điểm theo nhóm người đánh giá, chênh lệch tự đánh giá so với người khác, nhận xét không kèm tên. Nhóm dưới 3 phiếu không được hiển thị riêng.
+360 result: score per criterion, score per reviewer group, gap between self-assessment and others, comments without names. Groups with fewer than 3 forms are not shown separately.
 
-Mẫu tiêu chí: Tinh thần làm việc nhóm · Giao tiếp · Chủ động giải quyết vấn đề · Chất lượng công việc · Hỗ trợ và chia sẻ kiến thức.
+Sample criteria: Teamwork spirit · Communication · Proactive problem solving · Work quality · Support and knowledge sharing.
 
-## F07 Kết quả cuối kỳ
+## F07 Final results
 
-Gộp điểm OKR và điểm 360 thành một điểm cuối kỳ cho mỗi nhân viên.
+Combine the OKR score and the 360 score into one final score for each employee.
 
-- F07.1 Chốt điểm OKR
-- **F07.2 Tổng hợp điểm OKR + 360**
-- F07.3 Công bố kết quả
+- F07.1 Finalize OKR score
+- **F07.2 Aggregate OKR + 360 score**
+- F07.3 Publish results
 
-Kết quả cuối kỳ: tiến độ OKR, điểm OKR (thang 1–5), điểm 360, điểm cuối kỳ, xếp loại.
+Final result: OKR progress, OKR score (scale 1–5), 360 score, final score, rating.
 
-Mẫu: tiến độ OKR 83% → điểm OKR 4,32; điểm 360 là 4,20; điểm cuối kỳ = 0,6 × 4,32 + 0,4 × 4,20 = **4,27**, xếp loại Tốt.
+Example: OKR progress 83% → OKR score 4.32; 360 score is 4.20; final score = 0.6 × 4.32 + 0.4 × 4.20 = **4.27**, rating Good.
 
 ## F08 Dashboard
 
-Trang tổng quan theo vai trò.
+Overview page by role.
 
-- F08.1 Dashboard cá nhân: tiến độ OKR của tôi, Key Result cần check-in, phiếu đánh giá cần điền
-- F08.2 Dashboard đội nhóm: tiến độ OKR phòng ban, thành viên chưa check-in, OKR có rủi ro
-- F08.3 Dashboard công ty: tiến độ theo phòng ban, tỷ lệ check-in, tỷ lệ hoàn thành đánh giá
+- F08.1 Personal dashboard: my OKR progress, Key Results needing check-in, review forms to fill in
+- F08.2 Team dashboard: department OKR progress, members who have not checked in, at-risk OKRs
+- F08.3 Company dashboard: progress by department, check-in rate, review completion rate
 
-## F09 Báo cáo
+## F09 Reports
 
-- F09.1 Báo cáo tiến độ OKR (theo chu kỳ, phòng ban, cấp)
-- F09.2 Báo cáo tỷ lệ check-in (theo tuần, phòng ban, người)
-- F09.3 Báo cáo kết quả cuối kỳ
-- F09.4 Xuất Excel / PDF theo bộ lọc đang chọn
+- F09.1 OKR progress report (by cycle, department, level)
+- F09.2 Check-in rate report (by week, department, person)
+- F09.3 Final results report
+- F09.4 Export to Excel / PDF by the currently selected filters
 
-## F10 Thông báo và nhắc nhở
+## F10 Notifications and reminders
 
-- F10.1 Thông báo trong ứng dụng (chuông, đã đọc / chưa đọc)
-- F10.2 Email thông báo
-- F10.3 Nhắc nhở tự động
+- F10.1 In-app notifications (bell, read / unread)
+- F10.2 Email notifications
+- F10.3 Automatic reminders
 
-Các sự kiện nhắc: Key Result chưa check-in 7 ngày, chưa đề cử đồng nghiệp, còn phiếu chưa nộp, kết quả đã được công bố.
+Reminder events: Key Result not checked in for 7 days, peers not nominated, review forms not yet submitted, results have been published.
 
-## F11 Nhật ký hoạt động
+## F11 Activity log
 
-- F11.1 Ghi nhật ký
-- F11.2 Xem và lọc nhật ký
+- F11.1 Record the log
+- F11.2 View and filter the log
 
-Bản ghi nhật ký: người thực hiện, hành động, phân hệ, đối tượng, thời điểm. Nhật ký không chứa nội dung phiếu đánh giá và không ghi ai đánh giá ai trong nhóm ẩn danh.
+Log record: actor, action, module, object, time. The log does not contain review form content and does not record who reviewed whom in anonymous groups.
 
-## F12 Hồ sơ cá nhân
+## F12 Personal profile
 
-- F12.1 Cập nhật thông tin (họ tên, số điện thoại, ảnh đại diện)
-- F12.2 Đổi mật khẩu
-- F12.3 Xem quyền của tôi
+- F12.1 Update information (full name, phone number, avatar)
+- F12.2 Change password
+- F12.3 View my permissions
 
-Email, vai trò, phòng ban và quản lý trực tiếp chỉ được xem, không tự sửa.
+Email, role, department, and direct manager are view-only and cannot be edited by the user.
 
-## F13 Tự động hóa bằng AI
+## F13 AI automation
 
-Hệ thống tự đọc phần **văn bản** mà luật thông thường không hiểu được (ghi chú, vướng mắc, nhận xét), rồi tự chuyển việc đến đúng người, tóm tắt và cảnh báo. Mỗi luồng chạy khi có sự kiện hoặc tới lịch, không cần ai bấm nút.
+The system automatically reads the **text** parts that ordinary rules cannot understand (notes, blockers, comments), then automatically routes work to the right person, summarizes, and raises alerts. Each flow runs on an event or on a schedule, with no one needing to press a button.
 
-**Lưu ý** : AI chỉ **đọc, phân loại, tóm tắt, cảnh báo và tạo bản nháp**. AI không chấm điểm, không xếp loại, không sửa số liệu OKR hay 360.
+**Note**: AI only **reads, classifies, summarizes, alerts, and creates drafts**. AI does not score, does not rate, and does not modify OKR or 360 data.
 
-- **F13.1 Chuyển vướng mắc đến đúng người**
-- **F13.2 Bản tin tuần cho quản lý**
-- **F13.3 Bản nháp buổi 1-1 sau đợt 360**
-- F13.4 Phát hiện check-in không khớp
-- F13.5 Rà soát OKR mới tạo
-- F13.6 Cảnh báo nhận xét 360 dễ lộ danh tính
-- F13.7 Lịch sử chạy
+- **F13.1 Route blockers to the right person**
+- **F13.2 Weekly digest for managers**
+- **F13.3 Draft 1-on-1 meeting after a 360 round**
+- F13.4 Detect inconsistent check-ins
+- F13.5 Review newly created OKRs
+- F13.6 Warn about 360 comments that may reveal identity
+- F13.7 Run history
 
-| Luồng | Khi nào chạy              | AI làm gì                                                                                                                        | Hệ thống tự làm gì                                                                 |
+| Flow  | When it runs              | What the AI does                                                                                                                 | What the system does automatically                                                 |
 | ----- | ------------------------- | -------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
-| F13.1 | Check-in có ghi vướng mắc | Phân loại vướng mắc (phụ thuộc phòng khác, thiếu nguồn lực, kỹ thuật, ưu tiên thay đổi, khác), phòng liên quan, mức nghiêm trọng | Gắn nhãn vào check-in; báo trưởng phòng liên quan nếu là phụ thuộc phòng khác      |
-| F13.2 | 8h sáng thứ Hai           | Gom vướng mắc giống nhau trong check-in tuần trước của đội, chọn tối đa 3 việc cần chú ý                                         | Gửi bản tin cho quản lý trong ứng dụng và qua email                                |
-| F13.3 | HR đóng đợt 360           | Tóm tắt nhận xét mở của các nhóm đủ ngưỡng ẩn danh thành điểm mạnh và điểm cần cải thiện                                         | Lưu **bản nháp** cho quản lý trực tiếp; quản lý sửa rồi gửi cho nhân viên, hoặc bỏ |
-| F13.4 | Có check-in mới           | So mức tự tin với ghi chú, ví dụ chọn "Đúng hướng" nhưng ghi "trễ 2 tuần"                                                        | Nhắc người check-in xem lại; mâu thuẫn 3 lần liên tiếp thì báo quản lý trực tiếp   |
-| F13.5 | Lưu Objective mới         | Kiểm tra KR có đo được không, có trùng KR của người cùng phòng không, có khớp Objective cấp trên không                           | Gắn ghi chú rà soát vào Objective để người tạo và quản lý cùng xem                 |
-| F13.6 | Bấm Nộp phiếu 360         | Phát hiện câu có thể làm lộ người viết hoặc lời lẽ xúc phạm                                                                      | Hiện cảnh báo **chỉ cho người viết**; người viết sửa hoặc vẫn nộp                  |
+| F13.1 | Check-in with a blocker   | Classify the blocker (dependency on another department, lack of resources, technical, priority change, other), related department, severity | Tag the check-in; notify the head of the related department if it is a dependency on another department |
+| F13.2 | 8 AM on Monday            | Group similar blockers in the team's check-ins from last week, pick up to 3 items needing attention                              | Send the digest to the manager in the app and by email                             |
+| F13.3 | HR closes the 360 round   | Summarize open comments from groups that meet the anonymity threshold into strengths and areas for improvement                   | Save a **draft** for the direct manager; the manager edits and sends it to the employee, or discards it |
+| F13.4 | New check-in              | Compare the confidence level with the notes, e.g. "On track" selected but the note says "2 weeks late"                           | Prompt the person who checked in to review; if the contradiction occurs 3 times in a row, notify the direct manager |
+| F13.5 | Save a new Objective      | Check whether the KRs are measurable, whether they duplicate KRs of people in the same department, whether they match the parent Objective | Attach a review note to the Objective for the creator and manager to see together |
+| F13.6 | Click Submit 360 form     | Detect sentences that may reveal the writer or offensive wording                                                                 | Show a warning **only to the writer**; the writer edits or submits anyway          |
 
-Cấu hình mỗi luồng: bật/tắt, lịch chạy (với luồng theo lịch), hạn mức số lần gọi AI mỗi ngày.
+Configuration of each flow: on/off, run schedule (for scheduled flows), daily limit on the number of AI calls.
 
-Lịch sử chạy: luồng, sự kiện kích hoạt, trạng thái (Đang chờ / Thành công / Lỗi / Bỏ qua), số lần thử, thời gian chạy, số token, lỗi. Lịch sử không lưu nội dung gửi cho AI.
+Run history: flow, trigger event, status (Pending / Succeeded / Failed / Skipped), number of attempts, run time, token count, error. The history does not store the content sent to the AI.
 
-Bản nháp AI: loại, người nhận, nội dung AI đề xuất, nội dung sau khi người duyệt sửa, trạng thái (Chờ duyệt / Đã gửi / Đã bỏ). Mọi nội dung do AI tạo đều có nhãn "Do AI tạo" trên giao diện.
+AI draft: type, recipient, content proposed by AI, content after the reviewer's edits, status (Pending approval / Sent / Discarded). All AI-generated content carries an "AI-generated" label in the UI.
 
-Mẫu: Lan check-in KR "Tăng độ phủ test" và ghi vướng mắc "Chờ team QA dựng môi trường test, đã trễ 1 tuần". AI phân loại: phụ thuộc phòng khác, phòng QA, mức cao. Trưởng phòng QA nhận thông báo kèm link tới KR của Lan.
+Example: Lan checks in on KR "Increase test coverage" and notes the blocker "Waiting for the QA team to set up the test environment, already 1 week late". The AI classifies it: dependency on another department, QA department, high severity. The head of the QA department receives a notification with a link to Lan's KR.
 
-## Ngoài phạm vi V1
+## Out of scope for V1
 
-Tích hợp Jira / GitLab / Slack, các phương pháp KPI / BSC / MBO, tính lương, đăng nhập một lần (SSO), ứng dụng di động riêng, AI chấm điểm hay xếp loại nhân viên, chatbot viết hộ OKR, trình tự tạo luồng tự động kéo-thả. Chi tiết ở [01-scope.md](01-scope.md).
+Jira / GitLab / Slack integration, KPI / BSC / MBO methodologies, payroll calculation, single sign-on (SSO), a dedicated mobile app, AI that scores or rates employees, a chatbot that writes OKRs on behalf of users, a drag-and-drop automation flow builder. Details are in [01-scope.md](01-scope.md).
 
-**Liên quan:** [Phạm vi](01-scope.md) · [Use case](03-use-cases.md)
+**Related:** [Scope](01-scope.md) · [Use cases](03-use-cases.md)

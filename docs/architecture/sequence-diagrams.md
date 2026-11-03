@@ -1,58 +1,58 @@
-# Sơ đồ sequence — OKR360 V1
+# Sequence Diagrams — OKR360 V1
 
-> Trạng thái thiết kế: TARGET V1
+> Design Status: TARGET V1
 >
-> Trạng thái triển khai: Tài liệu thiết kế, chưa triển khai
+> Implementation Status: Design specification, not yet implemented
 
-Mỗi use case có một sơ đồ sequence, cùng số với use case: SD-12 là UC12. Sơ đồ cho thấy thứ tự các class trong [sơ đồ class](class-diagrams.md) phối hợp với nhau, kèm các nhánh lỗi chính.
+Each use case has a corresponding sequence diagram sharing the same number: SD-12 corresponds to UC12. The diagrams illustrate the interaction sequence among classes defined in the [class diagram](class-diagrams.md), including primary failure paths.
 
-Quy ước:
+Conventions:
 
-- Mọi yêu cầu trừ đăng nhập đi qua `JwtAuthGuard` và `RolesGuard` trước khi tới controller; bước này chỉ vẽ ở SD-12 và SD-23.
-- Lỗi trả về theo định dạng Problem Details qua `ProblemDetailsFilter`.
-- Các luồng AI chạy nền dùng chung một đường ống, vẽ đầy đủ ở SD-32; SD-08, SD-12, SD-30 và SD-31 chỉ vẽ phần riêng của luồng mình.
+- Every request except login passes through `JwtAuthGuard` and `RolesGuard` before reaching the controller; this step is explicitly depicted only in SD-12 and SD-23.
+- Errors are returned using the Problem Details format via `ProblemDetailsFilter`.
+- Background AI flows share a common pipeline, fully illustrated in SD-32; SD-08, SD-12, SD-30, and SD-31 only depict steps specific to their respective flows.
 
-| Mã                                                       | Use case                                     | API                                                                        |
+| Code                                                     | Use case                                     | API                                                                        |
 | -------------------------------------------------------- | -------------------------------------------- | -------------------------------------------------------------------------- |
-| [SD-01](#sd-01--đăng-nhập)                               | UC01 Đăng nhập                               | `login`                                                                    |
-| [SD-02](#sd-02--đăng-xuất)                               | UC02 Đăng xuất                               | `logout`                                                                   |
-| [SD-03](#sd-03--quản-lý-hồ-sơ-cá-nhân)                   | UC03 Quản lý hồ sơ cá nhân                   | `getProfile`, `updateProfile`, `changePassword`                            |
-| [SD-04](#sd-04--quản-lý-phòng-ban-và-team)               | UC04 Quản lý phòng ban và team               | `createDepartment`, `updateDepartment`, `deactivateDepartment`             |
-| [SD-05](#sd-05--quản-lý-người-dùng)                      | UC05 Quản lý người dùng                      | `createUser`, `updateUser`, `updateUserStatus`                             |
-| [SD-06](#sd-06--quản-lý-chu-kỳ-okr)                      | UC06 Quản lý chu kỳ OKR                      | `createCycle`, `activateCycle`, `closeCycle`                               |
-| [SD-07](#sd-07--xem-cây-okr)                             | UC07 Xem cây OKR                             | `getObjectiveTree`, `getObjective`                                         |
-| [SD-08](#sd-08--tạosửa-objective)                        | UC08 Tạo/sửa Objective                       | `createObjective`, `updateObjective`                                       |
-| [SD-09](#sd-09--quản-lý-key-result)                      | UC09 Quản lý Key Result                      | `createKeyResult`, `updateKeyResult`, `deleteKeyResult`                    |
-| [SD-10](#sd-10--liên-kết-lên-mục-tiêu-cấp-trên)          | UC10 Liên kết lên mục tiêu cấp trên          | `linkParentObjective`                                                      |
-| [SD-11](#sd-11--xóa-mềm-okr)                             | UC11 Xóa mềm OKR                             | `deleteObjective`                                                          |
+| [SD-01](#sd-01--login)                                   | UC01 Login                                   | `login`                                                                    |
+| [SD-02](#sd-02--logout)                                  | UC02 Logout                                  | `logout`                                                                   |
+| [SD-03](#sd-03--manage-personal-profile)                 | UC03 Manage personal profile                 | `getProfile`, `updateProfile`, `changePassword`                            |
+| [SD-04](#sd-04--manage-departments-and-teams)            | UC04 Manage departments and teams            | `createDepartment`, `updateDepartment`, `deactivateDepartment`             |
+| [SD-05](#sd-05--manage-users)                            | UC05 Manage users                            | `createUser`, `updateUser`, `updateUserStatus`                             |
+| [SD-06](#sd-06--manage-okr-cycles)                       | UC06 Manage OKR cycles                       | `createCycle`, `activateCycle`, `closeCycle`                               |
+| [SD-07](#sd-07--view-okr-tree)                           | UC07 View OKR tree                           | `getObjectiveTree`, `getObjective`                                         |
+| [SD-08](#sd-08--createedit-objective)                    | UC08 Create/edit Objective                   | `createObjective`, `updateObjective`                                       |
+| [SD-09](#sd-09--manage-key-results)                      | UC09 Manage Key Results                      | `createKeyResult`, `updateKeyResult`, `deleteKeyResult`                    |
+| [SD-10](#sd-10--align-to-parent-objective)               | UC10 Align to parent objective               | `linkParentObjective`                                                      |
+| [SD-11](#sd-11--soft-delete-okr)                         | UC11 Soft delete OKR                         | `deleteObjective`                                                          |
 | [SD-12](#sd-12--check-in-key-result)                     | UC12 Check-in Key Result                     | `createCheckin`                                                            |
-| [SD-13](#sd-13--xem-lịch-sử-check-in-và-biểu-đồ-tiến-độ) | UC13 Xem lịch sử check-in và biểu đồ tiến độ | `listCheckins`                                                             |
-| [SD-14](#sd-14--phản-hồi-check-in)                       | UC14 Phản hồi check-in                       | `createCheckinComment`                                                     |
-| [SD-15](#sd-15--quản-lý-bộ-tiêu-chí-đánh-giá)            | UC15 Quản lý bộ tiêu chí đánh giá            | `createTemplate`, `updateTemplate`, `duplicateTemplate`                    |
-| [SD-16](#sd-16--tạo-và-mở-đợt-đánh-giá-360)              | UC16 Tạo và mở đợt đánh giá 360              | `createCampaign`, `openNomination`, `openCollection`                       |
-| [SD-17](#sd-17--đề-cử-đồng-nghiệp)                       | UC17 Đề cử đồng nghiệp                       | `getMyNomination`, `submitNomination`                                      |
-| [SD-18](#sd-18--duyệt-người-đánh-giá)                    | UC18 Duyệt người đánh giá                    | `listPendingNominations`, `approveNomination`                              |
-| [SD-19](#sd-19--điền-phiếu-đánh-giá)                     | UC19 Điền phiếu đánh giá                     | `checkReviewComment`, `submitReviewForm`                                   |
-| [SD-20](#sd-20--theo-dõi-tiến-độ-nộp-phiếu-và-đóng-đợt)  | UC20 Theo dõi tiến độ nộp phiếu và đóng đợt  | `getCampaignProgress`, `remindReviewers`, `closeCampaign`                  |
-| [SD-21](#sd-21--xem-kết-quả-360)                         | UC21 Xem kết quả 360                         | `getReviewResult`                                                          |
-| [SD-22](#sd-22--tổng-hợp-và-công-bố-kết-quả-cuối-kỳ)     | UC22 Tổng hợp và công bố kết quả cuối kỳ     | `calculateFinalResults`, `publishFinalResults`                             |
-| [SD-23](#sd-23--xem-dashboard)                           | UC23 Xem dashboard                           | `getMyDashboard`, `getTeamDashboard`, `getCompanyDashboard`                |
-| [SD-24](#sd-24--xem-và-xuất-báo-cáo)                     | UC24 Xem và xuất báo cáo                     | `getReport`, `exportReport`                                                |
-| [SD-25](#sd-25--nhận-thông-báo-và-nhắc-nhở)              | UC25 Nhận thông báo và nhắc nhở              | Worker, `listNotifications`, `markNotificationRead`                        |
-| [SD-26](#sd-26--xem-nhật-ký-hoạt-động)                   | UC26 Xem nhật ký hoạt động                   | `listAuditLogs`                                                            |
-| [SD-27](#sd-27--cấu-hình-luồng-tự-động)                  | UC27 Cấu hình luồng tự động                  | `updateAutomationFlow`                                                     |
-| [SD-28](#sd-28--xem-lịch-sử-chạy-tự-động)                | UC28 Xem lịch sử chạy tự động                | `listAutomationRuns`, `getAutomationRun`, `retryAutomationRun`             |
-| [SD-29](#sd-29--xử-lý-vướng-mắc-được-chuyển-đến)         | UC29 Xử lý vướng mắc được chuyển đến         | `acknowledgeBlocker`, `rejectBlocker`                                      |
-| [SD-30](#sd-30--xem-bản-tin-tuần)                        | UC30 Xem bản tin tuần                        | Worker, `getWeeklyDigest`                                                  |
-| [SD-31](#sd-31--duyệt-bản-nháp-1-1)                      | UC31 Duyệt bản nháp 1-1                      | Worker, `updateOneOnOneDraft`, `sendOneOnOneDraft`, `discardOneOnOneDraft` |
-| [SD-32](#sd-32--chạy-luồng-tự-động-ai)                   | UC32 Chạy luồng tự động AI                   | Worker                                                                     |
+| [SD-13](#sd-13--view-check-in-history-and-progress-chart) | UC13 View check-in history and progress chart | `listCheckins`                                                             |
+| [SD-14](#sd-14--comment-on-check-in)                     | UC14 Comment on check-in                     | `createCheckinComment`                                                     |
+| [SD-15](#sd-15--manage-review-templates)                 | UC15 Manage review templates                 | `createTemplate`, `updateTemplate`, `duplicateTemplate`                    |
+| [SD-16](#sd-16--create-and-launch-360-review-campaign)   | UC16 Create and launch 360 review campaign   | `createCampaign`, `openNomination`, `openCollection`                       |
+| [SD-17](#sd-17--nominate-peers)                          | UC17 Nominate peers                          | `getMyNomination`, `submitNomination`                                      |
+| [SD-18](#sd-18--approve-reviewers)                       | UC18 Approve reviewers                       | `listPendingNominations`, `approveNomination`                              |
+| [SD-19](#sd-19--fill-review-form)                        | UC19 Fill review form                        | `checkReviewComment`, `submitReviewForm`                                   |
+| [SD-20](#sd-20--monitor-review-progress-and-close-campaign) | UC20 Monitor review progress and close campaign | `getCampaignProgress`, `remindReviewers`, `closeCampaign`                  |
+| [SD-21](#sd-21--view-360-review-results)                 | UC21 View 360 review results                 | `getReviewResult`                                                          |
+| [SD-22](#sd-22--aggregate-and-publish-final-results)     | UC22 Aggregate and publish final results     | `calculateFinalResults`, `publishFinalResults`                             |
+| [SD-23](#sd-23--view-dashboard)                          | UC23 View dashboard                          | `getMyDashboard`, `getTeamDashboard`, `getCompanyDashboard`                |
+| [SD-24](#sd-24--view-and-export-reports)                 | UC24 View and export reports                 | `getReport`, `exportReport`                                                |
+| [SD-25](#sd-25--receive-notifications-and-reminders)     | UC25 Receive notifications and reminders     | Worker, `listNotifications`, `markNotificationRead`                        |
+| [SD-26](#sd-26--view-audit-logs)                         | UC26 View audit logs                         | `listAuditLogs`                                                            |
+| [SD-27](#sd-27--configure-automation-flows)              | UC27 Configure automation flows              | `updateAutomationFlow`                                                     |
+| [SD-28](#sd-28--view-automation-run-history)             | UC28 View automation run history             | `listAutomationRuns`, `getAutomationRun`, `retryAutomationRun`             |
+| [SD-29](#sd-29--handle-routed-blockers)                  | UC29 Handle routed blockers                  | `acknowledgeBlocker`, `rejectBlocker`                                      |
+| [SD-30](#sd-30--view-weekly-digest)                      | UC30 View weekly digest                      | Worker, `getWeeklyDigest`                                                  |
+| [SD-31](#sd-31--review-1-on-1-draft)                     | UC31 Review 1-on-1 draft                     | Worker, `updateOneOnOneDraft`, `sendOneOnOneDraft`, `discardOneOnOneDraft` |
+| [SD-32](#sd-32--execute-ai-automation-flow)              | UC32 Execute AI automation flow              | Worker                                                                     |
 
-## SD-01 — Đăng nhập
+## SD-01 — Login
 
 ```mermaid
 sequenceDiagram
     autonumber
-    actor U as Người dùng
+    actor U as User
     participant W as Web App
     participant C as AuthController
     participant L as LoginAttemptLimiter
@@ -61,83 +61,83 @@ sequenceDiagram
     participant H as PasswordHasher
     participant T as TokenService
 
-    U->>W: Nhập email, mật khẩu
+    U->>W: Enter email, password
     W->>C: POST /auth/login
     C->>S: login(email, password)
     S->>L: assertAllowed(email)
-    alt Sai quá 5 lần trong 15 phút
-        L-->>C: lỗi quá số lần
+    alt More than 5 failed attempts in 15 minutes
+        L-->>C: Rate limit exceeded error
         C-->>W: 429
-    else Còn được thử
+    else Attempts remaining
         S->>R: findUserByEmail(email)
         S->>H: verify(password, hash)
-        alt Sai thông tin hoặc tài khoản bị khóa
+        alt Invalid credentials or account locked
             S->>L: recordFailure(email)
-            C-->>W: 401, cùng một thông báo cho mọi trường hợp
-        else Đúng
+            C-->>W: 401, identical generic error message
+        else Valid credentials
             S->>L: reset(email)
             S->>T: sign(user)
-            T-->>S: token hết hạn sau 30 phút
+            T-->>S: Token expires after 30 minutes
             C-->>W: 200 LoginResponse
-            W-->>U: Vào Dashboard
+            W-->>U: Navigate to Dashboard
         end
     end
 ```
 
-## SD-02 — Đăng xuất
+## SD-02 — Logout
 
-V1 không thu hồi token ở server; token tự hết hạn sau 30 phút.
+V1 does not revoke tokens on the server; the token automatically expires after 30 minutes.
 
 ```mermaid
 sequenceDiagram
     autonumber
-    actor U as Người dùng
+    actor U as User
     participant W as Web App
     participant C as AuthController
 
-    U->>W: Bấm Đăng xuất
+    U->>W: Click Logout
     W->>C: POST /auth/logout
     C-->>W: 204
-    W->>W: Xóa token và dữ liệu phiên phía client
-    W-->>U: Về trang đăng nhập
+    W->>W: Clear token and client-side session data
+    W-->>U: Redirect to login page
 ```
 
-## SD-03 — Quản lý hồ sơ cá nhân
+## SD-03 — Manage Personal Profile
 
 ```mermaid
 sequenceDiagram
     autonumber
-    actor U as Người dùng
+    actor U as User
     participant W as Web App
     participant C as ProfileController
     participant S as ProfileService
     participant H as PasswordHasher
     participant R as OrganizationRepository
 
-    U->>W: Mở Hồ sơ
+    U->>W: Open Profile
     W->>C: GET /me
     C->>S: get(actor)
     C-->>W: 200 Profile
-    U->>W: Sửa họ tên, số điện thoại, ảnh đại diện
+    U->>W: Edit full name, phone number, avatar
     W->>C: PATCH /me
-    Note over C: DTO chỉ nhận các trường tự sửa được, không có email, vai trò, phòng ban
+    Note over C: DTO only accepts self-editable fields; email, role, department excluded
     C->>S: update(actor, input)
     S->>R: saveUser(user)
     C-->>W: 200 Profile
-    U->>W: Nhập mật khẩu cũ và mật khẩu mới
+    U->>W: Enter current password and new password
     W->>C: POST /me/password
     C->>S: changePassword(actor, current, next)
     S->>H: verify(current, hash)
-    alt Mật khẩu cũ sai hoặc mật khẩu mới dưới 8 ký tự
+    alt Current password incorrect or new password under 8 characters
         C-->>W: 400
-    else Hợp lệ
+    else Valid
         S->>H: hash(next)
         S->>R: saveUser(user)
         C-->>W: 204
     end
 ```
 
-## SD-04 — Quản lý phòng ban và team
+## SD-04 — Manage Departments and Teams
 
 ```mermaid
 sequenceDiagram
@@ -150,35 +150,35 @@ sequenceDiagram
     participant DB as PostgreSQL
     participant L as AuditLogService
 
-    A->>W: Thêm hoặc sửa phòng ban, team
-    W->>C: POST /departments hoặc PATCH /departments/{id}
-    C->>S: create(input) hoặc update(id, input)
+    A->>W: Add or edit department, team
+    W->>C: POST /departments or PATCH /departments/{id}
+    C->>S: create(input) or update(id, input)
     S->>R: findDepartment(parentId)
-    alt Team không nằm ngay dưới một phòng ban
+    alt Team is not directly under a department
         C-->>W: 400
-    else Cấu trúc hợp lệ
+    else Valid structure
         S->>R: saveDepartment(unit)
-        R->>DB: Trigger kiểm tra vòng lặp và loại đơn vị
-        alt Tạo vòng lặp
+        R->>DB: Trigger verifies cycles and unit types
+        alt Cycle detected
             C-->>W: 409
-        else Lưu được
-            S->>L: record(CREATE hoặc UPDATE)
-            C-->>W: 201 hoặc 200 Department
+        else Saved successfully
+            S->>L: record(CREATE or UPDATE)
+            C-->>W: 201 or 200 Department
         end
     end
-    A->>W: Ngưng hoạt động đơn vị
+    A->>W: Deactivate unit
     W->>C: POST /departments/{id}/deactivate
     C->>S: deactivate(id)
     S->>R: countActiveMembers(id)
-    alt Còn nhân viên đang hoạt động
+    alt Active members remain
         C-->>W: 409
-    else Không còn
+    else No active members
         S->>R: saveDepartment(isActive = false)
         C-->>W: 200 Department
     end
 ```
 
-## SD-05 — Quản lý người dùng
+## SD-05 — Manage Users
 
 ```mermaid
 sequenceDiagram
@@ -192,37 +192,37 @@ sequenceDiagram
     participant DB as PostgreSQL
     participant L as AuditLogService
 
-    A->>W: Nhập thông tin người dùng
-    W->>C: POST /users hoặc PATCH /users/{id}
-    C->>S: create(actor, input) hoặc update(actor, id, input)
-    alt HR gán vai trò Admin
+    A->>W: Enter user details
+    W->>C: POST /users or PATCH /users/{id}
+    C->>S: create(actor, input) or update(actor, id, input)
+    alt HR assigns Admin role
         C-->>W: 403
-    else Được phép
+    else Permitted
         S->>R: findUserByEmail(email)
-        alt Email trùng với tài khoản chưa xóa
+        alt Email matches an active/undeleted account
             C-->>W: 409
-        else Email hợp lệ
-            S->>H: hash(mật khẩu ban đầu), chỉ khi tạo mới
+        else Valid email
+            S->>H: hash(initial password), on create only
             S->>R: saveUser(user)
-            R->>DB: Trigger kiểm tra vòng lặp quản lý
-            alt Tự quản lý mình hoặc tạo vòng lặp
+            R->>DB: Trigger checks manager cycle
+            alt Self-management or hierarchy cycle detected
                 C-->>W: 409
-            else Lưu được
-                S->>L: record(CREATE hoặc UPDATE)
-                C-->>W: 201 hoặc 200 User
+            else Saved successfully
+                S->>L: record(CREATE or UPDATE)
+                C-->>W: 201 or 200 User
             end
         end
     end
-    A->>W: Bật hoặc tắt tài khoản
+    A->>W: Activate or deactivate account
     W->>C: PATCH /users/{id}/status
     C->>S: setActive(id, isActive)
     S->>R: saveUser(user)
     C-->>W: 200 User
 ```
 
-- Tài khoản bị tắt không đăng nhập được và không được phân công làm người đánh giá mới (BR-014).
+- Deactivated accounts cannot log in and cannot be assigned as new reviewers (BR-014).
 
-## SD-06 — Quản lý chu kỳ OKR
+## SD-06 — Manage OKR Cycles
 
 ```mermaid
 sequenceDiagram
@@ -234,68 +234,68 @@ sequenceDiagram
     participant R as OkrRepository
     participant DB as PostgreSQL
 
-    A->>W: Tạo chu kỳ
+    A->>W: Create cycle
     W->>C: POST /cycles
     C->>S: create(input)
-    alt Ngày kết thúc trước ngày bắt đầu
+    alt End date is before start date
         C-->>W: 400
-    else Hợp lệ
-        S->>DB: Lưu chu kỳ ở DRAFT
+    else Valid
+        S->>DB: Save cycle in DRAFT status
         C-->>W: 201 Cycle
     end
-    A->>W: Kích hoạt chu kỳ
+    A->>W: Activate cycle
     W->>C: POST /cycles/{id}/activate
     C->>S: activate(id)
-    S->>DB: Chuyển sang ACTIVE
-    alt Đã có chu kỳ ACTIVE khác, hoặc sai trạng thái
-        DB-->>S: Unique index hoặc trigger từ chối
+    S->>DB: Transition to ACTIVE
+    alt Another ACTIVE cycle exists, or invalid state transition
+        DB-->>S: Unique index or trigger rejection
         C-->>W: 409
-    else Được kích hoạt
+    else Activated
         C-->>W: 200 Cycle
     end
-    A->>W: Đóng chu kỳ
+    A->>W: Close cycle
     W->>C: POST /cycles/{id}/close
     C->>S: close(id)
-    Note over S,DB: Bắt đầu transaction
-    S->>R: Chốt final_progress cho mọi Objective của chu kỳ
-    S->>DB: Chuyển sang CLOSED
+    Note over S,DB: Begin transaction
+    S->>R: Finalize final_progress for all Objectives in cycle
+    S->>DB: Transition to CLOSED
     Note over S,DB: Commit
     C-->>W: 200 Cycle
 ```
 
-- Từ lúc đóng, trigger chặn mọi thao tác sửa OKR và check-in trong chu kỳ (BR-022).
+- Once closed, database triggers block all modifications to OKRs and check-ins within the cycle (BR-022).
 
-## SD-07 — Xem cây OKR
+## SD-07 — View OKR Tree
 
 ```mermaid
 sequenceDiagram
     autonumber
-    actor U as Người dùng
+    actor U as User
     participant W as Web App
     participant C as ObjectivesController
     participant S as ObjectiveService
     participant R as OkrRepository
     participant DB as PostgreSQL
 
-    U->>W: Chọn chu kỳ, mở Cây OKR
+    U->>W: Select cycle, open OKR Tree
     W->>C: GET /objectives/tree?cycleId=...
     C->>S: tree(filter)
     S->>R: findTree(filter)
-    R->>DB: Đọc vw_objective_tree, bỏ OKR đã xóa mềm
-    S->>S: Dựng cây lồng nhau, gắn tiến độ và mức tự tin
+    R->>DB: Query vw_objective_tree, exclude soft-deleted OKRs
+    S->>S: Construct nested tree, attach progress and confidence levels
     C-->>W: 200 ObjectiveTreeNode[]
-    U->>W: Lọc, mở rộng, chọn một Objective
+    U->>W: Filter, expand, select an Objective
     W->>C: GET /objectives/{id}
     C->>S: get(id)
-    C-->>W: 200 Objective kèm KR, Objective con, ghi chú rà soát
+    C-->>W: 200 Objective with KRs, child Objectives, and review notes
 ```
 
-## SD-08 — Tạo/sửa Objective
+## SD-08 — Create/Edit Objective
 
 ```mermaid
 sequenceDiagram
     autonumber
-    actor U as Người dùng
+    actor U as User
     participant W as Web App
     participant C as ObjectivesController
     participant S as ObjectiveService
@@ -305,24 +305,24 @@ sequenceDiagram
     participant RU as ProgressRollup
     participant L as AuditLogService
 
-    U->>W: Nhập Objective và 1 đến 5 Key Result, bấm lưu
+    U->>W: Enter Objective and 1 to 5 Key Results, click save
     W->>C: POST /objectives
     C->>S: create(actor, input)
-    S->>P: Kiểm tra cấp OKR theo vai trò và đơn vị phụ trách
-    alt Không được tạo ở cấp này
+    S->>P: Validate OKR level against user role and unit ownership
+    alt Unauthorized at this level
         C-->>W: 403
-    else Được phép
+    else Permitted
         S->>R: findCycle(cycleId)
-        alt Chu kỳ đã CLOSED
+        alt Cycle is CLOSED
             C-->>W: 409
-        else Vượt số Objective tối đa hoặc thiếu đơn vị
+        else Exceeds maximum Objectives or missing unit
             C-->>W: 400
-        else Hợp lệ
-            Note over S,DB: Bắt đầu transaction
-            S->>R: Lưu Objective và các Key Result
-            R->>DB: Trigger kiểm tra cấp cha và chu kỳ
-            R->>DB: Trigger ghi domain_events OBJECTIVE_CREATED
-            opt Có Objective cha
+        else Valid
+            Note over S,DB: Begin transaction
+            S->>R: Save Objective and Key Results
+            R->>DB: Trigger validates parent level and cycle
+            R->>DB: Trigger inserts domain_events OBJECTIVE_CREATED
+            opt Parent Objective exists
                 S->>RU: recalculateFrom(parentId)
             end
             S->>L: record(CREATE)
@@ -330,17 +330,17 @@ sequenceDiagram
             C-->>W: 201 Objective
         end
     end
-    Note over DB: Worker chạy luồng Rà soát OKR mới tạo theo SD-32, rồi gắn ghi chú rà soát
+    Note over DB: Worker executes New OKR Review flow per SD-32, then attaches review notes
 ```
 
-- Sửa Objective (`updateObjective`) đi theo cùng mẫu, không ghi sự kiện cho AI.
+- Editing an Objective (`updateObjective`) follows the same pattern, without emitting events for AI.
 
-## SD-09 — Quản lý Key Result
+## SD-09 — Manage Key Results
 
 ```mermaid
 sequenceDiagram
     autonumber
-    actor U as Người sở hữu
+    actor U as Owner
     participant W as Web App
     participant C as KeyResultsController
     participant S as KeyResultService
@@ -348,34 +348,34 @@ sequenceDiagram
     participant R as OkrRepository
     participant RU as ProgressRollup
 
-    U->>W: Thêm, sửa hoặc xóa Key Result
-    W->>C: POST, PATCH hoặc DELETE Key Result
-    C->>S: create, update hoặc softDelete
-    S->>P: Kiểm tra người gọi sở hữu Objective
-    alt Không có quyền
+    U->>W: Add, edit, or delete Key Result
+    W->>C: POST, PATCH, or DELETE Key Result
+    C->>S: create, update, or softDelete
+    S->>P: Verify caller owns the Objective
+    alt Unauthorized
         C-->>W: 403
-    else Thêm KR thứ 6, hoặc giá trị đầu bằng đích
+    else Adding a 6th KR, or initial value equals target
         C-->>W: 400
-    else Xóa KR cuối cùng của Objective, hoặc chu kỳ đã đóng
+    else Deleting the last KR of Objective, or cycle is closed
         C-->>W: 409
-    else Hợp lệ
-        Note over S,RU: Bắt đầu transaction
-        S->>R: Lưu Key Result
-        opt Đổi giá trị đầu hoặc đích, hoặc thêm, xóa KR
+    else Valid
+        Note over S,RU: Begin transaction
+        S->>R: Save Key Result
+        opt Changed start or target value, or added/removed KR
             S->>RU: recalculateFrom(objectiveId)
-            Note over RU: Lịch sử check-in giữ nguyên
+            Note over RU: Check-in history remains intact
         end
         Note over S,RU: Commit
-        C-->>W: 201, 200 hoặc 204
+        C-->>W: 201, 200, or 204
     end
 ```
 
-## SD-10 — Liên kết lên mục tiêu cấp trên
+## SD-10 — Align to Parent Objective
 
 ```mermaid
 sequenceDiagram
     autonumber
-    actor U as Người sở hữu
+    actor U as Owner
     participant W as Web App
     participant C as ObjectivesController
     participant S as ObjectiveService
@@ -383,33 +383,33 @@ sequenceDiagram
     participant DB as PostgreSQL
     participant RU as ProgressRollup
 
-    U->>W: Chọn Objective cha, hoặc gỡ liên kết
+    U->>W: Select parent Objective, or remove link
     W->>C: PUT /objectives/{id}/parent
     C->>S: linkParent(actor, id, parentId)
-    S->>R: Đọc Objective cha
-    alt Sai cấp, khác chu kỳ hoặc cha đã bị xóa
+    S->>R: Read parent Objective
+    alt Invalid level, mismatched cycle, or parent is soft-deleted
         C-->>W: 400
-    else Hợp lệ
-        Note over S,DB: Bắt đầu transaction
-        S->>R: Cập nhật parent_id
-        R->>DB: Trigger kiểm tra vòng lặp
-        alt Tạo vòng lặp
+    else Valid
+        Note over S,DB: Begin transaction
+        S->>R: Update parent_id
+        R->>DB: Trigger checks for cycle
+        alt Cycle detected
             C-->>W: 409
-        else Lưu được
-            S->>RU: recalculateFrom(cha cũ)
-            S->>RU: recalculateFrom(cha mới)
+        else Saved successfully
+            S->>RU: recalculateFrom(oldParent)
+            S->>RU: recalculateFrom(newParent)
             Note over S,DB: Commit
             C-->>W: 200 Objective
         end
     end
 ```
 
-## SD-11 — Xóa mềm OKR
+## SD-11 — Soft Delete OKR
 
 ```mermaid
 sequenceDiagram
     autonumber
-    actor U as Người dùng
+    actor U as User
     participant W as Web App
     participant C as ObjectivesController
     participant S as ObjectiveService
@@ -418,17 +418,17 @@ sequenceDiagram
     participant RU as ProgressRollup
     participant L as AuditLogService
 
-    U->>W: Bấm xóa, xác nhận
+    U->>W: Click delete, confirm
     W->>C: DELETE /objectives/{id}
     C->>S: softDelete(actor, id)
-    S->>P: Người sở hữu, Manager của đơn vị, hoặc Admin
-    alt Không có quyền
+    S->>P: Owner, unit Manager, or Admin
+    alt Unauthorized
         C-->>W: 403
-    else Còn Objective con đang liên kết
+    else Child Objectives still linked
         C-->>W: 409
-    else Hợp lệ
-        Note over S,RU: Bắt đầu transaction
-        S->>R: Đặt deleted_at, deleted_by
+    else Valid
+        Note over S,RU: Begin transaction
+        S->>R: Set deleted_at, deleted_by
         S->>RU: recalculateFrom(parentId)
         S->>L: record(SOFT_DELETE)
         Note over S,RU: Commit
@@ -438,14 +438,14 @@ sequenceDiagram
 
 ## SD-12 — Check-in Key Result
 
-Mọi bước ghi nằm trong một transaction. AI không được gọi ở đây: trigger chỉ ghi sự kiện, Worker xử lý sau (SD-32).
+All write steps execute within a single transaction. AI is not invoked here: triggers only log events; the background Worker processes them later (SD-32).
 
 ```mermaid
 sequenceDiagram
     autonumber
-    actor U as Người phụ trách
+    actor U as Assignee
     participant W as Web App
-    participant G as JwtAuthGuard và RolesGuard
+    participant G as JwtAuthGuard and RolesGuard
     participant C as CheckinsController
     participant S as CheckinService
     participant R as OkrRepository
@@ -453,55 +453,55 @@ sequenceDiagram
     participant P as ProgressRollup
     participant N as NotificationService
 
-    U->>W: Nhập giá trị, mức tự tin, ghi chú, vướng mắc
+    U->>W: Enter value, confidence level, note, blocker
     W->>G: POST /key-results/{id}/checkins
     G->>C: CurrentUser
     C->>S: create(actor, keyResultId, input)
     S->>R: findKeyResultForCheckin(keyResultId)
-    alt Không phải người phụ trách KR
+    alt Not the KR assignee
         C-->>W: 403
-    else Chu kỳ không ACTIVE
+    else Cycle not ACTIVE
         C-->>W: 409
-    else Hợp lệ
-        Note over S,DB: Bắt đầu transaction
+    else Valid
+        Note over S,DB: Begin transaction
         S->>R: insertCheckin(input)
         R->>DB: INSERT checkins
-        DB->>DB: Trigger cập nhật giá trị hiện tại của KR
-        DB->>DB: Trigger ghi domain_events CHECKIN_CREATED
+        DB->>DB: Trigger updates KR current_value
+        DB->>DB: Trigger inserts domain_events CHECKIN_CREATED
         S->>P: recalculateFrom(objectiveId)
         P->>R: findObjectiveChain(objectiveId)
-        P->>R: updateObjectiveProgress cho từng Objective tới gốc
-        opt Mức tự tin là Chệch hướng
-            S->>N: notify(quản lý trực tiếp, CHECKIN_OFF_TRACK)
+        P->>R: updateObjectiveProgress for each Objective up to root
+        opt Confidence is Off Track
+            S->>N: notify(direct manager, CHECKIN_OFF_TRACK)
         end
-        S->>DB: Ghi audit_logs
+        S->>DB: Write audit_logs
         Note over S,DB: Commit
-        C-->>W: 201 CheckinResult kèm các Objective đã cộng dồn
-        W-->>U: Tiến độ các cấp cập nhật ngay
+        C-->>W: 201 CheckinResult with rolled-up Objectives
+        W-->>U: Progress across all levels updates immediately
     end
 ```
 
-## SD-13 — Xem lịch sử check-in và biểu đồ tiến độ
+## SD-13 — View Check-in History and Progress Chart
 
 ```mermaid
 sequenceDiagram
     autonumber
-    actor U as Người dùng
+    actor U as User
     participant W as Web App
     participant C as CheckinsController
     participant S as CheckinService
     participant R as OkrRepository
 
-    U->>W: Mở một Key Result
+    U->>W: Open a Key Result
     W->>C: GET /key-results/{id}/checkins
     C->>S: list(keyResultId)
-    S->>R: Đọc check-in mới nhất trước, kèm bình luận và nhãn AI
+    S->>R: Query check-ins newest first, with comments and AI insights
     C-->>W: 200 Checkin[]
-    W->>W: Vẽ tiến độ thực tế và đường kỳ vọng theo ngày của chu kỳ
-    W-->>U: Thấy KR chững lại từ khi nào
+    W->>W: Plot actual progress and expected timeline curve based on cycle dates
+    W-->>U: View when the KR began stalling
 ```
 
-## SD-14 — Phản hồi check-in
+## SD-14 — Comment on Check-in
 
 ```mermaid
 sequenceDiagram
@@ -514,21 +514,21 @@ sequenceDiagram
     participant R as OkrRepository
     participant N as NotificationService
 
-    M->>W: Viết bình luận vào check-in
+    M->>W: Write comment on check-in
     W->>C: POST /checkins/{id}/comments
     C->>S: comment(actor, checkinId, body)
-    S->>R: Đọc check-in và người check-in
-    S->>P: isDirectManager(actor, người check-in)
-    alt Không phải quản lý trực tiếp
+    S->>R: Read check-in and check-in author
+    S->>P: isDirectManager(actor, author)
+    alt Not direct manager
         C-->>W: 403
-    else Đúng
-        S->>R: Lưu bình luận, không đổi check-in
-        S->>N: notify(người check-in, CHECKIN_COMMENT)
+    else Valid
+        S->>R: Save comment, check-in remains unmodified
+        S->>N: notify(author, CHECKIN_COMMENT)
         C-->>W: 201 CheckinComment
     end
 ```
 
-## SD-15 — Quản lý bộ tiêu chí đánh giá
+## SD-15 — Manage Review Templates
 
 ```mermaid
 sequenceDiagram
@@ -539,25 +539,25 @@ sequenceDiagram
     participant S as TemplateService
     participant R as ReviewRepository
 
-    HR->>W: Tạo hoặc sửa mẫu phiếu
-    W->>C: POST /review-templates hoặc PUT /review-templates/{id}
-    C->>S: create(input) hoặc update(id, input)
-    alt Không có tiêu chí chấm điểm nào
+    HR->>W: Create or edit review template
+    W->>C: POST /review-templates or PUT /review-templates/{id}
+    C->>S: create(input) or update(id, input)
+    alt No rating criteria provided
         C-->>W: 400
-    else Sửa mẫu đã được đợt ngoài DRAFT dùng
-        C-->>W: 409, chỉ được nhân bản
-    else Hợp lệ
-        S->>R: Lưu mẫu, tiêu chí, câu hỏi mở
-        C-->>W: 201 hoặc 200 ReviewTemplate
+    else Modifying template used by non-DRAFT campaign
+        C-->>W: 409, duplication required
+    else Valid
+        S->>R: Save template, criteria, open questions
+        C-->>W: 201 or 200 ReviewTemplate
     end
-    HR->>W: Nhân bản mẫu đang bị khóa
+    HR->>W: Duplicate locked template
     W->>C: POST /review-templates/{id}/duplicate
     C->>S: duplicate(id)
-    S->>R: Sao chép thành mẫu mới chưa khóa
+    S->>R: Duplicate into a new unlocked template
     C-->>W: 201 ReviewTemplate
 ```
 
-## SD-16 — Tạo và mở đợt đánh giá 360
+## SD-16 — Create and Launch 360 Review Campaign
 
 ```mermaid
 sequenceDiagram
@@ -569,66 +569,66 @@ sequenceDiagram
     participant R as ReviewRepository
     participant DB as PostgreSQL
 
-    HR->>W: Tạo đợt: mẫu phiếu, người được đánh giá, các hạn
+    HR->>W: Create campaign: template, reviewees, deadlines
     W->>C: POST /campaigns
     C->>S: create(input)
-    alt Hạn đề cử sau hạn nộp
+    alt Nomination deadline after submission deadline
         C-->>W: 400
-    else Chu kỳ đã có đợt 360
+    else Cycle already has a 360 campaign
         C-->>W: 409
-    else Hợp lệ
-        S->>R: Lưu đợt ở DRAFT và danh sách người được đánh giá
+    else Valid
+        S->>R: Save campaign in DRAFT and participant list
         C-->>W: 201 Campaign
     end
-    HR->>W: Mở đề cử
+    HR->>W: Open nomination
     W->>C: POST /campaigns/{id}/open-nomination
     C->>S: openNomination(id)
-    S->>DB: Chuyển sang NOMINATION, trigger chỉ cho đi một bước
+    S->>DB: Transition to NOMINATION, trigger enforces single-step transition
     C-->>W: 200 Campaign
-    HR->>W: Mở thu phiếu
+    HR->>W: Open response collection
     W->>C: POST /campaigns/{id}/open-collection
     C->>S: openCollection(id)
-    Note over S,DB: Bắt đầu transaction
-    S->>DB: Chuyển sang COLLECTING
-    S->>R: Ghi bản chụp quản lý trực tiếp và phòng ban vào campaign_participants
-    S->>R: Tạo phiếu Tự đánh giá, Quản lý, Cấp dưới theo bản chụp
-    DB->>DB: Trigger khóa tỷ trọng OKR/360 của chu kỳ
+    Note over S,DB: Begin transaction
+    S->>DB: Transition to COLLECTING
+    S->>R: Snapshot direct manager and department into campaign_participants
+    S->>R: Generate Self, Manager, Direct Report assignments based on snapshot
+    DB->>DB: Trigger locks cycle OKR/360 weight
     Note over S,DB: Commit
     C-->>W: 200 Campaign
 ```
 
-- Phiếu nhóm Đồng nghiệp được tạo khi duyệt người đánh giá (SD-18).
+- Peer group assignments are generated upon reviewer nomination approval (SD-18).
 
-## SD-17 — Đề cử đồng nghiệp
+## SD-17 — Nominate Peers
 
 ```mermaid
 sequenceDiagram
     autonumber
-    actor U as Người được đánh giá
+    actor U as Reviewee
     participant W as Web App
     participant C as NominationsController
     participant S as NominationService
     participant R as ReviewRepository
     participant N as NotificationService
 
-    U->>W: Mở Đề cử
+    U->>W: Open Nominations
     W->>C: GET /campaigns/{id}/nominations/me
     C-->>W: 200 Nomination
-    U->>W: Chọn 3 đến 5 đồng nghiệp, bấm gửi
+    U->>W: Select 3 to 5 peers, click submit
     W->>C: PUT /campaigns/{id}/nominations/me
     C->>S: submit(actor, campaignId, peerIds)
-    alt Đợt không ở NOMINATION
+    alt Campaign not in NOMINATION status
         C-->>W: 409
-    else Có chính mình, quản lý, cấp dưới trực tiếp, người bị tắt, hoặc ngoài 3 đến 5
+    else Includes self, manager, direct report, inactive user, or outside 3 to 5
         C-->>W: 400
-    else Hợp lệ
-        S->>R: Lưu đề cử ở PENDING
-        S->>N: notify(quản lý trực tiếp, NOMINATION_PENDING)
+    else Valid
+        S->>R: Save nomination in PENDING status
+        S->>N: notify(direct manager, NOMINATION_PENDING)
         C-->>W: 200 Nomination
     end
 ```
 
-## SD-18 — Duyệt người đánh giá
+## SD-18 — Approve Reviewers
 
 ```mermaid
 sequenceDiagram
@@ -640,36 +640,36 @@ sequenceDiagram
     participant P as AccessPolicy
     participant R as ReviewRepository
 
-    M->>W: Mở Duyệt người đánh giá
+    M->>W: Open Reviewer Approvals
     W->>C: GET /campaigns/{id}/nominations
-    C-->>W: 200 Nomination[], gồm cả người chưa đề cử
-    M->>W: Giữ, thêm hoặc bớt người, bấm duyệt
+    C-->>W: 200 Nomination[], including reviewees without nominations
+    M->>W: Keep, add, or remove peers, click approve
     W->>C: POST /campaigns/{id}/nominations/{revieweeId}/approve
     C->>S: approve(actor, campaignId, revieweeId, peerIds)
-    S->>P: Quản lý trực tiếp, hoặc HR với người không có quản lý
-    alt Không có quyền
+    S->>P: Direct manager, or HR for reviewees without a manager
+    alt Unauthorized
         C-->>W: 403
-    else Đợt không ở NOMINATION
+    else Campaign not in NOMINATION status
         C-->>W: 409
-    else Ngoài 3 đến 5 đồng nghiệp
+    else Not between 3 and 5 peers
         C-->>W: 400
-    else Hợp lệ
-        Note over S,R: Bắt đầu transaction
-        S->>R: Đề cử sang APPROVED
-        S->>R: Tạo phiếu nhóm Đồng nghiệp cho từng người được duyệt
+    else Valid
+        Note over S,R: Begin transaction
+        S->>R: Nomination transitions to APPROVED
+        S->>R: Generate Peer review assignments for each approved peer
         Note over S,R: Commit
         C-->>W: 200 Nomination
     end
 ```
 
-## SD-19 — Điền phiếu đánh giá
+## SD-19 — Fill Review Form
 
-Luồng này chạy ngay trong API, không qua hộp thư sự kiện và không ghi lịch sử chạy.
+This flow executes synchronously within the API request without utilizing the outbox event queue and without persisting execution run logs.
 
 ```mermaid
 sequenceDiagram
     autonumber
-    actor U as Người đánh giá
+    actor U as Reviewer
     participant W as Web App
     participant C as ReviewFormsController
     participant G as CommentGuardService
@@ -678,39 +678,39 @@ sequenceDiagram
     participant F as ReviewFormService
     participant DB as PostgreSQL
 
-    U->>W: Bấm Nộp phiếu
+    U->>W: Click Submit Form
     W->>C: POST /review-forms/{id}/comment-check
     C->>G: check(actor, formId, answers)
-    G->>DB: Kiểm tra phiếu của người gọi, đợt đang COLLECTING
+    G->>DB: Verify form belongs to caller, campaign is COLLECTING
     G->>Q: tryConsume(REVIEW_COMMENT_GUARD)
-    alt Luồng tắt, vượt hạn mức hoặc không có nhận xét mở
+    alt Flow disabled, quota exceeded, or no open text comments
         C-->>W: 200, checked false
-    else Được chạy
-        G->>A: complete(nhận xét đã đổi tên, chờ tối đa 5 giây)
-        alt AI lỗi hoặc quá 5 giây
+    else Allowed to run
+        G->>A: complete(pseudonymized comments, max 5s timeout)
+        alt AI error or timeout exceeded
             C-->>W: 200, checked false
-        else Có kết quả đúng khuôn
-            Note over G: Bỏ mục có câu không nằm trong nhận xét
-            C-->>W: 200, checked true, danh sách cảnh báo
+        else Valid structured output returned
+            Note over G: Discard items where flagged sentence is absent from source text
+            C-->>W: 200, checked true, warning list
         end
     end
-    opt Có cảnh báo
-        W-->>U: Hiện câu bị đánh dấu, chỉ người viết thấy
-        U->>W: Sửa nhận xét hoặc chọn Vẫn nộp
+    opt Warnings detected
+        W-->>U: Display flagged sentences, visible to author only
+        U->>W: Edit feedback or select Submit Anyway
     end
     W->>C: POST /review-forms/{id}/submit
     C->>F: submit(actor, formId, input)
-    alt Thiếu tiêu chí bắt buộc
+    alt Missing mandatory criteria
         C-->>W: 400
-    else Đủ
-        F->>DB: Lưu câu trả lời, phiếu sang SUBMITTED, ghi nhật ký không kèm điểm
+    else Complete
+        F->>DB: Save answers, form transitions to SUBMITTED, audit log written without scores
         C-->>W: 200 ReviewForm
     end
 ```
 
-- Cảnh báo không được lưu ở đâu cả; chỉ `automation_daily_usage` được cộng một lần gọi (BR-101, NFR-PRIV-006).
+- Warnings are never persisted anywhere; only `automation_daily_usage` increments by one call count (BR-101, NFR-PRIV-006).
 
-## SD-20 — Theo dõi tiến độ nộp phiếu và đóng đợt
+## SD-20 — Monitor Review Progress and Close Campaign
 
 ```mermaid
 sequenceDiagram
@@ -722,34 +722,34 @@ sequenceDiagram
     participant R as ReviewRepository
     participant DB as PostgreSQL
 
-    HR->>W: Bấm Đóng đợt
+    HR->>W: Click Close Campaign
     W->>C: POST /campaigns/{id}/close
     C->>S: close(id)
-    alt Đợt không ở COLLECTING
+    alt Campaign not in COLLECTING status
         C-->>W: 409
-    else Đang thu phiếu
-        Note over S,DB: Bắt đầu transaction
+    else Currently collecting
+        Note over S,DB: Begin transaction
         S->>R: closeCampaign(id)
         R->>DB: SELECT close_review_campaign(id)
-        DB->>DB: Đợt sang CLOSED
-        DB->>DB: Xóa câu trả lời của phiếu chưa nộp, phân công sang CANCELLED
-        DB->>DB: Đặt assignment_id = NULL cho mọi câu trả lời
-        DB->>DB: Trigger ghi domain_events CAMPAIGN_CLOSED
-        S->>DB: Ghi audit_logs
+        DB->>DB: Campaign transitions to CLOSED
+        DB->>DB: Purge answers for unsubmitted forms, assignments transition to CANCELLED
+        DB->>DB: Set assignment_id = NULL across all answers
+        DB->>DB: Trigger inserts domain_events CAMPAIGN_CLOSED
+        S->>DB: Write audit_logs
         Note over S,DB: Commit
         C-->>W: 200 Campaign
     end
-    Note over DB: Worker nhận CAMPAIGN_CLOSED, tạo bản nháp 1-1 cho từng người theo SD-32
+    Note over DB: Worker receives CAMPAIGN_CLOSED, generates 1-on-1 drafts for each reviewee per SD-32
 ```
 
-- Sau bước đặt `assignment_id = NULL`, ngay cả người đọc được toàn bộ database cũng không nối được điểm với người chấm (NFR-PRIV-001).
+- Once `assignment_id = NULL` is set, even an actor with full database read privileges cannot correlate scores back to individual reviewers (NFR-PRIV-001).
 
-## SD-21 — Xem kết quả 360
+## SD-21 — View 360 Review Results
 
 ```mermaid
 sequenceDiagram
     autonumber
-    actor U as Người dùng
+    actor U as User
     participant W as Web App
     participant C as ReviewResultsController
     participant S as ReviewResultService
@@ -757,25 +757,25 @@ sequenceDiagram
     participant R as ReviewRepository
     participant G as AnonymityAggregator
 
-    U->>W: Mở kết quả 360
+    U->>W: Open 360 Results
     W->>C: GET /campaigns/{id}/results/{revieweeId}
     C->>S: get(actor, campaignId, revieweeId)
     S->>P: canViewReviewResult(actor, campaign, revieweeId)
-    Note over P: Bản thân khi PUBLISHED, quản lý trực tiếp theo bản chụp khi CLOSED, HR luôn được, Admin chỉ bản thân
-    alt Không được xem
+    Note over P: Self when PUBLISHED, direct manager via snapshot when CLOSED, HR always, Admin self only
+    alt Unauthorized
         C-->>W: 403
-    else Được xem
+    else Authorized
         S->>R: groupScores(campaignId, revieweeId)
         S->>R: visibleComments(campaignId, revieweeId)
-        S->>G: aggregate(điểm theo nhóm, nhận xét)
-        Note over G: Nhóm dưới 3 phiếu thì gộp, gộp vẫn dưới 3 thì ẩn và không tính điểm
-        G-->>S: ReviewResult, nhận xét không kèm tên và không theo thứ tự nộp
-        S->>R: Lấy bản tóm tắt 1-1 đã gửi, nếu có
+        S->>G: aggregate(scores by group, comments)
+        Note over G: Group < 3 reviews is merged; merged group < 3 is hidden and excluded from score
+        G-->>S: ReviewResult, comments stripped of names and shuffled out of submission order
+        S->>R: Retrieve sent 1-on-1 summary, if present
         C-->>W: 200 ReviewResult
     end
 ```
 
-## SD-22 — Tổng hợp và công bố kết quả cuối kỳ
+## SD-22 — Aggregate and Publish Final Results
 
 ```mermaid
 sequenceDiagram
@@ -789,40 +789,40 @@ sequenceDiagram
     participant N as NotificationService
     participant DB as PostgreSQL
 
-    HR->>W: Bấm Tổng hợp
+    HR->>W: Click Aggregate Results
     W->>C: POST /cycles/{id}/final-results/calculate
     C->>S: calculate(cycleId)
-    alt Chu kỳ hoặc đợt chưa CLOSED, hoặc đã công bố
+    alt Cycle or campaign not CLOSED, or already published
         C-->>W: 409
-    else Đủ điều kiện
-        loop Mỗi nhân viên
-            S->>DB: Đọc tiến độ OKR cá nhân đã chốt
-            S->>RS: overallScore(campaignId, nhân viên)
+    else Prerequisites met
+        loop Each employee
+            S->>DB: Read finalized individual OKR progress
+            S->>RS: overallScore(campaignId, employee)
             S->>K: okrScore, finalScore, grade
         end
-        S->>DB: Ghi đè final_results
+        S->>DB: Overwrite final_results
         C-->>W: 200 FinalResultSummary
     end
-    HR->>W: Xem trước, rồi bấm Công bố
+    HR->>W: Preview, then click Publish
     W->>C: POST /cycles/{id}/final-results/publish
     C->>S: publish(cycleId)
-    Note over S,DB: Bắt đầu transaction
-    S->>DB: Đợt sang PUBLISHED, ghi published_at
-    loop Mỗi nhân viên
-        S->>N: notify(nhân viên, RESULT_PUBLISHED)
+    Note over S,DB: Begin transaction
+    S->>DB: Campaign transitions to PUBLISHED, record published_at
+    loop Each employee
+        S->>N: notify(employee, RESULT_PUBLISHED)
     end
     Note over S,DB: Commit
     C-->>W: 200 PublishResult
 ```
 
-- AI không tham gia bước nào trong sơ đồ này.
+- AI does not participate in any step of this flow.
 
-## SD-23 — Xem dashboard
+## SD-23 — View Dashboard
 
 ```mermaid
 sequenceDiagram
     autonumber
-    actor U as Người dùng
+    actor U as User
     participant W as Web App
     participant G as RolesGuard
     participant C as DashboardsController
@@ -830,27 +830,27 @@ sequenceDiagram
     participant P as AccessPolicy
     participant DB as PostgreSQL
 
-    U->>W: Mở trang chủ, chọn chu kỳ
+    U->>W: Open home page, select cycle
     W->>C: GET /dashboards/me
     C->>S: personal(actor, cycleId)
-    S->>DB: Tiến độ OKR của tôi, KR cần check-in, phiếu cần điền
+    S->>DB: My OKR progress, KRs needing check-in, pending review forms
     C-->>W: 200 MyDashboard
-    opt Người gọi là Manager
+    opt Caller is Manager
         W->>G: GET /dashboards/team
-        G->>C: Vai trò MANAGER
+        G->>C: Role MANAGER
         C->>S: team(actor, cycleId)
         S->>P: managedUnitIds(actor)
-        S->>DB: Tiến độ đơn vị, thành viên chưa check-in, OKR có rủi ro
+        S->>DB: Unit progress, members with missing check-ins, at-risk OKRs
         C-->>W: 200 TeamDashboard
     end
-    opt Người gọi là Admin hoặc HR
+    opt Caller is Admin or HR
         W->>C: GET /dashboards/company
         C->>S: company(cycleId)
         C-->>W: 200 CompanyDashboard
     end
 ```
 
-## SD-24 — Xem và xuất báo cáo
+## SD-24 — View and Export Reports
 
 ```mermaid
 sequenceDiagram
@@ -863,27 +863,27 @@ sequenceDiagram
     participant E as ReportExporter
     participant L as AuditLogService
 
-    U->>W: Chọn loại báo cáo, chu kỳ, phòng ban
+    U->>W: Select report type, cycle, department
     W->>C: GET /reports/{type}
     C->>S: build(actor, type, filter)
-    alt Admin chọn FINAL_RESULTS
+    alt Admin selects FINAL_RESULTS
         C-->>W: 403
-    else Được xem
-        S->>P: Phạm vi đơn vị của người gọi
-        Note over S: Manager chỉ thấy đơn vị mình, riêng FINAL_RESULTS chỉ gồm cấp dưới trực tiếp
+    else Authorized
+        S->>P: Unit scope of caller
+        Note over S: Manager only views own unit; for FINAL_RESULTS, direct reports only
         C-->>W: 200 Report
     end
-    U->>W: Bấm xuất Excel hoặc PDF
+    U->>W: Click Export Excel or PDF
     W->>C: GET /reports/{type}/export?format=XLSX
     C->>S: build(actor, type, filter)
     C->>E: export(report)
     C->>L: record(EXPORT)
-    C-->>W: File khớp số liệu đang hiển thị
+    C-->>W: File matching currently displayed data
 ```
 
-## SD-25 — Nhận thông báo và nhắc nhở
+## SD-25 — Receive Notifications and Reminders
 
-Phần nhắc nhở chạy trong Worker, không dùng AI.
+The reminder processing runs in the background Worker without AI.
 
 ```mermaid
 sequenceDiagram
@@ -893,30 +893,30 @@ sequenceDiagram
     participant N as NotificationService
     participant DB as PostgreSQL
     participant E as EmailSender
-    participant SM as Máy chủ SMTP
-    actor U as Người dùng
+    participant SM as SMTP Server
+    actor U as User
     participant W as Web App
     participant C as NotificationsController
 
-    SC->>J: run() theo lịch
-    J->>DB: Tìm KR chưa check-in 7 ngày, người chưa đề cử, phiếu chưa nộp
-    loop Mỗi việc đến hạn
-        J->>N: notify(người dùng, loại, dedupeKey theo ngày)
-        N->>DB: INSERT notifications, trùng dedupeKey thì bỏ qua
+    SC->>J: run() on schedule
+    J->>DB: Find KRs unchecked for 7 days, unsubmitted nominations, unsubmitted forms
+    loop Each due item
+        J->>N: notify(user, type, dedupeKey by date)
+        N->>DB: INSERT notifications, skip if dedupeKey duplicates
     end
     SC->>E: sendPending()
-    E->>DB: Đọc thông báo chưa gửi email
-    E->>SM: Gửi email
-    E->>DB: Ghi email_sent_at
-    U->>W: Mở chuông thông báo
+    E->>DB: Read notifications pending email dispatch
+    E->>SM: Send email
+    E->>DB: Record email_sent_at
+    U->>W: Open notifications bell
     W->>C: GET /notifications
     C-->>W: 200 NotificationPage
-    U->>W: Đánh dấu đã đọc
+    U->>W: Mark as read
     W->>C: POST /notifications/{id}/read
     C-->>W: 200 Notification
 ```
 
-## SD-26 — Xem nhật ký hoạt động
+## SD-26 — View Audit Logs
 
 ```mermaid
 sequenceDiagram
@@ -927,14 +927,14 @@ sequenceDiagram
     participant S as AuditLogService
     participant DB as PostgreSQL
 
-    A->>W: Mở nhật ký, chọn bộ lọc
+    A->>W: Open Audit Logs, select filters
     W->>C: GET /audit-logs
     C->>S: list(filter)
-    S->>DB: Đọc audit_logs theo người, phân hệ, hành động, thời gian
-    C-->>W: 200 AuditLogPage, không có nội dung phiếu hay cặp người chấm ẩn danh
+    S->>DB: Read audit_logs by actor, module, action, timestamp
+    C-->>W: 200 AuditLogPage, without form answers or anonymous reviewer-reviewee pairs
 ```
 
-## SD-27 — Cấu hình luồng tự động
+## SD-27 — Configure Automation Flows
 
 ```mermaid
 sequenceDiagram
@@ -946,25 +946,25 @@ sequenceDiagram
     participant R as AutomationRepository
     participant L as AuditLogService
 
-    A->>W: Mở Tự động hóa
+    A->>W: Open Automation
     W->>C: GET /automation/flows
     C-->>W: 200 AutomationFlowConfig[]
-    A->>W: Bật/tắt, sửa lịch chạy, hạn mức, bấm lưu
+    A->>W: Enable/disable, edit schedule, quota, click save
     W->>C: PATCH /automation/flows/{flow}
     C->>S: update(flow, input)
-    alt Hạn mức không dương hoặc lịch sai định dạng
+    alt Quota non-positive or schedule invalid format
         C-->>W: 400
-    else Bật luồng khi chưa cấu hình khóa dịch vụ AI
+    else Enabling flow without configured AI service key
         C-->>W: 409
-    else Hợp lệ
-        S->>R: Lưu cấu hình
-        S->>L: record(UPDATE, giá trị cũ và mới)
+    else Valid
+        S->>R: Save configuration
+        S->>L: record(UPDATE, old and new values)
         C-->>W: 200 AutomationFlowConfig
     end
-    Note over R: Luồng tắt thì sự kiện mới của luồng được đánh dấu Bỏ qua (SD-32)
+    Note over R: When flow is disabled, new events for flow are marked SKIPPED (SD-32)
 ```
 
-## SD-28 — Xem lịch sử chạy tự động
+## SD-28 — View Automation Run History
 
 ```mermaid
 sequenceDiagram
@@ -975,33 +975,33 @@ sequenceDiagram
     participant S as RunHistoryService
     participant R as AutomationRepository
 
-    A->>W: Mở Lịch sử chạy, lọc
+    A->>W: Open Run History, filter
     W->>C: GET /automation/runs
     C-->>W: 200 AutomationRunPage
-    A->>W: Mở một lần chạy
+    A->>W: Open a run execution
     W->>C: GET /automation/runs/{id}
     C->>R: findRun(id)
-    C-->>W: 200 AutomationRun, chỉ có số liệu kỹ thuật
-    A->>W: Bấm chạy lại
+    C-->>W: 200 AutomationRun, contains technical metrics only
+    A->>W: Click Retry
     W->>C: POST /automation/runs/{id}/retry
-    alt Người gọi là HR
+    alt Caller is HR
         C-->>W: 403
-    else Lần chạy không ở trạng thái Lỗi
+    else Run not in FAILED status
         C-->>W: 409
-    else Hợp lệ
+    else Valid
         C->>S: retry(runId)
-        S->>R: Đưa lần chạy về chờ, thử lại ngay
+        S->>R: Reset run to pending, retry immediately
         C-->>W: 200 AutomationRun
     end
-    Note over R: FlowRunner.retryDue() nhặt lần chạy này theo SD-32
+    Note over R: FlowRunner.retryDue() picks up this run per SD-32
 ```
 
-## SD-29 — Xử lý vướng mắc được chuyển đến
+## SD-29 — Handle Routed Blockers
 
 ```mermaid
 sequenceDiagram
     autonumber
-    actor H as Người phụ trách đơn vị
+    actor H as Department Head
     participant W as Web App
     participant C as BlockersController
     participant S as BlockerService
@@ -1009,33 +1009,33 @@ sequenceDiagram
     participant R as AutomationRepository
     participant N as NotificationService
 
-    H->>W: Mở Vướng mắc chuyển đến, chọn một vướng mắc
-    alt Đã nhận xử lý
+    H->>W: Open Routed Blockers, select a blocker
+    alt Acknowledge resolution
         W->>C: POST /blockers/{checkinId}/acknowledge
         C->>S: acknowledge(actor, checkinId, note)
-    else Không liên quan phòng tôi
+    else Not relevant to my department
         W->>C: POST /blockers/{checkinId}/reject
         C->>S: reject(actor, checkinId, note)
     end
     S->>R: findInsight(checkinId)
-    S->>P: managesUnit(actor, đơn vị được chuyển đến)
-    alt Không phụ trách đơn vị đó
+    S->>P: managesUnit(actor, targetDepartment)
+    alt Does not manage that unit
         C-->>W: 403
-    else Vướng mắc đã được xử lý
+    else Blocker already resolved/handled
         C-->>W: 409
-    else Hợp lệ
-        S->>R: Cập nhật trạng thái xử lý và ghi chú, không đổi nhãn AI
-        alt Nhận xử lý
-            S->>N: notify(người check-in, BLOCKER_UPDATED)
-        else Từ chối
-            S->>N: notify(quản lý trực tiếp của người check-in, BLOCKER_ROUTED)
-            Note over S: Ghi nhận một lần AI phân loại sai
+    else Valid
+        S->>R: Update routing status and note, AI labels remain unchanged
+        alt Acknowledged
+            S->>N: notify(check-in author, BLOCKER_UPDATED)
+        else Rejected
+            S->>N: notify(author direct manager, BLOCKER_ROUTED)
+            Note over S: Record an AI misclassification occurrence
         end
         C-->>W: 200 RoutedBlocker
     end
 ```
 
-## SD-30 — Xem bản tin tuần
+## SD-30 — View Weekly Digest
 
 ```mermaid
 sequenceDiagram
@@ -1050,29 +1050,29 @@ sequenceDiagram
     participant C as WeeklyDigestsController
     participant S as DigestService
 
-    SC->>F: 8h sáng thứ Hai, mỗi Manager một lần chạy
-    F->>DB: createRun("user:{id}:week:{thứ Hai}"), trùng thì dừng
+    SC->>F: 8:00 AM Monday, one run per Manager
+    F->>DB: createRun("user:{id}:week:{Monday}"), stop if duplicate
     F->>H: buildRequest(manager)
-    H->>DB: Đếm số liệu tuần trước bằng truy vấn
-    alt Không có ghi chú hay vướng mắc
-        Note over H: Không gọi AI
-    else Có văn bản
-        F->>A: complete(ghi chú, vướng mắc đã đổi tên thành mã)
-        A-->>F: Tối đa 3 việc cần chú ý, đã kiểm tra khuôn
+    H->>DB: Calculate prior week metrics via SQL query
+    alt No notes or blockers present
+        Note over H: Skip AI call
+    else Text content present
+        F->>A: complete(notes and blockers pseudonymized with identifiers)
+        A-->>F: Up to 3 attention items, schema verified
     end
-    F->>H: apply(kết quả)
-    H->>DB: Ghi weekly_digests và thông báo WEEKLY_DIGEST
-    Note over DB: EmailSender gửi email theo SD-25
-    M->>W: Mở Bản tin tuần
+    F->>H: apply(result)
+    H->>DB: Write weekly_digests and WEEKLY_DIGEST notification
+    Note over DB: EmailSender dispatches email per SD-25
+    M->>W: Open Weekly Digest
     W->>C: GET /weekly-digests/{id}
     C->>S: get(actor, id)
-    S->>DB: Ghi read_at ở lần mở đầu tiên
+    S->>DB: Record read_at on first view
     C-->>W: 200 WeeklyDigest
 ```
 
-- Các con số do truy vấn tính, AI chỉ viết phần việc cần chú ý (BR-105). Lỗi và thử lại đi theo SD-32.
+- Metrics are computed directly via queries; AI only authors key attention items (BR-105). Errors and retries follow SD-32.
 
-## SD-31 — Duyệt bản nháp 1-1
+## SD-31 — Review 1-on-1 Draft
 
 ```mermaid
 sequenceDiagram
@@ -1088,51 +1088,51 @@ sequenceDiagram
     participant P as AccessPolicy
     participant N as NotificationService
 
-    Note over F: Sau sự kiện CAMPAIGN_CLOSED, mỗi người được đánh giá một lần chạy
-    F->>H: shouldSkip(người được đánh giá)
-    alt Không có nhóm đủ ngưỡng, hoặc không có nhận xét mở
-        Note over H: Không gọi AI, không tạo bản nháp
-    else Có nhận xét
-        F->>A: complete(nhận xét đã đổi tên, không kèm điểm hay người chấm)
-        A-->>F: Điểm mạnh, điểm cần cải thiện, không trích nguyên văn
-        F->>H: apply(kết quả)
-        H->>DB: Ghi one_on_one_drafts trạng thái Chờ duyệt
-        H->>DB: Thông báo AI_DRAFT_READY cho người duyệt
+    Note over F: Following CAMPAIGN_CLOSED event, one run per reviewee
+    F->>H: shouldSkip(reviewee)
+    alt No group meets threshold, or no open text comments
+        Note over H: Skip AI call, do not generate draft
+    else Comments present
+        F->>A: complete(pseudonymized feedback, excluding scores and reviewer identities)
+        A-->>F: Strengths, improvement areas, no verbatim quotes
+        F->>H: apply(result)
+        H->>DB: Write one_on_one_drafts in Pending Review status
+        H->>DB: AI_DRAFT_READY notification to approver
     end
-    M->>W: Mở bản nháp, sửa nội dung
+    M->>W: Open draft, edit content
     W->>C: PATCH /one-on-one-drafts/{id}
     C->>S: edit(actor, id, text)
-    S->>P: Quản lý theo bản chụp, hoặc HR với người không có quản lý
-    alt Không phải người duyệt
+    S->>P: Manager via snapshot, or HR for reviewees without a manager
+    alt Not the assigned approver
         C-->>W: 403
-    else Bản nháp đã gửi hoặc đã bỏ
+    else Draft already sent or discarded
         C-->>W: 409
-    else Hợp lệ
-        S->>DB: Lưu edited_text, đề xuất gốc của AI giữ nguyên
+    else Valid
+        S->>DB: Save edited_text, original AI proposals preserved immutable
         C-->>W: 200 OneOnOneDraft
     end
-    alt Gửi cho nhân viên
+    alt Send to employee
         W->>C: POST /one-on-one-drafts/{id}/send
         C->>S: send(actor, id)
-        alt Đợt chưa PUBLISHED
+        alt Campaign not PUBLISHED
             C-->>W: 409
-        else Đã công bố
-            S->>DB: Trạng thái SENT, ghi người gửi, thời điểm
-            S->>N: notify(nhân viên, ONE_ON_ONE_SENT)
+        else Published
+            S->>DB: Status SENT, record sender and timestamp
+            S->>N: notify(employee, ONE_ON_ONE_SENT)
             C-->>W: 200 OneOnOneDraft
         end
-    else Bỏ bản nháp
+    else Discard draft
         W->>C: POST /one-on-one-drafts/{id}/discard
         C->>S: discard(actor, id)
         C-->>W: 200 OneOnOneDraft
     end
 ```
 
-- Nhân viên chỉ thấy nội dung đã sửa, trong khối "Tóm tắt từ quản lý" của kết quả 360 (SD-21, BR-092).
+- Employees only see the approved content within the "Manager Summary" section of 360 results (SD-21, BR-092).
 
-## SD-32 — Chạy luồng tự động AI
+## SD-32 — Execute AI Automation Flow
 
-Ví dụ với luồng Chuyển vướng mắc; bốn luồng chạy nền còn lại chỉ khác `AutomationFlowHandler`. Bản tin tuần bắt đầu từ `WorkerScheduler` thay cho `OutboxPoller`.
+Example illustrated with the Blocker Routing flow; the four other background flows differ only in their `AutomationFlowHandler`. The Weekly Digest begins from `WorkerScheduler` rather than `OutboxPoller`.
 
 ```mermaid
 sequenceDiagram
@@ -1148,43 +1148,43 @@ sequenceDiagram
     participant V as OutputValidator
     participant DB as PostgreSQL
 
-    loop Mỗi 30 giây
-        O->>DB: Lấy domain_events chưa xử lý, FOR UPDATE SKIP LOCKED
-        O->>F: run(handler, sự kiện)
+    loop Every 30 seconds
+        O->>DB: Fetch unprocessed domain_events, FOR UPDATE SKIP LOCKED
+        O->>F: run(handler, event)
         F->>Q: tryConsume(BLOCKER_ROUTING)
-        alt Luồng tắt hoặc vượt hạn mức
+        alt Flow disabled or quota exceeded
             F->>RR: markFinished(SKIPPED)
-        else Được chạy
+        else Allowed to run
             F->>RR: createRun(flow, "checkin:21")
-            alt run_key đã có
-                Note over F: Dừng, không chạy trùng
-            else Lần chạy mới
+            alt run_key already exists
+                Note over F: Stop, avoid duplicate execution
+            else New run execution
                 F->>H: shouldSkip(check-in)
-                alt Check-in không có vướng mắc
+                alt Check-in contains no blocker
                     F->>RR: markFinished(SKIPPED)
-                else Có vướng mắc
+                else Blocker present
                     F->>H: buildRequest(check-in)
-                    H->>DB: Đọc vướng mắc và danh bạ đơn vị
+                    H->>DB: Read blocker and department directory
                     F->>A: complete(request)
-                    A->>M: mask(dữ liệu)
-                    Note over A,P: Gọi ngoài transaction, chờ tối đa 30 giây
-                    A->>P: send(prompt đã đổi tên thành mã)
-                    alt AI lỗi hoặc quá giờ
-                        A-->>F: lỗi
-                        F->>RR: markRetry(sau 1, 5 hoặc 15 phút)
-                        Note over F: Lần thứ 4 vẫn lỗi thì markFinished(FAILED)
-                    else AI trả JSON
-                        A->>V: validate(raw, khuôn, mã đơn vị hợp lệ)
-                        alt Sai khuôn
+                    A->>M: mask(data)
+                    Note over A,P: Out-of-transaction call, max 30s timeout
+                    A->>P: send(prompt with identifiers masked)
+                    alt AI error or timeout exceeded
+                        A-->>F: error
+                        F->>RR: markRetry(after 1, 5, or 15 minutes)
+                        Note over F: 4th consecutive error marks finished as FAILED
+                    else AI returns JSON
+                        A->>V: validate(raw, schema, valid department IDs)
+                        alt Invalid schema
                             F->>RR: markFinished(FAILED)
-                        else Đúng khuôn
-                            A->>M: unmask(kết quả)
-                            Note over F,DB: Transaction mới
-                            F->>H: apply(kết quả)
-                            H->>DB: Ghi checkin_insights
-                            H->>DB: Ghi notifications cho người phụ trách đơn vị
-                            F->>RR: markFinished(SUCCEEDED, số token)
-                            F->>DB: Đánh dấu processed_at của sự kiện
+                        else Valid schema
+                            A->>M: unmask(result)
+                            Note over F,DB: New transaction
+                            F->>H: apply(result)
+                            H->>DB: Write checkin_insights
+                            H->>DB: Write notifications to target department head
+                            F->>RR: markFinished(SUCCEEDED, token count)
+                            F->>DB: Mark event processed_at
                             Note over F,DB: Commit
                         end
                     end
@@ -1194,7 +1194,7 @@ sequenceDiagram
     end
 ```
 
-- Bảng mã chỉ nằm trong bộ nhớ của lần chạy; `automation_runs` không có nội dung gửi đi hay câu trả lời (BR-093, BR-100).
-- Lần chạy chờ thử lại được `FlowRunner.retryDue()` nhặt lại khi tới `next_attempt_at`.
+- Masking mappings reside strictly in memory for the duration of the run; `automation_runs` contains neither the outgoing payload nor the AI response (BR-093, BR-100).
+- Runs pending retry are retrieved by `FlowRunner.retryDue()` once `next_attempt_at` is reached.
 
-**Liên quan:** [Sơ đồ class](class-diagrams.md) · [Đặc tả luồng AI](ai-flows.md) · [Kiến trúc C4](c4.md) · [Use case](../03-use-cases.md)
+**Related:** [Class Diagrams](class-diagrams.md) · [AI Flow Specification](ai-flows.md) · [C4 Architecture](c4.md) · [Use Cases](../03-use-cases.md)

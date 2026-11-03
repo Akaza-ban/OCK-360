@@ -1,121 +1,121 @@
-# Yêu cầu theo INVEST — OKR360 V1
+# INVEST Requirements — OKR360 V1
 
-> Trạng thái thiết kế: TARGET V1 — Bước 1
+> Design status: TARGET V1 — Step 1
 
-Mỗi user story là tầng thấp nhất của phân rã top-down, đủ nhỏ để làm và kiểm thử độc lập. Các ràng buộc chung (xác thực, phân quyền, kiểm tra dữ liệu, nhật ký, xử lý lỗi, ẩn danh) là **ràng buộc chấp nhận**, không phải tính năng ẩn.
+Each user story is the lowest level of the top-down breakdown, small enough to build and test independently. The cross-cutting constraints (authentication, authorization, data validation, audit log, error handling, anonymity) are **acceptance constraints**, not hidden features.
 
-## Tiêu chí INVEST
+## INVEST criteria
 
-| Tiêu chí | Áp dụng trong OKR360 |
+| Criterion | How it applies in OKR360 |
 |---|---|
-| **Independent** | Mỗi story tạo ra một kết quả demo được; chỉ phụ thuộc story khác khi bắt buộc. |
-| **Negotiable** | Bố cục giao diện và cách cài đặt có thể đổi, miễn giữ nguyên kết quả và quy tắc quyền. |
-| **Valuable** | Mỗi story nêu rõ giá trị cho người dùng hoặc công ty. |
-| **Estimable** | Đầu vào, đầu ra, vai trò và các trường hợp lỗi quan trọng được ghi rõ. |
-| **Small** | Mỗi story nhắm một năng lực chính, chia được thành việc API, nghiệp vụ, lưu trữ, giao diện và test. |
-| **Testable** | Mỗi story gắn với tiêu chí chấp nhận quan sát được trong [06-acceptance-criteria.md](06-acceptance-criteria.md). |
+| **Independent** | Each story produces a demonstrable outcome; it depends on another story only when unavoidable. |
+| **Negotiable** | UI layout and implementation approach can change, as long as the outcome and the permission rules stay the same. |
+| **Valuable** | Each story states its value to the user or the company. |
+| **Estimable** | Inputs, outputs, roles and important error cases are written down. |
+| **Small** | Each story targets one main capability and can be split into API, business logic, storage, UI and test work. |
+| **Testable** | Each story is tied to observable acceptance criteria in [06-acceptance-criteria.md](06-acceptance-criteria.md). |
 
-## Nhóm story
+## Story groups
 
 ```text
-US01–US03   Truy cập và hồ sơ               (F01, F12)
-US04–US06   Tổ chức và chu kỳ               (F02, F03)
-US07–US11   Quản lý OKR                     (F04)
-US12–US14   Check-in và tiến độ             (F05)
-US15–US21   Đánh giá 360 độ                 (F06)
-US22        Kết quả cuối kỳ                 (F07)
-US23–US26   Dashboard, báo cáo, thông báo, nhật ký   (F08–F11)
-US27–US34   Tự động hóa bằng AI             (F13)
+US01–US03   Access and profile                (F01, F12)
+US04–US06   Organization and cycles           (F02, F03)
+US07–US11   OKR management                    (F04)
+US12–US14   Check-in and progress             (F05)
+US15–US21   360-degree review                 (F06)
+US22        Final results                     (F07)
+US23–US26   Dashboard, reports, notifications, audit log   (F08–F11)
+US27–US34   AI automation                     (F13)
 ```
 
 ## Product backlog
 
-| ID | User story | Giá trị | Phụ thuộc | Tiêu chí chấp nhận | Ưu tiên |
+| ID | User story | Value | Dependencies | Acceptance criteria | Priority |
 |---|---|---|---|---|---|
-| US01 | Là người dùng đang hoạt động, tôi muốn đăng nhập để truy cập an toàn vào phần việc mình được phép. | Bảo vệ truy cập | Tài khoản khởi tạo sẵn | AC-UC01 | Must |
-| US02 | Là người dùng đã đăng nhập, tôi muốn đăng xuất để thiết bị này xóa phiên làm việc của tôi. | An toàn phiên | US01 | AC-UC02 | Must |
-| US03 | Là người dùng, tôi muốn cập nhật hồ sơ và đổi mật khẩu mà không tự đổi được vai trò, để tài khoản luôn đúng và an toàn. | Tự phục vụ | US01 | AC-UC03 | Should |
-| US04 | Là Admin hoặc HR, tôi muốn quản lý phòng ban, team bên trong phòng ban, trưởng phòng và team lead để cây OKR phản ánh đúng cơ cấu công ty. | Nền cho cây mục tiêu | US01 | AC-UC04 | Must |
-| US05 | Là Admin hoặc HR, tôi muốn quản lý người dùng, vai trò và quản lý trực tiếp để hệ thống biết ai báo cáo cho ai. | Nền cho phân quyền và 360 | US04 | AC-UC05 | Must |
-| US06 | Là Admin hoặc HR, tôi muốn tạo, kích hoạt và đóng chu kỳ OKR để cả công ty cùng làm việc trên một mốc thời gian. | Nhịp vận hành chung | US01 | AC-UC06 | Must |
-| US07 | Là nhân viên, tôi muốn xem cây OKR toàn công ty để biết mục tiêu của mình đóng góp vào đâu. | Minh bạch, liên kết | US06 | AC-UC07 | Must |
-| US08 | Là nhân viên/quản lý/admin, tôi muốn tạo và sửa Objective ở cấp mình được phép để ghi lại điều mình muốn đạt trong chu kỳ. | Có mục tiêu rõ ràng | US06 | AC-UC08 | Must |
-| US09 | Là người sở hữu Objective, tôi muốn thêm 1–5 Key Result đo được để biết khi nào mục tiêu đạt. | Mục tiêu đo lường được | US08 | AC-UC09 | Must |
-| US10 | Là người sở hữu Objective, tôi muốn liên kết Objective lên mục tiêu cấp trên để tiến độ của tôi đóng góp vào mục tiêu chung. | Liên kết theo cây | US08 | AC-UC10 | Must |
-| US11 | Là người sở hữu OKR, Manager hoặc Admin, tôi muốn xóa mềm OKR đặt sai để nó biến khỏi cây và báo cáo nhưng vẫn truy vết được. | Dữ liệu sạch, truy vết được | US08 | AC-UC11 | Should |
-| US12 | Là người phụ trách Key Result, tôi muốn check-in giá trị hiện tại và mức tự tin để mọi người thấy tiến độ thật ngay lập tức. | Tiến độ theo thời gian thực | US09 | AC-UC12 | Must |
-| US13 | Là nhân viên, tôi muốn xem lịch sử check-in và biểu đồ tiến độ của một KR để biết nó bị chững lại từ khi nào. | Phát hiện sớm vấn đề | US12 | AC-UC13 | Must |
-| US14 | Là Manager, tôi muốn bình luận vào check-in của cấp dưới để hỗ trợ kịp thời khi họ gặp vướng mắc. | Kèm cặp liên tục | US12 | AC-UC14 | Could |
-| US15 | Là HR, tôi muốn tạo bộ tiêu chí đánh giá để các đợt 360 dùng chung một chuẩn. | Đánh giá nhất quán | US01 | AC-UC15 | Must |
-| US16 | Là HR, tôi muốn tạo đợt đánh giá gắn với chu kỳ, chọn người tham gia và các hạn, để tổ chức đánh giá 360 đúng thời điểm. | Vận hành đợt đánh giá | US05, US06, US15 | AC-UC16 | Must |
-| US17 | Là người được đánh giá, tôi muốn đề cử 3–5 đồng nghiệp hiểu công việc của mình để nhận góp ý sát thực tế. | Góp ý đúng người | US16 | AC-UC17 | Must |
-| US18 | Là Manager, tôi muốn duyệt, thêm hoặc bớt người đánh giá cho cấp dưới để tránh chọn toàn người thân quen. | Đánh giá khách quan | US17 | AC-UC18 | Must |
-| US19 | Là người đánh giá, tôi muốn chấm điểm và nhận xét trên phiếu, lưu nháp và nộp, để góp ý thẳng thắn mà không bị lộ danh tính. | Góp ý trung thực | US18 | AC-UC19 | Must |
-| US20 | Là HR, tôi muốn theo dõi tỷ lệ nộp phiếu, nhắc người chưa nộp và đóng đợt, để đợt đánh giá kết thúc đúng hạn. | Kiểm soát tiến độ | US19 | AC-UC20 | Must |
-| US21 | Là nhân viên, tôi muốn xem kết quả 360 của mình (theo tiêu chí, theo nhóm người đánh giá, chênh lệch với tự đánh giá) để biết điểm cần cải thiện. | Phát triển bản thân | US20 | AC-UC21 | Must |
-| US22 | Là HR, tôi muốn tổng hợp điểm OKR và 360 theo trọng số rồi công bố, để có dữ liệu cuối kỳ xét thưởng và phát triển. | Ra quyết định nhân sự | US12, US20 | AC-UC22 | Must |
-| US23 | Là người dùng, tôi muốn dashboard theo vai trò để thấy ngay việc cần làm và tình hình mục tiêu. | Tổng quan nhanh | US12 | AC-UC23 | Should |
-| US24 | Là Admin, HR hoặc Manager, tôi muốn xem và xuất báo cáo theo bộ lọc để phân tích và chia sẻ. | Phân tích, chia sẻ | US12, US22 | AC-UC24 | Should |
-| US25 | Là người dùng, tôi muốn nhận thông báo và nhắc nhở đúng lúc để không quên check-in hay nộp phiếu. | Tăng tỷ lệ tham gia | US12, US16 | AC-UC25 | Should |
-| US26 | Là Admin hoặc HR, tôi muốn xem nhật ký hoạt động để truy vết các thay đổi quan trọng. | Trách nhiệm giải trình | US01 | AC-UC26 | Should |
-| US27 | Là Admin, tôi muốn bật/tắt từng luồng tự động, đặt lịch chạy và hạn mức gọi AI, để kiểm soát chi phí và tắt ngay luồng chạy sai. | Kiểm soát vận hành | US01 | AC-UC27 | Must |
-| US28 | Là Admin hoặc HR, tôi muốn xem lịch sử chạy của các luồng (trạng thái, lỗi, số lần thử) và chạy lại lần bị lỗi, để biết luồng nào đang hỏng. | Theo dõi, sửa lỗi | US32 | AC-UC28 | Should |
-| US29 | Là trưởng phòng, tôi muốn nhận ngay các vướng mắc mà phòng khác đang chờ phòng mình xử lý, để gỡ việc trước khi KR của họ bị trễ. | Gỡ vướng mắc liên phòng sớm | US12, US32 | AC-UC29 | Must |
-| US30 | Là Manager, tôi muốn nhận bản tin tuần tóm tắt check-in và vướng mắc của đội vào sáng thứ Hai, để không phải đọc từng check-in trước buổi họp. | Tiết kiệm thời gian quản lý | US12, US32 | AC-UC30 | Must |
-| US31 | Là Manager, tôi muốn có sẵn bản nháp tóm tắt nhận xét 360 của từng nhân viên để sửa rồi gửi, để chuẩn bị buổi 1-1 nhanh hơn. | Phản hồi phát triển kịp thời | US20, US32 | AC-UC31 | Must |
-| US32 | Là Admin, tôi muốn mọi luồng AI chạy nền, đổi tên người thành mã, kiểm tra kết quả và không bao giờ sửa điểm, để tự động hóa mà vẫn an toàn và giữ ẩn danh. | Tự động hóa an toàn | US27 | AC-UC32 | Must |
-| US33 | Là nhân viên, tôi muốn được nhắc khi check-in mâu thuẫn với ghi chú và khi OKR mới tạo có KR khó đo, để OKR của tôi phản ánh đúng thực tế. | OKR chất lượng hơn | US08, US12, US32 | AC-UC32 | Should |
-| US34 | Là người đánh giá, tôi muốn được cảnh báo khi nhận xét có thể làm lộ danh tính của tôi, để tôi góp ý thẳng thắn mà vẫn an toàn. | Bảo vệ người góp ý | US19 | AC-UC19 | Should |
+| US01 | As an active user, I want to log in so that I can securely access the work I am allowed to do. | Access protection | Pre-seeded account | AC-UC01 | Must |
+| US02 | As a logged-in user, I want to log out so that this device clears my session. | Session safety | US01 | AC-UC02 | Must |
+| US03 | As a user, I want to update my profile and change my password without being able to change my own role, so that my account stays accurate and secure. | Self-service | US01 | AC-UC03 | Should |
+| US04 | As an Admin or HR, I want to manage departments, teams within departments, department heads and team leads so that the OKR tree reflects the company's structure. | Foundation for the goal tree | US01 | AC-UC04 | Must |
+| US05 | As an Admin or HR, I want to manage users, roles and direct managers so that the system knows who reports to whom. | Foundation for authorization and 360 | US04 | AC-UC05 | Must |
+| US06 | As an Admin or HR, I want to create, activate and close OKR cycles so that the whole company works on the same timeline. | Shared operating rhythm | US01 | AC-UC06 | Must |
+| US07 | As an employee, I want to view the company-wide OKR tree so that I know what my goals contribute to. | Transparency, alignment | US06 | AC-UC07 | Must |
+| US08 | As an employee/manager/admin, I want to create and edit Objectives at the levels I am allowed so that I can record what I want to achieve in the cycle. | Clear goals | US06 | AC-UC08 | Must |
+| US09 | As an Objective owner, I want to add 1–5 measurable Key Results so that I know when the goal is achieved. | Measurable goals | US08 | AC-UC09 | Must |
+| US10 | As an Objective owner, I want to link my Objective to a higher-level goal so that my progress contributes to the shared goal. | Tree alignment | US08 | AC-UC10 | Must |
+| US11 | As an OKR owner, Manager or Admin, I want to soft-delete a mistakenly created OKR so that it disappears from the tree and reports but remains traceable. | Clean, traceable data | US08 | AC-UC11 | Should |
+| US12 | As a Key Result owner, I want to check in the current value and my confidence level so that everyone sees real progress immediately. | Real-time progress | US09 | AC-UC12 | Must |
+| US13 | As an employee, I want to view a KR's check-in history and progress chart so that I know since when it has stalled. | Early problem detection | US12 | AC-UC13 | Must |
+| US14 | As a Manager, I want to comment on my direct reports' check-ins so that I can support them promptly when they hit blockers. | Continuous coaching | US12 | AC-UC14 | Could |
+| US15 | As HR, I want to create a set of evaluation criteria so that 360 campaigns share one standard. | Consistent evaluation | US01 | AC-UC15 | Must |
+| US16 | As HR, I want to create a review campaign tied to a cycle, choosing participants and deadlines, so that 360 reviews are organized at the right time. | Running review campaigns | US05, US06, US15 | AC-UC16 | Must |
+| US17 | As a reviewee, I want to nominate 3–5 colleagues who understand my work so that I receive realistic feedback. | Feedback from the right people | US16 | AC-UC17 | Must |
+| US18 | As a Manager, I want to approve, add or remove reviewers for my direct reports so that the selection is not made up only of close friends. | Objective evaluation | US17 | AC-UC18 | Must |
+| US19 | As a reviewer, I want to rate and comment on a form, save a draft and submit, so that I can give candid feedback without revealing my identity. | Honest feedback | US18 | AC-UC19 | Must |
+| US20 | As HR, I want to track the form submission rate, remind those who have not submitted, and close the campaign, so that the review campaign finishes on time. | Progress control | US19 | AC-UC20 | Must |
+| US21 | As an employee, I want to view my 360 results (by criterion, by reviewer group, and the gap versus self-assessment) so that I know what to improve. | Personal development | US20 | AC-UC21 | Must |
+| US22 | As HR, I want to consolidate OKR and 360 scores by weight and then publish them, so that there is end-of-period data for rewards and development decisions. | HR decision-making | US12, US20 | AC-UC22 | Must |
+| US23 | As a user, I want a role-based dashboard so that I immediately see what I need to do and the state of the goals. | Quick overview | US12 | AC-UC23 | Should |
+| US24 | As an Admin, HR or Manager, I want to view and export reports with filters so that I can analyze and share them. | Analysis, sharing | US12, US22 | AC-UC24 | Should |
+| US25 | As a user, I want to receive timely notifications and reminders so that I do not forget to check in or submit forms. | Higher participation | US12, US16 | AC-UC25 | Should |
+| US26 | As an Admin or HR, I want to view the audit log so that I can trace important changes. | Accountability | US01 | AC-UC26 | Should |
+| US27 | As an Admin, I want to enable/disable each automated flow, set its run schedule and AI call quota, so that I control cost and can immediately turn off a misbehaving flow. | Operational control | US01 | AC-UC27 | Must |
+| US28 | As an Admin or HR, I want to view the run history of the flows (status, errors, attempt count) and re-run failed runs, so that I know which flow is broken. | Monitoring, troubleshooting | US32 | AC-UC28 | Should |
+| US29 | As a department head, I want to immediately receive the blockers that other departments are waiting on my department to resolve, so that I can clear them before their KRs fall behind. | Early cross-department blocker removal | US12, US32 | AC-UC29 | Must |
+| US30 | As a Manager, I want to receive a weekly digest summarizing my team's check-ins and blockers on Monday morning, so that I do not have to read each check-in before the meeting. | Saves management time | US12, US32 | AC-UC30 | Must |
+| US31 | As a Manager, I want a ready-made draft summarizing each employee's 360 comments that I can edit and send, so that I can prepare for the 1-1 faster. | Timely development feedback | US20, US32 | AC-UC31 | Must |
+| US32 | As an Admin, I want all AI flows to run in the background, replace people's names with codes, validate results and never modify scores, so that automation is safe and keeps anonymity. | Safe automation | US27 | AC-UC32 | Must |
+| US33 | As an employee, I want to be reminded when a check-in contradicts its note and when a newly created OKR has hard-to-measure KRs, so that my OKRs reflect reality. | Better-quality OKRs | US08, US12, US32 | AC-UC32 | Should |
+| US34 | As a reviewer, I want to be warned when a comment could reveal my identity so that I can give candid feedback and still stay safe. | Protects feedback givers | US19 | AC-UC19 | Should |
 
-## Đánh giá INVEST từng story
+## INVEST assessment per story
 
-`PASS` nghĩa là thiết kế hiện tại đủ thông tin để lập kế hoạch và nghiệm thu, không có nghĩa đã cài đặt. `REVIEW` nghĩa là story chưa đạt tiêu chí Small, cần tách nhỏ khi lập kế hoạch triển khai.
+`PASS` means the current design has enough information for planning and acceptance, not that it has been implemented. `REVIEW` means the story does not meet the Small criterion and needs to be split when planning the implementation.
 
-| Story | I | N | V | E | S | T | Ghi chú |
+| Story | I | N | V | E | S | T | Notes |
 |---|---|---|---|---|---|---|---|
-| US01 | PASS | PASS | PASS | PASS | PASS | PASS | JWT 30 phút, không refresh token. |
-| US02 | PASS | PASS | PASS | PASS | PASS | PASS | Đăng xuất phía client. |
-| US03 | PASS | PASS | PASS | PASS | PASS | PASS | Các trường được sửa đã ghi rõ. |
-| US04 | PASS | PASS | PASS | PASS | PASS | PASS | Cây phòng ban, team chống vòng lặp; team chỉ nằm dưới phòng ban. |
-| US05 | PASS | PASS | PASS | PASS | PASS | PASS | Quan hệ báo cáo chống vòng lặp. |
-| US06 | PASS | PASS | PASS | PASS | PASS | PASS | Máy trạng thái chu kỳ. |
-| US07 | PASS | PASS | PASS | PASS | PASS | PASS | Chỉ đọc; hiệu năng cây ở NFR-PERF-003. |
-| US08 | PASS | PASS | PASS | PASS | PASS | PASS | Quyền theo 4 cấp OKR; OKR team do team lead hoặc trưởng phòng tạo. |
-| US09 | PASS | PASS | PASS | PASS | PASS | PASS | Công thức tiến độ từng kiểu KR. |
-| US10 | PASS | PASS | PASS | PASS | PASS | PASS | Quy tắc liên kết 4 cấp, cho phép nối vượt cấp. |
-| US11 | PASS | PASS | PASS | PASS | PASS | PASS | Không xóa khi còn OKR con liên kết. |
-| US12 | PASS | PASS | PASS | PASS | PASS | PASS | Story quan trọng nhất về kỹ thuật: cộng dồn tiến độ. |
-| US13 | PASS | PASS | PASS | PASS | PASS | PASS | Đường kỳ vọng tuyến tính theo thời gian. |
-| US14 | PASS | PASS | PASS | PASS | PASS | PASS | Chỉ bình luận, không sửa check-in. |
-| US15 | PASS | PASS | PASS | PASS | PASS | PASS | Mẫu đã dùng cho đợt đang chạy thì khóa sửa. |
-| US16 | PASS | PASS | PASS | PASS | PASS | PASS | Máy trạng thái đợt đánh giá. |
-| US17 | PASS | PASS | PASS | PASS | PASS | PASS | 3–5 đồng nghiệp. |
-| US18 | PASS | PASS | PASS | PASS | PASS | PASS | HR duyệt thay khi không có quản lý. |
-| US19 | PASS | PASS | PASS | PASS | PASS | PASS | Ẩn danh và "Không đủ thông tin". |
-| US20 | PASS | PASS | PASS | PASS | PASS | PASS | HR chỉ thấy số phiếu còn thiếu theo người đánh giá, không thấy cặp ai–ai. |
-| US21 | PASS | PASS | PASS | PASS | PASS | PASS | Ngưỡng tối thiểu 3 phiếu mỗi nhóm. |
-| US22 | PASS | PASS | PASS | PASS | **REVIEW** | PASS | Story lớn nhất; có thể tách "tính điểm" và "công bố". Tỷ trọng mặc định 60/40 đã chốt (BR-072). Đã tách ở [kế hoạch triển khai](09-implementation-plan.md#3-tách-story-quá-lớn). |
-| US23 | PASS | PASS | PASS | PASS | **REVIEW** | PASS | Ba loại dashboard; nên tách thành 3 story khi lập kế hoạch sprint. Đã tách ở [kế hoạch triển khai](09-implementation-plan.md#3-tách-story-quá-lớn). |
-| US24 | PASS | PASS | PASS | PASS | PASS | PASS | Báo cáo 360 tuân thủ ngưỡng ẩn danh. |
-| US25 | PASS | PASS | PASS | PASS | PASS | PASS | Lịch nhắc mô tả ở UC25. |
-| US26 | PASS | PASS | PASS | PASS | PASS | PASS | Nhật ký không chứa cặp người đánh giá–người được đánh giá ẩn danh. |
-| US27 | PASS | PASS | PASS | PASS | PASS | PASS | Chỉ luồng dựng sẵn, không có trình tạo luồng tự do. |
-| US28 | PASS | PASS | PASS | PASS | PASS | PASS | Lịch sử không lưu nội dung gửi cho AI. |
-| US29 | PASS | PASS | PASS | PASS | PASS | PASS | Có nút "Không liên quan phòng tôi" để đo độ chính xác. |
-| US30 | PASS | PASS | PASS | PASS | PASS | PASS | Con số lấy từ database, AI chỉ viết phần tóm tắt. |
-| US31 | PASS | PASS | PASS | PASS | PASS | PASS | Chỉ gửi được sau khi đợt `PUBLISHED`; chỉ dùng nhóm đủ ngưỡng ẩn danh. |
-| US32 | PASS | PASS | PASS | PASS | **REVIEW** | PASS | Nền tảng của F13; nên tách thành "ghi sự kiện và hàng đợi", "gọi AI và kiểm tra kết quả", "thử lại và chống chạy trùng". Dịch vụ AI được chọn khi làm backend, qua AI Gateway (ADR-005). Đã tách ở [kế hoạch triển khai](09-implementation-plan.md#3-tách-story-quá-lớn). |
-| US33 | PASS | PASS | PASS | PASS | PASS | PASS | Gộp hai luồng nhỏ cùng kiểu "nhắc người viết". |
-| US34 | PASS | PASS | PASS | PASS | PASS | PASS | Chạy đồng bộ, tối đa 5 giây; AI lỗi thì vẫn cho nộp. |
+| US01 | PASS | PASS | PASS | PASS | PASS | PASS | 30-minute JWT, no refresh token. |
+| US02 | PASS | PASS | PASS | PASS | PASS | PASS | Client-side logout. |
+| US03 | PASS | PASS | PASS | PASS | PASS | PASS | Editable fields are specified. |
+| US04 | PASS | PASS | PASS | PASS | PASS | PASS | Department and team tree prevents cycles; a team sits only under a department. |
+| US05 | PASS | PASS | PASS | PASS | PASS | PASS | Reporting relationships prevent cycles. |
+| US06 | PASS | PASS | PASS | PASS | PASS | PASS | Cycle state machine. |
+| US07 | PASS | PASS | PASS | PASS | PASS | PASS | Read-only; tree performance in NFR-PERF-003. |
+| US08 | PASS | PASS | PASS | PASS | PASS | PASS | Permissions by the 4 OKR levels; team OKRs are created by the team lead or department head. |
+| US09 | PASS | PASS | PASS | PASS | PASS | PASS | Progress formula for each KR type. |
+| US10 | PASS | PASS | PASS | PASS | PASS | PASS | 4-level linking rule, skip-level links allowed. |
+| US11 | PASS | PASS | PASS | PASS | PASS | PASS | Cannot delete while child OKRs are still linked. |
+| US12 | PASS | PASS | PASS | PASS | PASS | PASS | Technically the most important story: progress roll-up. |
+| US13 | PASS | PASS | PASS | PASS | PASS | PASS | Expected line is linear over time. |
+| US14 | PASS | PASS | PASS | PASS | PASS | PASS | Comment only, no editing of check-ins. |
+| US15 | PASS | PASS | PASS | PASS | PASS | PASS | A template already used by a running campaign is locked against edits. |
+| US16 | PASS | PASS | PASS | PASS | PASS | PASS | Review campaign state machine. |
+| US17 | PASS | PASS | PASS | PASS | PASS | PASS | 3–5 colleagues. |
+| US18 | PASS | PASS | PASS | PASS | PASS | PASS | HR approves instead when there is no manager. |
+| US19 | PASS | PASS | PASS | PASS | PASS | PASS | Anonymity and "Not enough information". |
+| US20 | PASS | PASS | PASS | PASS | PASS | PASS | HR sees only the count of missing forms per reviewer, not who-rates-whom pairs. |
+| US21 | PASS | PASS | PASS | PASS | PASS | PASS | Minimum threshold of 3 forms per group. |
+| US22 | PASS | PASS | PASS | PASS | **REVIEW** | PASS | Largest story; can be split into "scoring" and "publishing". Default 60/40 weight is settled (BR-072). Already split in the [implementation plan](09-implementation-plan.md#3-splitting-stories-that-are-too-large). |
+| US23 | PASS | PASS | PASS | PASS | **REVIEW** | PASS | Three kinds of dashboards; should be split into 3 stories during sprint planning. Already split in the [implementation plan](09-implementation-plan.md#3-splitting-stories-that-are-too-large). |
+| US24 | PASS | PASS | PASS | PASS | PASS | PASS | 360 reports respect the anonymity threshold. |
+| US25 | PASS | PASS | PASS | PASS | PASS | PASS | Reminder schedule is described in UC25. |
+| US26 | PASS | PASS | PASS | PASS | PASS | PASS | The log does not contain anonymous reviewer–reviewee pairs. |
+| US27 | PASS | PASS | PASS | PASS | PASS | PASS | Prebuilt flows only, no free-form flow builder. |
+| US28 | PASS | PASS | PASS | PASS | PASS | PASS | History does not store the content sent to the AI. |
+| US29 | PASS | PASS | PASS | PASS | PASS | PASS | Has a "Not relevant to my department" button to measure accuracy. |
+| US30 | PASS | PASS | PASS | PASS | PASS | PASS | Numbers come from the database; the AI only writes the summary. |
+| US31 | PASS | PASS | PASS | PASS | PASS | PASS | Can be sent only after the campaign is `PUBLISHED`; uses only groups that meet the anonymity threshold. |
+| US32 | PASS | PASS | PASS | PASS | **REVIEW** | PASS | Foundation of F13; should be split into "event recording and queue", "AI call and result validation", "retry and duplicate-run prevention". The AI service is chosen when building the backend, via the AI Gateway (ADR-005). Already split in the [implementation plan](09-implementation-plan.md#3-splitting-stories-that-are-too-large). |
+| US33 | PASS | PASS | PASS | PASS | PASS | PASS | Merges two small flows of the same "remind the writer" kind. |
+| US34 | PASS | PASS | PASS | PASS | PASS | PASS | Runs synchronously, at most 5 seconds; if the AI fails, submission is still allowed. |
 
-## Ràng buộc chấp nhận xuyên suốt
+## Cross-cutting acceptance constraints
 
-- Chỉ có 4 vai trò: `ADMIN`, `HR`, `MANAGER`, `EMPLOYEE`; mọi vai trò kế thừa quyền nhân viên.
-- Backend (không phải giao diện React) kiểm tra quyền, quan hệ báo cáo và quyền sở hữu.
-- Dữ liệu của chu kỳ `CLOSED` chỉ đọc.
-- Truy vấn mặc định loại bỏ bản ghi có `deleted_at`.
-- Danh tính người đánh giá ẩn danh không xuất hiện ở bất kỳ API, báo cáo, file xuất hay nhật ký nào dành cho người dùng.
-- Lỗi API dùng định dạng `ProblemDetails` (`400`, `401`, `403`, `404`, `409`, `429`).
-- AI không chấm điểm, không xếp loại, không sửa số liệu OKR hay 360; tên người được đổi thành mã trước khi gửi cho dịch vụ AI; nội dung gửi cho người khác luôn qua bước người duyệt.
+- There are only 4 roles: `ADMIN`, `HR`, `MANAGER`, `EMPLOYEE`; every role inherits employee permissions.
+- The backend (not the React UI) checks permissions, reporting relationships and ownership.
+- Data of a `CLOSED` cycle is read-only.
+- Queries exclude records with `deleted_at` by default.
+- The identity of an anonymous reviewer does not appear in any user-facing API, report, export file or log.
+- API errors use the `ProblemDetails` format (`400`, `401`, `403`, `404`, `409`, `429`).
+- The AI does not score, grade, or modify OKR or 360 figures; people's names are replaced with codes before being sent to the AI service; content sent to other people always goes through a human review step.
 
-**Liên quan:** [Use case](03-use-cases.md) · [Tiêu chí chấp nhận](06-acceptance-criteria.md)
+**Related:** [Use cases](03-use-cases.md) · [Acceptance criteria](06-acceptance-criteria.md)

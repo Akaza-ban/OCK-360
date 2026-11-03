@@ -1,66 +1,66 @@
-# Quyết định kiến trúc — OKR360 V1
+# Architecture Decisions — OKR360 V1
 
-> Trạng thái thiết kế: TARGET V1
+> Design status: TARGET V1
 
-Mỗi quyết định ghi lý do và cái giá phải trả, để sau này biết điều gì có thể đổi. Trạng thái **Đã chốt** là quyết định đã có từ chủ dự án hoặc từ thiết kế hiện có. **Đề xuất** là lựa chọn mới ở bước kiến trúc, có hiệu lực cho tới khi bị thay thế.
+Each decision records the reason and the price to pay, so that later it is clear what can change. Status **Decided** means the decision already came from the project owner or the existing design. **Proposed** is a new choice made at the architecture step, valid until replaced.
 
-| Mã                                                                     | Quyết định                                         | Trạng thái |
-| ---------------------------------------------------------------------- | -------------------------------------------------- | ---------- |
-| [ADR-001](#adr-001--backend-dùng-nestjs)                               | Backend dùng NestJS                                | Đã chốt    |
-| [ADR-002](#adr-002--một-mã-nguồn-hai-tiến-trình)                       | Một mã nguồn, hai tiến trình API và Worker         | Đề xuất    |
-| [ADR-003](#adr-003--database-giữ-luật-và-truy-vấn-bằng-kysely)         | Database giữ luật, truy vấn bằng Kysely            | Đề xuất    |
-| [ADR-004](#adr-004--hộp-thư-sự-kiện-trong-postgresql-không-dùng-redis) | Hộp thư sự kiện trong PostgreSQL, không dùng Redis | Đề xuất    |
-| [ADR-005](#adr-005--gọi-ai-qua-một-cổng-riêng)                         | Gọi AI qua một cổng riêng                          | Đề xuất    |
-| [ADR-006](#adr-006--đăng-nhập-bằng-jwt-30-phút-và-argon2id)            | Đăng nhập bằng JWT 30 phút và Argon2id             | Đề xuất    |
-| [ADR-007](#adr-007--v1-chạy-bằng-docker-compose)                       | V1 chạy bằng Docker Compose                        | Đề xuất    |
+| ID                                                                     | Decision                                           | Status   |
+| ---------------------------------------------------------------------- | -------------------------------------------------- | -------- |
+| [ADR-001](#adr-001--backend-uses-nestjs)                               | Backend uses NestJS                                | Decided  |
+| [ADR-002](#adr-002--one-codebase-two-processes)                        | One codebase, two processes: API and Worker        | Proposed |
+| [ADR-003](#adr-003--database-keeps-the-rules-and-queries-with-kysely)  | Database keeps the rules, queries with Kysely      | Proposed |
+| [ADR-004](#adr-004--event-outbox-in-postgresql-no-redis)               | Event outbox in PostgreSQL, no Redis               | Proposed |
+| [ADR-005](#adr-005--call-ai-through-a-dedicated-gateway)               | Call AI through a dedicated gateway                | Proposed |
+| [ADR-006](#adr-006--login-with-a-30-minute-jwt-and-argon2id)           | Login with a 30-minute JWT and Argon2id            | Proposed |
+| [ADR-007](#adr-007--v1-runs-on-docker-compose)                         | V1 runs on Docker Compose                          | Proposed |
 
-## ADR-001 — Backend dùng NestJS
+## ADR-001 — Backend uses NestJS
 
-- **Bối cảnh:** frontend và công cụ sinh dữ liệu đều dùng JavaScript.
-- **Quyết định:** backend dùng NestJS với TypeScript.
-- **Lý do:** một hệ ngôn ngữ cho cả dự án; NestJS có sẵn module, dependency injection và guard, hợp với kiến trúc ba tầng.
-- **Cái giá:** NestJS không tự tách tầng; ranh giới API, Application, Infrastructure phải được giữ bằng cấu trúc thư mục và quy tắc import.
+- **Context:** the frontend and the data generation tools both use JavaScript.
+- **Decision:** the backend uses NestJS with TypeScript.
+- **Reason:** one language family for the whole project; NestJS ships with modules, dependency injection and guards, which fit the three-layer architecture.
+- **Cost:** NestJS does not separate layers by itself; the boundaries between API, Application and Infrastructure must be kept through folder structure and import rules.
 
-## ADR-002 — Một mã nguồn, hai tiến trình
+## ADR-002 — One codebase, two processes
 
-- **Bối cảnh:** gọi AI có thể mất tới 30 giây và thử lại nhiều lần, trong khi check-in phải phản hồi ngay (BR-096).
-- **Quyết định:** API và Worker dùng chung một mã nguồn NestJS, chạy thành hai tiến trình riêng. V1 không chia microservice.
-- **Lý do:** Worker lỗi hoặc chậm không ảnh hưởng API, mà vẫn chỉ có một dự án để bảo trì.
-- **Cái giá:** phải triển khai hai tiến trình; code dùng chung phải tránh phụ thuộc vào HTTP.
+- **Context:** an AI call can take up to 30 seconds and be retried many times, while check-in must respond immediately (BR-096).
+- **Decision:** the API and the Worker share one NestJS codebase and run as two separate processes. V1 does not split into microservices.
+- **Reason:** a failing or slow Worker does not affect the API, while there is still only one project to maintain.
+- **Cost:** two processes must be deployed; shared code must avoid depending on HTTP.
 
-## ADR-003 — Database giữ luật và truy vấn bằng Kysely
+## ADR-003 — Database keeps the rules and queries with Kysely
 
-- **Bối cảnh:** `okr360.sql` đã có trigger, view, CTE đệ quy, unique index có điều kiện và 67 kiểm thử.
-- **Quyết định:** `okr360.sql` là nguồn gốc của schema. Backend truy vấn bằng Kysely, kiểu TypeScript sinh từ database. Không dùng ORM tự tạo migration.
-- **Lý do:** Kysely viết được SQL đầy đủ (`FOR UPDATE SKIP LOCKED`, CTE, view) mà vẫn kiểm tra kiểu. ORM dễ sinh schema lệch với các trigger đã kiểm thử.
-- **Cái giá:** viết truy vấn nhiều hơn so với ORM; cần thêm công cụ chạy migration SQL.
+- **Context:** `okr360.sql` already has triggers, views, recursive CTEs, conditional unique indexes and 67 tests.
+- **Decision:** `okr360.sql` is the source of truth for the schema. The backend queries with Kysely, with TypeScript types generated from the database. No ORM that auto-creates migrations.
+- **Reason:** Kysely can express full SQL (`FOR UPDATE SKIP LOCKED`, CTEs, views) while still type-checking. An ORM easily generates a schema that drifts from the tested triggers.
+- **Cost:** more queries to write than with an ORM; an additional tool is needed to run SQL migrations.
 
-## ADR-004 — Hộp thư sự kiện trong PostgreSQL, không dùng Redis
+## ADR-004 — Event outbox in PostgreSQL, no Redis
 
-- **Bối cảnh:** sự kiện phải được ghi cùng transaction với thao tác gốc (NFR-REL-001), và hệ thống phục vụ tối đa 300 người.
-- **Quyết định:** Worker đọc `domain_events` theo chu kỳ bằng `FOR UPDATE SKIP LOCKED`, mặc định mỗi 30 giây. Bộ lập lịch chạy trong Worker. V1 không thêm Redis hay hàng đợi riêng.
-- **Lý do:** đảm bảo không mất sự kiện mà không cần thêm thành phần vận hành. Độ trễ 30 giây vẫn đáp ứng mục tiêu 15 phút (NFR-AI-001). `UNIQUE (flow, run_key)` chặn chạy trùng kể cả khi có nhiều Worker.
-- **Cái giá:** có độ trễ do đọc theo chu kỳ, và database nhận thêm một truy vấn định kỳ. Nếu tải tăng nhiều, cần đổi sang hàng đợi riêng.
+- **Context:** events must be written in the same transaction as the original operation (NFR-REL-001), and the system serves at most 300 people.
+- **Decision:** the Worker polls `domain_events` periodically using `FOR UPDATE SKIP LOCKED`, every 30 seconds by default. The scheduler runs inside the Worker. V1 adds no Redis or dedicated queue.
+- **Reason:** guarantees no event is lost without adding an operational component. A 30-second latency still meets the 15-minute target (NFR-AI-001). `UNIQUE (flow, run_key)` prevents duplicate runs even with multiple Workers.
+- **Cost:** there is latency from periodic polling, and the database receives one additional periodic query. If load grows a lot, switch to a dedicated queue.
 
-## ADR-005 — Gọi AI qua một cổng riêng
+## ADR-005 — Call AI through a dedicated gateway
 
-- **Bối cảnh:** chưa chọn dịch vụ AI, và mọi nội dung phải đổi tên thành mã trước khi gửi (BR-093).
-- **Quyết định:** mọi lời gọi AI đi qua AI Gateway, gồm đổi tên, gọi dịch vụ và đổi mã về tên. Nghiệp vụ chỉ biết một giao diện chung. Môi trường test dùng bản giả ghi lại nội dung gửi đi.
-- **Lý do:** đổi nhà cung cấp không phải sửa nghiệp vụ (NFR-AI-006), không luồng nào quên đổi tên, và kiểm thử được NFR-PRIV-004.
-- **Cái giá:** thêm một lớp trừu tượng; dùng được ít tính năng riêng của từng nhà cung cấp.
+- **Context:** no AI service has been chosen yet, and all content must be replaced with codes (pseudonymized) before sending (BR-093).
+- **Decision:** every AI call goes through the AI Gateway, which covers pseudonymization, calling the service and mapping codes back to names. Business logic knows only one common interface. The test environment uses a fake that records the content sent out.
+- **Reason:** switching providers requires no business logic changes (NFR-AI-006), no flow can forget to pseudonymize, and NFR-PRIV-004 can be tested.
+- **Cost:** one more abstraction layer; few provider-specific features can be used.
 
-## ADR-006 — Đăng nhập bằng JWT 30 phút và Argon2id
+## ADR-006 — Login with a 30-minute JWT and Argon2id
 
-- **Bối cảnh:** phạm vi V1 đã chốt JWT, không refresh token, không SSO.
-- **Quyết định:** access token hết hạn sau 30 phút, gửi qua header `Authorization: Bearer`. Mật khẩu băm bằng Argon2id. Quyền được đọc lại từ database ở mỗi yêu cầu cần kiểm tra quan hệ báo cáo.
-- **Lý do:** đơn giản và đúng phạm vi. Đọc quan hệ báo cáo từ database giúp đổi quản lý có hiệu lực ngay, không phải chờ token hết hạn.
-- **Cái giá:** người dùng phải đăng nhập lại sau 30 phút; không thu hồi được token trước hạn. Tắt tài khoản cần kiểm tra thêm ở database để có hiệu lực ngay.
+- **Context:** the V1 scope has fixed JWT, no refresh token, no SSO.
+- **Decision:** the access token expires after 30 minutes and is sent via the `Authorization: Bearer` header. Passwords are hashed with Argon2id. Permissions are re-read from the database on every request that needs a reporting-relationship check.
+- **Reason:** simple and within scope. Reading the reporting relationship from the database makes a manager change take effect immediately, without waiting for the token to expire.
+- **Cost:** users must log in again after 30 minutes; a token cannot be revoked before expiry. Disabling an account requires an extra database check to take effect immediately.
 
-## ADR-007 — V1 chạy bằng Docker Compose
+## ADR-007 — V1 runs on Docker Compose
 
-- **Bối cảnh:** hệ thống dùng nội bộ cho một công ty, tối đa 300 người.
-- **Quyết định:** Web App, API, Worker và PostgreSQL chạy bằng Docker Compose trên một máy chủ, sau một reverse proxy lo HTTPS.
-- **Lý do:** đủ cho quy mô V1, dễ dựng lại trên máy phát triển.
-- **Cái giá:** có một điểm lỗi duy nhất, nên cần sao lưu (NFR-REL-005). Chưa có tự mở rộng hay cập nhật không gián đoạn.
+- **Context:** the system is used internally by one company, at most 300 people.
+- **Decision:** the Web App, API, Worker and PostgreSQL run with Docker Compose on one server, behind a reverse proxy that handles HTTPS.
+- **Reason:** enough for the V1 scale, easy to recreate on a development machine.
+- **Cost:** there is a single point of failure, so backups are needed (NFR-REL-005). No auto-scaling or zero-downtime updates yet.
 
-**Liên quan:** [Kiến trúc C4](c4.md) · [Yêu cầu phi chức năng](../requirements/non-functional-requirements.md)
+**Related:** [C4 Architecture](c4.md) · [Non-functional Requirements](../requirements/non-functional-requirements.md)

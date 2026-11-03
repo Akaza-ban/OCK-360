@@ -1,318 +1,318 @@
-# Kiến trúc thông tin
+# Information Architecture
 
-> Trạng thái thiết kế: TARGET V1
+> Design status: TARGET V1
 >
-> Trạng thái triển khai: CÓ GIAO DIỆN MẪU — React + dữ liệu giả, chưa có API
+> Implementation status: SAMPLE UI AVAILABLE — React + mock data, no API yet
 
-Tài liệu này trả lời câu hỏi **"hệ thống có những màn hình nào, đi từ màn hình này sang màn hình kia ra sao, và ai được vào màn hình nào?"**. Nó nối user story ở [08-invest-requirements.md](08-invest-requirements.md) với giao diện sẽ vẽ ở bước sau.
+This document answers the question **"what screens does the system have, how do you get from one screen to another, and who may enter which screen?"** It connects the user stories in [08-invest-requirements.md](08-invest-requirements.md) with the UI to be drawn in a later step.
 
-![Kiến trúc thông tin OKR360](images/information-architecture.png)
+![OKR360 information architecture](images/information-architecture.png)
 
-Cách đọc sơ đồ:
+How to read the diagram:
 
-- Ô xanh đậm là trang cổng trên menu chính.
-- Ô trắng là trang.
-- Ô bo tròn là tab hoặc khối nội dung bên trong một trang; ô chồng hai lớp là trang lặp lại cho từng đối tượng (mỗi Objective, mỗi đợt đánh giá có một trang chi tiết).
-- Ô vàng là biểu mẫu hoặc công cụ, thường mở dạng modal. Nhãn đỏ cho biết chỉ vai trò đó được vào; nhãn trên trang cổng áp cho cả cột.
+- Dark blue boxes are gateway pages on the main menu.
+- White boxes are pages.
+- Rounded boxes are tabs or content blocks inside a page; double-layered boxes are pages repeated per object (each Objective and each evaluation campaign has a detail page).
+- Yellow boxes are forms or tools, usually opened as a modal. A red label means only that role may enter; a label on a gateway page applies to the whole column.
 
-Đường dẫn (hash route): `#/login` `#/dashboard` `#/okr/my` `#/okr/tree` `#/okr/:objectiveId` `#/reviews/todo` `#/reviews/forms/:formId` `#/reviews/nominate` `#/reviews/approvals` `#/reviews/results` `#/reviews/results/:userId` `#/final-results` `#/reports` `#/admin/cycles` `#/admin/departments` `#/admin/users` `#/admin/campaigns` `#/admin/campaigns/:campaignId` `#/admin/templates` `#/audit` `#/ai/blockers` `#/ai/digest` `#/ai/drafts` `#/ai/automation` `#/notifications` `#/profile` `#/403`.
+Routes (hash routes): `#/login` `#/dashboard` `#/okr/my` `#/okr/tree` `#/okr/:objectiveId` `#/reviews/todo` `#/reviews/forms/:formId` `#/reviews/nominate` `#/reviews/approvals` `#/reviews/results` `#/reviews/results/:userId` `#/final-results` `#/reports` `#/admin/cycles` `#/admin/departments` `#/admin/users` `#/admin/campaigns` `#/admin/campaigns/:campaignId` `#/admin/templates` `#/audit` `#/ai/blockers` `#/ai/digest` `#/ai/drafts` `#/ai/automation` `#/notifications` `#/profile` `#/403`.
 
-Tạo/sửa Objective và Check-in mở dạng **modal** ngay trên trang đang đứng (OKR của tôi, Cây OKR, Chi tiết Objective, Dashboard), để người dùng không bị rời khỏi ngữ cảnh.
+Creating/editing an Objective and Check-in open as a **modal** right on the current page (My OKRs, OKR Tree, Objective Detail, Dashboard), so the user is not taken out of context.
 
-**Bộ chọn chu kỳ** trên topbar quyết định dữ liệu của mọi trang OKR, dashboard và báo cáo. Mặc định là chu kỳ đang chạy (`ACTIVE`); chọn chu kỳ đã đóng thì mọi nút sửa và check-in bị ẩn.
+The **cycle selector** on the topbar determines the data of every OKR page, dashboard and report. The default is the running cycle (`ACTIVE`); when a closed cycle is chosen, all edit and check-in buttons are hidden.
 
-## Quyền vào trang
+## Page access
 
-| Trang                                                                         | Ai được vào                                                                                                        |
+| Page                                                                          | Who may enter                                                                                                      |
 | ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
-| Dashboard cá nhân, OKR của tôi, Cây OKR, Chi tiết Objective, Thông báo, Hồ sơ | Mọi vai trò                                                                                                        |
-| Dashboard đội nhóm                                                            | Manager                                                                                                            |
-| Dashboard công ty                                                             | Admin, HR                                                                                                          |
-| Phiếu cần điền, Điền phiếu                                                    | Mọi vai trò, chỉ thấy phiếu được giao cho mình                                                                     |
-| Đề cử đồng nghiệp                                                             | Mọi vai trò, khi đợt đánh giá đang ở giai đoạn đề cử                                                               |
-| Duyệt người đánh giá                                                          | Manager (cho nhân viên dưới quyền trực tiếp); HR (cho nhân viên không có quản lý trực tiếp)                        |
-| Kết quả 360                                                                   | Mọi vai trò xem kết quả của bản thân sau khi công bố; Manager xem nhân viên dưới quyền trực tiếp; HR xem mọi người |
-| Kết quả cuối kỳ                                                               | HR                                                                                                                 |
-| Báo cáo                                                                       | Admin (trừ báo cáo kết quả 360), HR, Manager (chỉ đơn vị mình phụ trách)                                           |
-| Chu kỳ OKR, Phòng ban, Người dùng, Nhật ký                                    | Admin, HR                                                                                                          |
-| Đợt đánh giá 360, Bộ tiêu chí                                                 | HR                                                                                                                 |
-| Vướng mắc chuyển đến                                                          | Trưởng phòng hoặc team lead (chỉ vướng mắc chuyển tới đơn vị mình)                                                 |
-| Bản tin tuần                                                                  | Manager (bản tin của đội mình)                                                                                     |
-| Bản nháp 1-1                                                                  | Manager (nhân viên dưới quyền trực tiếp); HR (nhân viên không có quản lý trực tiếp)                                |
-| Luồng tự động                                                                 | Admin (cấu hình, chạy lại); HR (chỉ xem tab Lịch sử chạy)                                                          |
-| Truy cập không có quyền                                                       | `#/403`                                                                                                            |
+| Personal Dashboard, My OKRs, OKR Tree, Objective Detail, Notifications, Profile | All roles                                                                                                        |
+| Team Dashboard                                                                | Manager                                                                                                            |
+| Company Dashboard                                                             | Admin, HR                                                                                                          |
+| Forms to Fill, Fill in Form                                                   | All roles, only see forms assigned to themselves                                                                   |
+| Nominate Peers                                                                | All roles, when the evaluation campaign is in the nomination phase                                                 |
+| Approve Reviewers                                                             | Manager (for direct reports); HR (for employees without a direct manager)                                          |
+| 360 Results                                                                   | All roles view their own results after publication; Manager views direct reports; HR views everyone               |
+| Final Results                                                                 | HR                                                                                                                 |
+| Reports                                                                       | Admin (except the 360 results report), HR, Manager (only the unit they are responsible for)                        |
+| OKR Cycles, Departments, Users, Audit Log                                     | Admin, HR                                                                                                          |
+| 360 Evaluation Campaigns, Criteria Templates                                  | HR                                                                                                                 |
+| Routed Blockers                                                               | Department head or team lead (only blockers routed to their own unit)                                              |
+| Weekly Digest                                                                 | Manager (their own team's digest)                                                                                  |
+| 1-1 Drafts                                                                    | Manager (direct reports); HR (employees without a direct manager)                                                  |
+| Automation Flows                                                              | Admin (configure, re-run); HR (view the Run History tab only)                                                      |
+| Access without permission                                                     | `#/403`                                                                                                            |
 
-Mục không có quyền **không hiển thị** trên sidebar. Nút sửa, xóa, check-in chỉ hiện khi người dùng có quyền với đúng đối tượng đó (ví dụ nút Check-in chỉ hiện với Key Result mình phụ trách).
+Items without permission are **not shown** in the sidebar. Edit, delete and check-in buttons appear only when the user has permission on that exact object (for example, the Check-in button appears only for Key Results they own).
 
-## Danh sách màn hình và nội dung
+## Screen list and content
 
-| Mã       | Màn hình              | Dạng                                                                                 | Nội dung hiển thị chính                                                                                                                                                                                                                                                                                                         | User story                   |
+| ID       | Screen                | Form                                                                                 | Main content displayed                                                                                                                                                                                                                                                                                                          | User story                   |
 | -------- | --------------------- | ------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------- |
-| `SCR-01` | Đăng nhập             | Trang                                                                                | Ô email, mật khẩu, nút đăng nhập, thông báo lỗi chung                                                                                                                                                                                                                                                                           | US01, US02                   |
-| `SCR-02` | Dashboard             | Trang, 3 tab theo vai trò                                                            | **Cá nhân:** tiến độ OKR của tôi, KR cần check-in, phiếu cần điền. **Đội nhóm:** OKR phòng ban và OKR các team bên trong (trưởng phòng) hoặc OKR team mình (team lead), thành viên chưa check-in tuần này, OKR có rủi ro. **Công ty:** tiến độ từng phòng ban, tỷ lệ check-in, tỷ lệ nộp phiếu                                  | US23                         |
-| `SCR-10` | OKR của tôi           | Trang                                                                                | Danh sách Objective của tôi trong chu kỳ, từng KR với % tiến độ và mức tự tin, nút Check-in, nút Thêm Objective                                                                                                                                                                                                                 | US08, US12                   |
-| `SCR-11` | Cây OKR công ty       | Trang                                                                                | Cây 4 cấp công ty → phòng ban → team → cá nhân; mỗi nút có nhãn cấp, tiêu đề, người sở hữu hoặc đơn vị, % tiến độ, màu mức tự tin; bộ lọc phòng ban / team, người, cấp, mức tự tin                                                                                                                                              | US07                         |
-| `SCR-12` | Chi tiết Objective    | Trang                                                                                | Tiêu đề, cấp, người sở hữu, Objective cấp trên, danh sách KR, Objective con; khối Lịch sử check-in gồm danh sách, biểu đồ tiến độ, bình luận của quản lý, nhãn AI trên check-in (loại vướng mắc, đã chuyển tới phòng nào, trạng thái xử lý; check-in không khớp); khối Gợi ý rà soát OKR do AI tạo, có nút Bỏ qua; nút sửa, xóa | US07, US11, US13, US14, US33 |
-| `SCR-13` | Tạo / sửa Objective   | Modal                                                                                | Tiêu đề, mô tả, cấp (công ty, phòng ban, team, cá nhân — chỉ hiện cấp được phép), phòng ban hoặc team khi chọn cấp tương ứng, người sở hữu; danh sách 1–5 KR (tiêu đề, kiểu đo, giá trị đầu, đích, đơn vị, người phụ trách); chọn Objective cấp trên                                                                            | US08, US09, US10             |
-| `SCR-14` | Check-in Key Result   | Modal                                                                                | Tên KR, giá trị hiện tại và đích; ô nhập giá trị mới, mức tự tin, ghi chú, vướng mắc                                                                                                                                                                                                                                            | US12                         |
-| `SCR-20` | Phiếu cần điền        | Trang                                                                                | Danh sách phiếu được giao: người được đánh giá, vai trò của tôi trong phiếu, trạng thái nháp/đã nộp, hạn nộp                                                                                                                                                                                                                    | US19                         |
-| `SCR-21` | Điền phiếu đánh giá   | Trang                                                                                | Tên người được đánh giá; từng tiêu chí với thang 1–5 hoặc "Không đủ thông tin"; câu hỏi mở; nút lưu nháp, nộp; khi nộp, hộp cảnh báo của AI (chỉ người viết thấy) với câu bị đánh dấu, nút "Sửa lại" và "Vẫn nộp"                                                                                                               | US19, US34                   |
-| `SCR-22` | Đề cử đồng nghiệp     | Trang                                                                                | Ô tìm đồng nghiệp, danh sách đã chọn (3–5 người), hạn đề cử, trạng thái duyệt                                                                                                                                                                                                                                                   | US17                         |
-| `SCR-23` | Duyệt người đánh giá  | Trang                                                                                | Danh sách nhân viên dưới quyền; với mỗi người: đồng nghiệp được đề cử, nút thêm, bớt, duyệt                                                                                                                                                                                                                                     | US18                         |
-| `SCR-24` | Kết quả 360           | Trang                                                                                | Điểm theo từng tiêu chí, điểm theo nhóm người đánh giá, chênh lệch tự đánh giá so với người khác, nhận xét không kèm tên; khối "Tóm tắt từ quản lý" khi quản lý đã gửi bản 1-1                                                                                                                                                  | US21, US31                   |
-| `SCR-30` | Kết quả cuối kỳ       | Trang                                                                                | Bảng từng nhân viên: tiến độ OKR, điểm OKR, điểm 360, điểm cuối kỳ, xếp loại; nút xuất file, công bố                                                                                                                                                                                                                            | US22                         |
-| `SCR-40` | Báo cáo và xuất file  | Trang                                                                                | Chọn loại báo cáo (tiến độ OKR, tỷ lệ check-in, kết quả cuối kỳ), bộ lọc chu kỳ và phòng ban, bảng và biểu đồ, nút xuất Excel/PDF                                                                                                                                                                                               | US24                         |
-| `SCR-50` | Chu kỳ OKR            | Trang có modal                                                                       | Danh sách chu kỳ: tên, ngày bắt đầu, kết thúc, trạng thái; nút tạo, kích hoạt, đóng                                                                                                                                                                                                                                             | US06                         |
-| `SCR-51` | Phòng ban và team     | Trang dạng cây có modal                                                              | Cây phòng ban và team, loại đơn vị, trưởng phòng hoặc team lead, số thành viên; nút thêm phòng ban, thêm team vào phòng ban, sửa, ngưng                                                                                                                                                                                         | US04                         |
-| `SCR-52` | Người dùng            | Trang có modal                                                                       | Bảng người dùng: họ tên, email, vai trò, phòng ban, quản lý trực tiếp, trạng thái; nút thêm, sửa, bật/tắt                                                                                                                                                                                                                       | US05                         |
-| `SCR-53` | Đợt đánh giá 360      | Trang có modal                                                                       | Danh sách đợt: tên, chu kỳ, mẫu phiếu, hạn đề cử, hạn nộp, trạng thái; nút tạo đợt                                                                                                                                                                                                                                              | US16                         |
-| `SCR-54` | Chi tiết đợt đánh giá | Trang                                                                                | Giai đoạn hiện tại, tỷ lệ nộp phiếu theo phòng ban, số phiếu còn thiếu của từng người; nút mở đề cử, mở thu phiếu, gửi nhắc, đóng đợt                                                                                                                                                                                           | US16, US20                   |
-| `SCR-55` | Bộ tiêu chí đánh giá  | Trang có modal                                                                       | Danh sách mẫu phiếu; trong mỗi mẫu: tiêu chí, mô tả, bắt buộc hay không, câu hỏi mở; nút tạo, sửa, nhân bản                                                                                                                                                                                                                     | US15                         |
-| `SCR-56` | Nhật ký hoạt động     | Trang                                                                                | Bảng: người thực hiện, hành động, phân hệ, đối tượng, thời gian; bộ lọc                                                                                                                                                                                                                                                         | US26                         |
-| `SCR-60` | Thông báo             | Danh sách thả xuống + trang                                                          | Danh sách thông báo mới nhất trước, trạng thái đã đọc/chưa đọc, nút đánh dấu tất cả đã đọc                                                                                                                                                                                                                                      | US25                         |
-| `SCR-70` | Hồ sơ cá nhân         | Trang có 3 tab                                                                       | **Tài khoản:** họ tên, số điện thoại, ảnh; email, vai trò, phòng ban chỉ xem. **Bảo mật:** đổi mật khẩu. **Quyền của tôi:** ma trận quyền                                                                                                                                                                                       | US03                         |
-| `SCR-80` | Vướng mắc chuyển đến  | Trang                                                                                | Tab Đang chờ / Đã xử lý; mỗi dòng: KR, người báo, phòng ban của người báo, nội dung vướng mắc, nhãn AI (loại, mức nghiêm trọng), thời điểm; nút "Đã nhận xử lý" (kèm ghi chú), "Không liên quan phòng tôi"                                                                                                                      | US29                         |
-| `SCR-81` | Bản tin tuần          | Trang                                                                                | Chọn tuần; số liệu đội (đã check-in, chưa check-in, KR có rủi ro, KR chệch hướng); tối đa 3 việc cần chú ý do AI viết, mỗi việc mở được tới KR; nhãn "Do AI tạo"                                                                                                                                                                | US30                         |
-| `SCR-82` | Bản nháp 1-1          | Trang chia hai cột                                                                   | Trái: danh sách bản nháp theo đợt và trạng thái. Phải: điểm 360 tóm tắt, đề xuất của AI (điểm mạnh, cần cải thiện), ô sửa nội dung gửi cho nhân viên, nút Gửi, Bỏ bản nháp                                                                                                                                                      | US31                         |
-| `SCR-83` | Luồng tự động         | Trang có 2 tab                                                                       | **Luồng:** 6 luồng, khi nào chạy, bật/tắt, lịch chạy, hạn mức, số lần gọi AI hôm nay, lần chạy gần nhất. **Lịch sử chạy:** luồng, đối tượng, trạng thái, số lần thử, thời gian, token, lỗi; bộ lọc; nút chạy lại (Admin)                                                                                                        | US27, US28                   |
-| `SCR-84` | Ngăn "AI đã làm gì?"  | Ngăn trượt bên phải, mở từ nhãn "Do AI tạo" ở `SCR-12`, `SCR-80`, `SCR-81`, `SCR-82` | Các bước của đúng lần chạy đã tạo ra nhãn: sự kiện, nội dung đã đổi tên thành mã, nội dung gửi cho AI, JSON trả về, kết quả kiểm tra khuôn, hành động đã làm. Dựng lại từ dữ liệu người xem đang có quyền xem, không đọc từ log                                                                                                 | US29–US33                    |
-| `SCR-90` | Không có quyền (403)  | Trang                                                                                | Thông báo không có quyền, nút quay về Dashboard                                                                                                                                                                                                                                                                                 | Phân quyền dùng chung        |
+| `SCR-01` | Login                 | Page                                                                                 | Email field, password, login button, generic error message                                                                                                                                                                                                                                                                      | US01, US02                   |
+| `SCR-02` | Dashboard             | Page, 3 role-based tabs                                                              | **Personal:** my OKR progress, KRs to check in, forms to fill. **Team:** department OKRs and the OKRs of teams within (department head) or own team OKRs (team lead), members who have not checked in this week, at-risk OKRs. **Company:** progress per department, check-in rate, form submission rate                           | US23                         |
+| `SCR-10` | My OKRs               | Page                                                                                 | List of my Objectives in the cycle, each KR with progress % and confidence level, Check-in button, Add Objective button                                                                                                                                                                                                         | US08, US12                   |
+| `SCR-11` | Company OKR Tree      | Page                                                                                 | 4-level tree company → department → team → individual; each node has level label, title, owner or unit, progress %, confidence color; filters for department / team, person, level, confidence                                                                                                                                  | US07                         |
+| `SCR-12` | Objective Detail      | Page                                                                                 | Title, level, owner, parent Objective, KR list, child Objectives; Check-in History block with list, progress chart, manager comments, AI labels on check-ins (blocker type, which department it was routed to, handling status; mismatched check-in); AI OKR review suggestions block with a Dismiss button; edit and delete buttons | US07, US11, US13, US14, US33 |
+| `SCR-13` | Create / edit Objective | Modal                                                                              | Title, description, level (company, department, team, individual — only permitted levels shown), department or team when the corresponding level is selected, owner; list of 1–5 KRs (title, measure type, start value, target, unit, owner); choose parent Objective                                                            | US08, US09, US10             |
+| `SCR-14` | Key Result Check-in   | Modal                                                                                | KR name, current value and target; fields for new value, confidence level, notes, blockers                                                                                                                                                                                                                                      | US12                         |
+| `SCR-20` | Forms to Fill         | Page                                                                                 | List of assigned forms: person being evaluated, my role in the form, draft/submitted status, due date                                                                                                                                                                                                                           | US19                         |
+| `SCR-21` | Fill in Review Form   | Page                                                                                 | Name of the person being evaluated; each criterion with a 1–5 scale or "Not enough information"; open questions; Save draft and Submit buttons; on submit, an AI warning box (visible only to the writer) with the flagged sentence, "Edit" and "Submit anyway" buttons                                                         | US19, US34                   |
+| `SCR-22` | Nominate Peers        | Page                                                                                 | Peer search field, list of selected people (3–5), nomination deadline, approval status                                                                                                                                                                                                                                          | US17                         |
+| `SCR-23` | Approve Reviewers     | Page                                                                                 | List of direct reports; for each person: nominated peers, add, remove and approve buttons                                                                                                                                                                                                                                       | US18                         |
+| `SCR-24` | 360 Results           | Page                                                                                 | Score per criterion, score per reviewer group, gap between self-assessment and others, comments without names; "Summary from manager" block when the manager has sent the 1-1 version                                                                                                                                           | US21, US31                   |
+| `SCR-30` | Final Results         | Page                                                                                 | Table per employee: OKR progress, OKR score, 360 score, final score, rating; export and publish buttons                                                                                                                                                                                                                         | US22                         |
+| `SCR-40` | Reports and Export    | Page                                                                                 | Choose report type (OKR progress, check-in rate, final results), cycle and department filters, table and chart, Excel/PDF export buttons                                                                                                                                                                                        | US24                         |
+| `SCR-50` | OKR Cycles            | Page with modal                                                                      | Cycle list: name, start date, end date, status; create, activate, close buttons                                                                                                                                                                                                                                                 | US06                         |
+| `SCR-51` | Departments and Teams | Tree page with modal                                                                 | Tree of departments and teams, unit type, department head or team lead, member count; add department, add team to department, edit, deactivate buttons                                                                                                                                                                         | US04                         |
+| `SCR-52` | Users                 | Page with modal                                                                      | User table: full name, email, role, department, direct manager, status; add, edit, enable/disable buttons                                                                                                                                                                                                                       | US05                         |
+| `SCR-53` | 360 Evaluation Campaigns | Page with modal                                                                   | Campaign list: name, cycle, form template, nomination deadline, submission deadline, status; create campaign button                                                                                                                                                                                                             | US16                         |
+| `SCR-54` | Campaign Detail       | Page                                                                                 | Current phase, form submission rate by department, number of missing forms per person; open nomination, open collection, send reminder, close campaign buttons                                                                                                                                                                  | US16, US20                   |
+| `SCR-55` | Evaluation Criteria Templates | Page with modal                                                              | List of form templates; in each template: criteria, description, required or not, open questions; create, edit, duplicate buttons                                                                                                                                                                                               | US15                         |
+| `SCR-56` | Audit Log             | Page                                                                                 | Table: actor, action, module, object, time; filters                                                                                                                                                                                                                                                                             | US26                         |
+| `SCR-60` | Notifications         | Dropdown list + page                                                                 | List of notifications, newest first, read/unread status, mark-all-as-read button                                                                                                                                                                                                                                                | US25                         |
+| `SCR-70` | Profile               | Page with 3 tabs                                                                     | **Account:** full name, phone number, photo; email, role, department read-only. **Security:** change password. **My permissions:** permission matrix                                                                                                                                                                            | US03                         |
+| `SCR-80` | Routed Blockers       | Page                                                                                 | Pending / Handled tabs; each row: KR, reporter, reporter's department, blocker content, AI label (type, severity), time; "Acknowledged" (with note) and "Not related to my department" buttons                                                                                                                                  | US29                         |
+| `SCR-81` | Weekly Digest         | Page                                                                                 | Week selector; team figures (checked in, not checked in, at-risk KRs, off-track KRs); up to 3 items needing attention written by AI, each linking to the KR; "AI-generated" label                                                                                                                                               | US30                         |
+| `SCR-82` | 1-1 Drafts            | Two-column page                                                                      | Left: list of drafts by campaign and status. Right: summarized 360 score, AI suggestions (strengths, areas to improve), field to edit the content sent to the employee, Send and Discard draft buttons                                                                                                                         | US31                         |
+| `SCR-83` | Automation Flows      | Page with 2 tabs                                                                     | **Flows:** 6 flows, when they run, on/off, run schedule, quota, AI calls today, most recent run. **Run History:** flow, object, status, retry count, time, tokens, error; filters; re-run button (Admin)                                                                                                                       | US27, US28                   |
+| `SCR-84` | "What did the AI do?" panel | Right slide-in panel, opened from the "AI-generated" label on `SCR-12`, `SCR-80`, `SCR-81`, `SCR-82` | The steps of the exact run that produced the label: event, content renamed to codes, content sent to the AI, returned JSON, schema validation result, action taken. Rebuilt from data the viewer is allowed to see, not read from logs                                                                                         | US29–US33                    |
+| `SCR-90` | No permission (403)   | Page                                                                                 | No-permission message, button to return to Dashboard                                                                                                                                                                                                                                                                            | Shared authorization         |
 
-## Nối user story với màn hình
+## Mapping user stories to screens
 
-| User story | Màn hình và thao tác chính                                                                            |
+| User story | Main screen and action                                                                                |
 | ---------- | ----------------------------------------------------------------------------------------------------- |
-| US01       | `SCR-01` nhập email, mật khẩu, đăng nhập                                                              |
-| US02       | Nút đăng xuất trên topbar, quay về `SCR-01`                                                           |
-| US03       | `SCR-70` sửa thông tin hoặc đổi mật khẩu                                                              |
-| US04       | `SCR-51` thêm, sửa, ngưng phòng ban                                                                   |
-| US05       | `SCR-52` thêm, sửa, bật/tắt người dùng, gán quản lý trực tiếp                                         |
-| US06       | `SCR-50` tạo, kích hoạt, đóng chu kỳ                                                                  |
-| US07       | `SCR-11` xem và lọc cây; `SCR-12` xem chi tiết                                                        |
-| US08       | `SCR-10` hoặc `SCR-11` → `SCR-13` tạo/sửa Objective                                                   |
-| US09       | `SCR-13` thêm, sửa Key Result                                                                         |
-| US10       | `SCR-13` chọn Objective cấp trên để liên kết                                                          |
-| US11       | `SCR-12` xác nhận xóa mềm Objective                                                                   |
-| US12       | `SCR-02` hoặc `SCR-10` → `SCR-14` check-in                                                            |
-| US13       | `SCR-12` xem lịch sử check-in và biểu đồ tiến độ                                                      |
-| US14       | `SCR-12` Manager bình luận vào check-in                                                               |
-| US15       | `SCR-55` tạo, sửa, nhân bản mẫu phiếu                                                                 |
-| US16       | `SCR-53` tạo đợt; `SCR-54` mở giai đoạn đề cử, mở thu phiếu                                           |
-| US17       | `SCR-22` chọn 3–5 đồng nghiệp và gửi                                                                  |
-| US18       | `SCR-23` giữ, thêm, bớt người đánh giá rồi duyệt                                                      |
-| US19       | `SCR-20` chọn phiếu → `SCR-21` chấm điểm, lưu nháp, nộp                                               |
-| US20       | `SCR-54` xem tỷ lệ nộp, gửi nhắc, đóng đợt                                                            |
-| US21       | `SCR-24` xem điểm theo tiêu chí, theo nhóm, nhận xét                                                  |
-| US22       | `SCR-30` xem trước, xuất file, công bố                                                                |
-| US23       | `SCR-02` xem dashboard theo vai trò                                                                   |
-| US24       | `SCR-40` chọn loại báo cáo, lọc, xuất Excel/PDF                                                       |
-| US25       | Chuông trên topbar → `SCR-60`                                                                         |
-| US26       | `SCR-56` lọc nhật ký                                                                                  |
-| US27       | `SCR-83` tab Luồng: bật/tắt, sửa lịch chạy và hạn mức                                                 |
-| US28       | `SCR-83` tab Lịch sử chạy: lọc, xem lỗi, chạy lại                                                     |
-| US29       | Thông báo → `SCR-80` nhận xử lý hoặc báo không liên quan                                              |
-| US30       | Thông báo thứ Hai → `SCR-81` → mở KR trong `SCR-12`                                                   |
-| US31       | `SCR-82` sửa đề xuất của AI rồi gửi; nhân viên xem ở `SCR-24`                                         |
-| US32       | Không có màn hình riêng; kết quả hiện ở `SCR-12`, `SCR-80`–`SCR-83`; bấm nhãn "Do AI tạo" mở `SCR-84` |
-| US33       | Thông báo → `SCR-12` xem nhãn không khớp, gợi ý rà soát                                               |
-| US34       | `SCR-21` cảnh báo khi bấm nộp                                                                         |
+| US01       | `SCR-01` enter email, password, log in                                                                |
+| US02       | Logout button on the topbar, return to `SCR-01`                                                       |
+| US03       | `SCR-70` edit information or change password                                                          |
+| US04       | `SCR-51` add, edit, deactivate departments                                                            |
+| US05       | `SCR-52` add, edit, enable/disable users, assign direct manager                                       |
+| US06       | `SCR-50` create, activate, close cycles                                                               |
+| US07       | `SCR-11` view and filter the tree; `SCR-12` view details                                              |
+| US08       | `SCR-10` or `SCR-11` → `SCR-13` create/edit Objective                                                 |
+| US09       | `SCR-13` add, edit Key Results                                                                        |
+| US10       | `SCR-13` choose parent Objective to link                                                              |
+| US11       | `SCR-12` confirm soft delete of Objective                                                             |
+| US12       | `SCR-02` or `SCR-10` → `SCR-14` check-in                                                              |
+| US13       | `SCR-12` view check-in history and progress chart                                                     |
+| US14       | `SCR-12` Manager comments on a check-in                                                               |
+| US15       | `SCR-55` create, edit, duplicate form templates                                                       |
+| US16       | `SCR-53` create campaign; `SCR-54` open nomination phase, open collection                             |
+| US17       | `SCR-22` choose 3–5 peers and submit                                                                  |
+| US18       | `SCR-23` keep, add, remove reviewers then approve                                                     |
+| US19       | `SCR-20` choose form → `SCR-21` score, save draft, submit                                             |
+| US20       | `SCR-54` view submission rate, send reminders, close campaign                                         |
+| US21       | `SCR-24` view scores by criterion, by group, comments                                                 |
+| US22       | `SCR-30` preview, export, publish                                                                     |
+| US23       | `SCR-02` view role-based dashboard                                                                    |
+| US24       | `SCR-40` choose report type, filter, export Excel/PDF                                                 |
+| US25       | Bell on the topbar → `SCR-60`                                                                         |
+| US26       | `SCR-56` filter audit log                                                                             |
+| US27       | `SCR-83` Flows tab: on/off, edit run schedule and quota                                               |
+| US28       | `SCR-83` Run History tab: filter, view errors, re-run                                                 |
+| US29       | Notification → `SCR-80` acknowledge or mark as not related                                            |
+| US30       | Monday notification → `SCR-81` → open KR in `SCR-12`                                                  |
+| US31       | `SCR-82` edit AI suggestions then send; employee views at `SCR-24`                                    |
+| US32       | No dedicated screen; results appear in `SCR-12`, `SCR-80`–`SCR-83`; clicking the "AI-generated" label opens `SCR-84` |
+| US33       | Notification → `SCR-12` view mismatch label, review suggestions                                       |
+| US34       | `SCR-21` warning when clicking submit                                                                 |
 
-## Sơ đồ phân cấp màn hình
+## Screen hierarchy diagram
 
 ```mermaid
 flowchart LR
-    Login["SCR-01 Đăng nhập"] --> Shell["Khung sau đăng nhập<br/>sidebar + topbar"]
+    Login["SCR-01 Login"] --> Shell["Post-login shell<br/>sidebar + topbar"]
 
     Shell --> Dashboard["SCR-02 Dashboard"]
-    Dashboard --> Checkin["SCR-14 Modal check-in"]
+    Dashboard --> Checkin["SCR-14 Check-in modal"]
 
-    Shell --> GroupOkr["Nhóm OKR"]
-    GroupOkr --> MyOkr["SCR-10 OKR của tôi"]
-    GroupOkr --> Tree["SCR-11 Cây OKR"]
-    MyOkr --> Detail["SCR-12 Chi tiết Objective"]
+    Shell --> GroupOkr["OKR group"]
+    GroupOkr --> MyOkr["SCR-10 My OKRs"]
+    GroupOkr --> Tree["SCR-11 OKR Tree"]
+    MyOkr --> Detail["SCR-12 Objective Detail"]
     Tree --> Detail
-    Detail --> ObjForm["SCR-13 Modal tạo/sửa Objective"]
+    Detail --> ObjForm["SCR-13 Create/edit Objective modal"]
 
-    Shell --> GroupReview["Nhóm Đánh giá 360"]
-    GroupReview --> Todo["SCR-20 Phiếu cần điền"]
-    Todo --> Form["SCR-21 Điền phiếu"]
-    GroupReview --> Nominate["SCR-22 Đề cử đồng nghiệp"]
-    GroupReview --> Approve["SCR-23 Duyệt người đánh giá"]
-    GroupReview --> Result360["SCR-24 Kết quả 360"]
+    Shell --> GroupReview["360 Evaluation group"]
+    GroupReview --> Todo["SCR-20 Forms to Fill"]
+    Todo --> Form["SCR-21 Fill in Form"]
+    GroupReview --> Nominate["SCR-22 Nominate Peers"]
+    GroupReview --> Approve["SCR-23 Approve Reviewers"]
+    GroupReview --> Result360["SCR-24 360 Results"]
 
-    Shell --> GroupResult["Nhóm Kết quả và báo cáo"]
-    GroupResult --> Final["SCR-30 Kết quả cuối kỳ"]
-    GroupResult --> Reports["SCR-40 Báo cáo"]
+    Shell --> GroupResult["Results and reports group"]
+    GroupResult --> Final["SCR-30 Final Results"]
+    GroupResult --> Reports["SCR-40 Reports"]
 
-    Shell --> GroupAdmin["Nhóm Quản trị"]
-    GroupAdmin --> Cycles["SCR-50 Chu kỳ OKR"]
-    GroupAdmin --> Depts["SCR-51 Phòng ban và team"]
-    GroupAdmin --> Users["SCR-52 Người dùng"]
-    GroupAdmin --> Campaigns["SCR-53 Đợt đánh giá"]
-    Campaigns --> Campaign["SCR-54 Chi tiết đợt"]
-    GroupAdmin --> Templates["SCR-55 Bộ tiêu chí"]
-    GroupAdmin --> Audit["SCR-56 Nhật ký"]
+    Shell --> GroupAdmin["Administration group"]
+    GroupAdmin --> Cycles["SCR-50 OKR Cycles"]
+    GroupAdmin --> Depts["SCR-51 Departments and Teams"]
+    GroupAdmin --> Users["SCR-52 Users"]
+    GroupAdmin --> Campaigns["SCR-53 Evaluation Campaigns"]
+    Campaigns --> Campaign["SCR-54 Campaign Detail"]
+    GroupAdmin --> Templates["SCR-55 Criteria Templates"]
+    GroupAdmin --> Audit["SCR-56 Audit Log"]
 
-    Shell --> GroupAi["Nhóm Tự động hóa AI"]
-    GroupAi --> Blockers["SCR-80 Vướng mắc chuyển đến"]
-    GroupAi --> Digest["SCR-81 Bản tin tuần"]
-    GroupAi --> Drafts["SCR-82 Bản nháp 1-1"]
-    GroupAi --> Flows["SCR-83 Luồng tự động"]
+    Shell --> GroupAi["AI Automation group"]
+    GroupAi --> Blockers["SCR-80 Routed Blockers"]
+    GroupAi --> Digest["SCR-81 Weekly Digest"]
+    GroupAi --> Drafts["SCR-82 1-1 Drafts"]
+    GroupAi --> Flows["SCR-83 Automation Flows"]
     Blockers --> Detail
     Digest --> Detail
 
-    Shell --> GroupPersonal["Nhóm Cá nhân và hệ thống"]
-    GroupPersonal --> Notify["SCR-60 Thông báo"]
-    GroupPersonal --> Profile["SCR-70 Hồ sơ cá nhân"]
+    Shell --> GroupPersonal["Personal and system group"]
+    GroupPersonal --> Notify["SCR-60 Notifications"]
+    GroupPersonal --> Profile["SCR-70 Profile"]
     GroupPersonal --> Forbidden["SCR-90 403"]
 
     classDef group fill:#e8f1fc,color:#123,stroke:#3a7bd5
     class GroupOkr,GroupReview,GroupResult,GroupAdmin,GroupAi,GroupPersonal group
 ```
 
-## Luồng thao tác chính
+## Main interaction flows
 
-### Luồng chung cho danh sách và biểu mẫu
+### Common flow for lists and forms
 
 ```mermaid
 flowchart LR
-    A["Mở danh sách"] --> B["Lọc hoặc tìm kiếm"] --> C["Mở chi tiết"]
-    A --> D["Thêm hoặc sửa"] --> E["Kiểm tra ở giao diện"] --> F["Kiểm tra ở API"]
-    F -->|Thành công| G["Làm mới danh sách và báo thành công"]
-    F -->|Lỗi dữ liệu| D
-    F -->|401| H["Về trang đăng nhập"]
-    F -->|403| I["Hiện trang 403"]
-    F -->|409 xung đột| J["Giữ dữ liệu đã nhập và giải thích lý do"]
+    A["Open list"] --> B["Filter or search"] --> C["Open detail"]
+    A --> D["Add or edit"] --> E["Validate in UI"] --> F["Validate in API"]
+    F --> |Success| G["Refresh list and show success"]
+    F --> |Data error| D
+    F --> |401| H["Go to login page"]
+    F --> |403| I["Show 403 page"]
+    F --> |409 conflict| J["Keep entered data and explain the reason"]
 ```
 
-### Luồng check-in hằng tuần
+### Weekly check-in flow
 
-Mục tiêu: check-in một Key Result trong tối đa 3 thao tác kể từ dashboard.
+Goal: check in a Key Result in at most 3 actions starting from the dashboard.
 
 ```mermaid
 flowchart LR
-    A["Dashboard: thẻ KR cần check-in"] --> B["Bấm Check-in"]
-    B --> C["Modal: giá trị, mức tự tin, ghi chú"]
-    C --> D["Lưu"]
-    D --> E["Tiến độ KR, Objective, Objective cấp trên cập nhật ngay"]
-    D -->|Chọn Chệch hướng| F["Quản lý trực tiếp nhận thông báo"]
+    A["Dashboard: KR-to-check-in card"] --> B["Click Check-in"]
+    B --> C["Modal: value, confidence, notes"]
+    C --> D["Save"]
+    D --> E["KR, Objective and parent Objective progress update immediately"]
+    D --> |Choose Off track| F["Direct manager receives notification"]
 ```
 
-### Luồng người đánh giá 360
+### 360 reviewer flow
 
 ```mermaid
 flowchart LR
-    A["Chuông: có phiếu cần điền"] --> B["SCR-20 Phiếu cần điền"]
-    B --> C["SCR-21 Điền phiếu"]
-    C --> D["Lưu nháp"]
+    A["Bell: a form needs filling"] --> B["SCR-20 Forms to Fill"]
+    B --> C["SCR-21 Fill in Form"]
+    C --> D["Save draft"]
     D --> C
-    C --> E["Nộp phiếu"]
-    E -->|Còn tiêu chí bắt buộc chưa chấm| C
-    E -->|Thành công| B
+    C --> E["Submit form"]
+    E --> |Required criteria still unscored| C
+    E --> |Success| B
 ```
 
-### Luồng vướng mắc được AI chuyển đến
+### Blocker routed by AI flow
 
-Người check-in không phải làm thêm gì; trưởng phòng nhận việc xử lý trong 2 thao tác từ thông báo.
+The person checking in does not have to do anything extra; the department head picks up the task in 2 actions from the notification.
 
 ```mermaid
 flowchart LR
-    A["Lan check-in, ghi vướng mắc<br/>chờ team QA"] --> B["Lưu xong ngay<br/>(AI chạy nền)"]
-    B --> C["AI gắn nhãn:<br/>Phụ thuộc phòng khác · QA · Cao"]
-    C --> D["Chị Hà nhận thông báo"]
-    D --> E["SCR-80 Vướng mắc chuyển đến"]
-    E -->|Đã nhận xử lý| F["Lan nhận thông báo kèm ghi chú"]
-    E -->|Không liên quan phòng tôi| G["Chuyển về quản lý trực tiếp của Lan"]
+    A["Lan checks in, notes a blocker<br/>waiting for the QA team"] --> B["Saved immediately<br/>(AI runs in background)"]
+    B --> C["AI labels:<br/>Cross-department dependency · QA · High"]
+    C --> D["Ms. Hà receives a notification"]
+    D --> E["SCR-80 Routed Blockers"]
+    E --> |Acknowledged| F["Lan receives a notification with the note"]
+    E --> |Not related to my department| G["Forwarded to Lan's direct manager"]
 ```
 
-### Luồng bản nháp 1-1
+### 1-1 draft flow
 
 ```mermaid
 flowchart LR
-    A["HR đóng đợt 360"] --> B["AI tóm tắt nhận xét<br/>nhóm đủ 3 phiếu"]
-    B --> C["Quản lý nhận thông báo"]
-    C --> D["SCR-82 sửa nội dung"]
-    D -->|Đợt chưa công bố| E["Lưu bản sửa, chưa gửi được"]
-    D -->|Đợt đã công bố| F["Gửi"]
-    F --> G["Nhân viên thấy khối<br/>Tóm tắt từ quản lý ở SCR-24"]
+    A["HR closes the 360 campaign"] --> B["AI summarizes comments<br/>for groups with 3 forms"]
+    B --> C["Manager receives notification"]
+    C --> D["SCR-82 edit content"]
+    D --> |Campaign not yet published| E["Save edits, cannot send yet"]
+    D --> |Campaign published| F["Send"]
+    F --> G["Employee sees the<br/>Summary from manager block in SCR-24"]
 ```
 
-## Quy ước trạng thái giao diện
+## UI state conventions
 
-| Trạng thái               | Cách hiển thị bắt buộc                                                                                         |
+| State                    | Required display                                                                                               |
 | ------------------------ | -------------------------------------------------------------------------------------------------------------- |
-| Đang tải lần đầu         | Giữ khung trang; hiện khung xương (skeleton) ở bảng, cây hoặc biểu đồ đang tải.                                |
-| Rỗng                     | Nói rõ chưa có dữ liệu hay do bộ lọc; hiện nút hành động chính nếu có quyền (ví dụ "Thêm Objective đầu tiên"). |
-| Lỗi dữ liệu nhập         | Giữ nguyên giá trị đã nhập, hiện lỗi ngay dưới ô bị sai, đưa con trỏ tới lỗi đầu tiên.                         |
-| Lỗi API                  | Hiện thông báo ngắn kèm mã tra cứu; không hiện chi tiết kỹ thuật.                                              |
-| Hết phiên (401)          | Xóa phiên đăng nhập và về trang đăng nhập.                                                                     |
-| Không có quyền (403)     | Giữ phiên đăng nhập, hiện `#/403` kèm đường quay lại.                                                          |
-| Đang lưu                 | Khóa nút gửi để tránh gửi hai lần, hiện trạng thái đang xử lý.                                                 |
-| Thành công               | Báo thành công, đóng modal nếu có, làm mới dữ liệu liên quan (ví dụ tiến độ trên cây sau check-in).            |
-| Xác nhận xóa             | Nêu tên Objective và nói rõ nó biến khỏi cây, báo cáo nhưng vẫn giữ lịch sử.                                   |
-| Chu kỳ đã đóng           | Hiện nhãn "Chu kỳ đã đóng — chỉ xem"; ẩn mọi nút sửa và check-in.                                              |
-| Kết quả bị ẩn vì ẩn danh | Ghi "Chưa đủ 3 phiếu nên không hiển thị để bảo vệ ẩn danh", không để ô trống.                                  |
-| Nội dung do AI tạo       | Luôn có nhãn "Do AI tạo" cạnh nội dung; nhãn, gợi ý, bản tin không có nút sửa số liệu OKR hay 360.             |
-| AI đang xử lý            | Sau khi check-in hay lưu Objective, không chờ AI; nhãn AI xuất hiện sau, khi người dùng mở lại trang.          |
-| Luồng AI tắt hoặc lỗi    | Mọi tính năng không dùng AI vẫn chạy; khối AI ghi "Chưa có phân tích" thay vì báo lỗi cho người dùng thường.   |
+| Initial loading          | Keep the page frame; show skeletons for the table, tree or chart being loaded.                                 |
+| Empty                    | State clearly whether there is no data or the filter caused it; show the primary action button if permitted (for example "Add the first Objective"). |
+| Input error              | Keep entered values, show the error right below the faulty field, move the cursor to the first error.          |
+| API error                | Show a short message with a reference code; do not show technical details.                                     |
+| Session expired (401)    | Clear the login session and go to the login page.                                                              |
+| No permission (403)      | Keep the login session, show `#/403` with a way back.                                                          |
+| Saving                   | Disable the submit button to prevent double submission, show the processing state.                             |
+| Success                  | Show success, close the modal if any, refresh related data (for example progress on the tree after a check-in). |
+| Delete confirmation      | State the Objective's name and say clearly that it disappears from the tree and reports but its history is kept. |
+| Closed cycle             | Show the label "Cycle closed — view only"; hide all edit and check-in buttons.                                 |
+| Result hidden for anonymity | Show "Fewer than 3 forms, so not displayed to protect anonymity"; never leave a blank cell.                 |
+| AI-generated content     | Always show the "AI-generated" label next to the content; labels, suggestions and digests have no button to edit OKR or 360 figures. |
+| AI processing            | After a check-in or saving an Objective, do not wait for the AI; the AI label appears later, when the user reopens the page. |
+| AI flow off or failed    | All non-AI features keep working; the AI block shows "No analysis yet" instead of an error for regular users.  |
 
-## Quy tắc responsive và trợ năng
+## Responsive and accessibility rules
 
-- Dùng tốt từ màn hình 375 px. Cây OKR trên màn hình hẹp chuyển thành danh sách lồng nhau có thể mở rộng; bảng cuộn ngang thay vì giấu cột.
-- Mức tự tin và tiến độ không chỉ thể hiện bằng màu: luôn kèm chữ ("Đúng hướng", "Có rủi ro", "Chệch hướng") và con số phần trăm.
-- Modal vừa khung nhìn, giữ nút hành động luôn thấy được, khóa phím Tab bên trong modal, đóng bằng `Escape` khi không đang lưu, trả con trỏ về nút đã mở modal.
-- Mọi ô nhập có nhãn hiển thị; nút chỉ có biểu tượng có tên cho trình đọc màn hình.
-- Người dùng bàn phím đi được qua sidebar, bộ lọc, cây OKR, nút trong modal và phân trang theo thứ tự hợp lý.
-- Ngày theo định dạng `dd/MM/yyyy`; phần trăm làm tròn đến số nguyên; điểm làm tròn 2 chữ số.
+- Works well from a 375 px screen. On narrow screens the OKR tree turns into an expandable nested list; tables scroll horizontally instead of hiding columns.
+- Confidence level and progress are not conveyed by color alone: always accompanied by text ("On track", "At risk", "Off track") and a percentage number.
+- Modals fit the viewport, keep action buttons always visible, trap the Tab key inside the modal, close with `Escape` when not saving, and return focus to the button that opened the modal.
+- Every input has a visible label; icon-only buttons have names for screen readers.
+- Keyboard users can move through the sidebar, filters, OKR tree, modal buttons and pagination in a logical order.
+- Dates use the format `dd/MM/yyyy`; percentages are rounded to integers; scores are rounded to 2 decimal places.
 
-## Nối màn hình với API
+## Mapping screens to the API
 
-Tên thao tác khớp với hợp đồng [OpenAPI](api/openapi.yaml).
+Operation names match the [OpenAPI](api/openapi.yaml) contract.
 
-| Màn hình                   | Thao tác API                                                                                                                                       |
+| Screen                     | API operations                                                                                                                                     |
 | -------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Đăng nhập                  | `login`, `logout`                                                                                                                                  |
+| Login                      | `login`, `logout`                                                                                                                                  |
 | Dashboard                  | `getMyDashboard`, `getTeamDashboard`, `getCompanyDashboard`                                                                                        |
-| OKR của tôi, Cây OKR       | `listObjectives`, `getObjectiveTree`                                                                                                               |
-| Chi tiết Objective         | `getObjective`, `deleteObjective`, `listCheckins`, `createCheckinComment`                                                                          |
-| Tạo / sửa Objective        | `createObjective`, `updateObjective`, `createKeyResult`, `updateKeyResult`, `deleteKeyResult`, `linkParentObjective`                               |
+| My OKRs, OKR Tree          | `listObjectives`, `getObjectiveTree`                                                                                                               |
+| Objective Detail           | `getObjective`, `deleteObjective`, `listCheckins`, `createCheckinComment`                                                                          |
+| Create / edit Objective    | `createObjective`, `updateObjective`, `createKeyResult`, `updateKeyResult`, `deleteKeyResult`, `linkParentObjective`                               |
 | Check-in                   | `createCheckin`                                                                                                                                    |
-| Phiếu cần điền, Điền phiếu | `listMyReviewForms`, `getReviewForm`, `saveReviewDraft`, `submitReviewForm`                                                                        |
-| Đề cử đồng nghiệp          | `getMyNomination`, `submitNomination`                                                                                                              |
-| Duyệt người đánh giá       | `listPendingNominations`, `approveNomination`                                                                                                      |
-| Kết quả 360                | `getReviewResult`                                                                                                                                  |
-| Kết quả cuối kỳ            | `calculateFinalResults`, `listFinalResults`, `exportFinalResults`, `publishFinalResults`                                                           |
-| Báo cáo                    | `getReport`, `exportReport`                                                                                                                        |
-| Chu kỳ OKR                 | `listCycles`, `createCycle`, `updateCycle`, `activateCycle`, `closeCycle`                                                                          |
-| Phòng ban                  | `listDepartments`, `createDepartment`, `updateDepartment`, `deactivateDepartment`                                                                  |
-| Người dùng                 | `listUsers`, `getUser`, `createUser`, `updateUser`, `updateUserStatus`                                                                             |
-| Đợt đánh giá, Chi tiết đợt | `listCampaigns`, `createCampaign`, `updateCampaign`, `openNomination`, `openCollection`, `getCampaignProgress`, `remindReviewers`, `closeCampaign` |
-| Bộ tiêu chí                | `listTemplates`, `createTemplate`, `updateTemplate`, `duplicateTemplate`                                                                           |
-| Nhật ký                    | `listAuditLogs`                                                                                                                                    |
-| Thông báo                  | `listNotifications`, `markNotificationRead`, `markAllNotificationsRead`                                                                            |
-| Hồ sơ cá nhân              | `getProfile`, `updateProfile`, `changePassword`                                                                                                    |
-| Vướng mắc chuyển đến       | `listRoutedBlockers`, `acknowledgeBlocker`, `rejectBlocker`                                                                                        |
-| Bản tin tuần               | `listWeeklyDigests`, `getWeeklyDigest`                                                                                                             |
-| Bản nháp 1-1               | `listOneOnOneDrafts`, `getOneOnOneDraft`, `updateOneOnOneDraft`, `sendOneOnOneDraft`, `discardOneOnOneDraft`                                       |
-| Luồng tự động              | `listAutomationFlows`, `updateAutomationFlow`, `listAutomationRuns`, `retryAutomationRun`                                                          |
-| Điền phiếu (cảnh báo AI)   | `checkReviewComment` (gọi khi bấm nộp, tối đa 5 giây)                                                                                              |
-| Chi tiết Objective (AI)    | `listObjectiveReviewNotes`, `dismissObjectiveReviewNote`                                                                                           |
-| Ngăn "AI đã làm gì?"       | `getAiRunExplanation`                                                                                                                              |
-| Thao tác dùng chung        | `listUserDirectory`, `getCampaign`, `listReviewResultSubjects`, `getMyFinalResult`, `getAutomationRun`                                             |
+| Forms to Fill, Fill in Form | `listMyReviewForms`, `getReviewForm`, `saveReviewDraft`, `submitReviewForm`                                                                       |
+| Nominate Peers             | `getMyNomination`, `submitNomination`                                                                                                              |
+| Approve Reviewers          | `listPendingNominations`, `approveNomination`                                                                                                      |
+| 360 Results                | `getReviewResult`                                                                                                                                  |
+| Final Results              | `calculateFinalResults`, `listFinalResults`, `exportFinalResults`, `publishFinalResults`                                                           |
+| Reports                    | `getReport`, `exportReport`                                                                                                                        |
+| OKR Cycles                 | `listCycles`, `createCycle`, `updateCycle`, `activateCycle`, `closeCycle`                                                                          |
+| Departments                | `listDepartments`, `createDepartment`, `updateDepartment`, `deactivateDepartment`                                                                  |
+| Users                      | `listUsers`, `getUser`, `createUser`, `updateUser`, `updateUserStatus`                                                                             |
+| Evaluation Campaigns, Campaign Detail | `listCampaigns`, `createCampaign`, `updateCampaign`, `openNomination`, `openCollection`, `getCampaignProgress`, `remindReviewers`, `closeCampaign` |
+| Criteria Templates         | `listTemplates`, `createTemplate`, `updateTemplate`, `duplicateTemplate`                                                                           |
+| Audit Log                  | `listAuditLogs`                                                                                                                                    |
+| Notifications              | `listNotifications`, `markNotificationRead`, `markAllNotificationsRead`                                                                            |
+| Profile                    | `getProfile`, `updateProfile`, `changePassword`                                                                                                    |
+| Routed Blockers            | `listRoutedBlockers`, `acknowledgeBlocker`, `rejectBlocker`                                                                                        |
+| Weekly Digest              | `listWeeklyDigests`, `getWeeklyDigest`                                                                                                             |
+| 1-1 Drafts                 | `listOneOnOneDrafts`, `getOneOnOneDraft`, `updateOneOnOneDraft`, `sendOneOnOneDraft`, `discardOneOnOneDraft`                                       |
+| Automation Flows           | `listAutomationFlows`, `updateAutomationFlow`, `listAutomationRuns`, `retryAutomationRun`                                                          |
+| Fill in Form (AI warning)  | `checkReviewComment` (called on submit, at most 5 seconds)                                                                                         |
+| Objective Detail (AI)      | `listObjectiveReviewNotes`, `dismissObjectiveReviewNote`                                                                                           |
+| "What did the AI do?" panel | `getAiRunExplanation`                                                                                                                             |
+| Shared operations          | `listUserDirectory`, `getCampaign`, `listReviewResultSubjects`, `getMyFinalResult`, `getAutomationRun`                                             |
 
-Thao tác `listCycles` và `listDepartments` cũng cung cấp danh sách chọn cho bộ chọn chu kỳ, bộ lọc và biểu mẫu; chúng không cần màn hình riêng cho việc đó.
+The `listCycles` and `listDepartments` operations also provide the selection lists for the cycle selector, filters and forms; they do not need a separate screen for that.
 
-## Giao diện mẫu
+## Sample UI
 
-Bản giao diện mẫu React chạy bằng dữ liệu giả nằm ở [src/frontend](../src/frontend/README.md). Ảnh chụp được lưu theo vai trò:
+The React sample UI running on mock data is at [src/frontend](../src/frontend/README.md). Screenshots are stored by role:
 
-| Thư mục               | Vai trò                         | Màn hình đã chụp                                                                                                                                                                                                            |
+| Folder                | Role                            | Screens captured                                                                                                                                                                                                            |
 | --------------------- | ------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `images/chung/`       | Chưa đăng nhập, tính năng chung | `SCR-01`, bảng tìm kiếm nhanh, chế độ nền sáng                                                                                                                                                                              |
-| `images/nhan-vien/`   | Nhân viên (Lan)                 | `SCR-02`, `SCR-10`, `SCR-11`, `SCR-12`, `SCR-13`, `SCR-14`, `SCR-20`, `SCR-21`, `SCR-22`, `SCR-24`, `SCR-60`, `SCR-70`                                                                                                      |
-| `images/quan-ly/`     | Quản lý (Nam, Hà)               | `SCR-02` đội nhóm, `SCR-23`, `SCR-24` của nhân viên và trường hợp gộp nhóm, `SCR-40`                                                                                                                                        |
-| `images/nhan-su/`     | Nhân sự (Mai)                   | `SCR-02` công ty, `SCR-53`, `SCR-54`, `SCR-30`, `SCR-55`, `SCR-52`                                                                                                                                                          |
-| `images/quan-tri/`    | Quản trị viên (Hùng)            | `SCR-02` công ty, `SCR-50`, `SCR-51`, `SCR-56`, `SCR-90`                                                                                                                                                                    |
-| `images/tu-dong-hoa/` | Hà, Nam, Mai, Hùng, Lan, An     | `SCR-80`, `SCR-81`, `SCR-82`, `SCR-83` (2 tab), `SCR-84`, luồng demo từ check-in tới người nhận (ảnh 11–18), nhãn AI trên check-in và gợi ý rà soát ở `SCR-12`, cảnh báo nhận xét ở `SCR-21`, tóm tắt từ quản lý ở `SCR-24` |
+| `images/chung/`       | Not logged in, shared features  | `SCR-01`, quick search panel, light theme                                                                                                                                                                                   |
+| `images/nhan-vien/`   | Employee (Lan)                  | `SCR-02`, `SCR-10`, `SCR-11`, `SCR-12`, `SCR-13`, `SCR-14`, `SCR-20`, `SCR-21`, `SCR-22`, `SCR-24`, `SCR-60`, `SCR-70`                                                                                                      |
+| `images/quan-ly/`     | Manager (Nam, Hà)               | `SCR-02` team, `SCR-23`, `SCR-24` of an employee and the group-merging case, `SCR-40`                                                                                                                                       |
+| `images/nhan-su/`     | HR (Mai)                        | `SCR-02` company, `SCR-53`, `SCR-54`, `SCR-30`, `SCR-55`, `SCR-52`                                                                                                                                                          |
+| `images/quan-tri/`    | Administrator (Hùng)            | `SCR-02` company, `SCR-50`, `SCR-51`, `SCR-56`, `SCR-90`                                                                                                                                                                    |
+| `images/tu-dong-hoa/` | Hà, Nam, Mai, Hùng, Lan, An     | `SCR-80`, `SCR-81`, `SCR-82`, `SCR-83` (2 tabs), `SCR-84`, demo flow from check-in to recipient (images 11–18), AI label on check-in and review suggestions in `SCR-12`, comment warning in `SCR-21`, manager summary in `SCR-24` |
 
-**Liên quan:** [Use case](03-use-cases.md) · [User stories](08-invest-requirements.md) · [Tiêu chí chấp nhận](06-acceptance-criteria.md)
+**Related:** [Use cases](03-use-cases.md) · [User stories](08-invest-requirements.md) · [Acceptance criteria](06-acceptance-criteria.md)

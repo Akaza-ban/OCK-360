@@ -1,98 +1,98 @@
-# Yêu cầu phi chức năng — OKR360 V1
+# Non-Functional Requirements — OKR360 V1
 
-> Trạng thái thiết kế: TARGET V1
+> Design status: TARGET V1
 >
-> Trạng thái triển khai: CHƯA BẮT ĐẦU; chưa yêu cầu nào được đo
+> Implementation status: NOT STARTED; no requirements measured yet
 
-Tài liệu này ghi các yêu cầu về chất lượng, kèm cách kiểm tra. Cột **Trạng thái** có hai giá trị:
+This document records quality requirements along with their verification methods. The **Status** column has two values:
 
-- **Đã có:** con số hoặc hành vi đã nằm trong tài liệu hoặc mã nguồn hiện có, cột Nguồn cho biết ở đâu. Số như `01` hay `05 §7.1` là tài liệu cùng số trong `docs/`.
-- **Đề xuất:** con số mới, đặt làm mốc ban đầu cho một công ty 50–300 nhân viên. Có thể đổi trước khi kiểm thử.
+- **Baseline:** values or behaviors already defined in existing documentation or source code; the Source column indicates where. Numbers like `01` or `05 §7.1` refer to the corresponding documents in `docs/`.
+- **Proposed:** new values, established as initial baselines for an organization of 50–300 employees. May be adjusted prior to testing.
 
-## Tải tham chiếu
+## Reference Load
 
-Mọi yêu cầu hiệu năng được đo với bộ dữ liệu sau. Đây là giả định để kiểm thử, không phải số liệu thực tế.
+All performance requirements are measured against the following dataset. This is a testing assumption, not production metrics.
 
-| Thông số | Giá trị | Trạng thái |
+| Parameter | Value | Status |
 |---|---|---|
-| Số người dùng | 300 | Đã có (01, mức trên của quy mô) |
-| Objective mỗi người mỗi chu kỳ | 5 | Đã có (mặc định `max_objectives_per_user`) |
-| Key Result mỗi Objective | 3 | Đề xuất |
-| Check-in lưu trữ | 8 chu kỳ, mỗi KR một check-in mỗi tuần, 13 tuần mỗi chu kỳ | Đề xuất |
-| Người dùng hoạt động đồng thời | 60 | Đề xuất |
+| User count | 300 | Baseline (01, upper bound of scale) |
+| Objectives per user per cycle | 5 | Baseline (default `max_objectives_per_user`) |
+| Key Results per Objective | 3 | Proposed |
+| Archived check-ins | 8 cycles, 1 check-in per KR per week, 13 weeks per cycle | Proposed |
+| Concurrent active users | 60 | Proposed |
 
-## Hiệu năng
+## Performance
 
-| Mã | Yêu cầu | Cách kiểm tra | Nguồn | Trạng thái |
+| ID | Requirement | Verification Method | Source | Status |
 |---|---|---|---|---|
-| NFR-PERF-001 | API đọc danh sách có phân trang: P95 ≤ 500 ms. | Kiểm thử tải | — | Đề xuất |
-| NFR-PERF-002 | API ghi, gồm check-in và cộng dồn tiến độ: P95 ≤ 800 ms. | Kiểm thử tải | — | Đề xuất |
-| NFR-PERF-003 | Đọc cây OKR toàn công ty: P95 ≤ 1 giây. | Kiểm thử tải | Mã có từ 08; con số là đề xuất | Đề xuất |
-| NFR-PERF-004 | Dashboard và báo cáo: P95 ≤ 2 giây. | Kiểm thử tải | — | Đề xuất |
-| NFR-PERF-005 | Xuất XLSX hoặc PDF hoàn tất trong 10 giây. | Kiểm thử tải | — | Đề xuất |
-| NFR-PERF-006 | Giao diện dùng được ngay sau khi check-in hoặc lưu Objective, không chờ AI. | Kiểm thử tích hợp với dịch vụ AI giả chậm | 04, BR-096 | Đã có |
+| NFR-PERF-001 | Paginated list read APIs: P95 ≤ 500 ms. | Load testing | — | Proposed |
+| NFR-PERF-002 | Write APIs, including check-in and progress roll-up: P95 ≤ 800 ms. | Load testing | — | Proposed |
+| NFR-PERF-003 | Read company-wide OKR tree: P95 ≤ 1 second. | Load testing | Code exists since 08; figure is proposed | Proposed |
+| NFR-PERF-004 | Dashboards and reports: P95 ≤ 2 seconds. | Load testing | — | Proposed |
+| NFR-PERF-005 | XLSX or PDF export completes within 10 seconds. | Load testing | — | Proposed |
+| NFR-PERF-006 | UI usable immediately after check-in or saving Objective, without waiting for AI. | Integration testing with slow mock AI service | 04, BR-096 | Baseline |
 
-## Độ tin cậy
+## Reliability
 
-| Mã | Yêu cầu | Cách kiểm tra | Nguồn | Trạng thái |
+| ID | Requirement | Verification Method | Source | Status |
 |---|---|---|---|---|
-| NFR-REL-001 | Thao tác gốc và sự kiện cho AI được ghi trong cùng một transaction. Thao tác lỗi thì không còn sự kiện; thao tác thành công thì chắc chắn có sự kiện. | Kiểm thử tích hợp | 05 §7.1 | Đã có |
-| NFR-REL-002 | Chạy lại job hoặc hai worker cùng nhận việc không tạo kết quả trùng. | Kiểm thử tích hợp | 05 §7.2, AC-UC30 | Đã có |
-| NFR-REL-003 | Job nhắc nhở chạy lại không gửi trùng thông báo. | Kiểm thử tích hợp | 05 §6 | Đã có |
-| NFR-REL-004 | Tắt dịch vụ AI, mọi tính năng không dùng AI vẫn chạy; khối AI hiện "Chưa có phân tích". | Kiểm thử với dịch vụ AI giả lỗi | 04, AC-UC27 | Đã có |
-| NFR-REL-005 | Sao lưu database mỗi ngày, giữ 7 bản gần nhất, và thử khôi phục ít nhất một lần trước khi đưa vào dùng. | Diễn tập khôi phục | — | Đề xuất |
+| NFR-REL-001 | Original mutation and AI event are recorded within the same transaction. If mutation fails, no event remains; if mutation succeeds, event is guaranteed to exist. | Integration testing | 05 §7.1 | Baseline |
+| NFR-REL-002 | Job retries or two workers picking up the same task do not produce duplicate results. | Integration testing | 05 §7.2, AC-UC30 | Baseline |
+| NFR-REL-003 | Reminder job retries do not send duplicate notifications. | Integration testing | 05 §6 | Baseline |
+| NFR-REL-004 | Disabling AI services keeps all non-AI features operational; AI blocks display "No analysis available". | Testing with failing mock AI service | 04, AC-UC27 | Baseline |
+| NFR-REL-005 | Daily database backups, retain last 7 snapshots, and test restoration at least once prior to production rollout. | Restoration drill | — | Proposed |
 
-## Tự động hóa bằng AI
+## AI Automation
 
-| Mã | Yêu cầu | Cách kiểm tra | Nguồn | Trạng thái |
+| ID | Requirement | Verification Method | Source | Status |
 |---|---|---|---|---|
-| NFR-AI-001 | Vướng mắc liên phòng đến người phụ trách trong vòng 15 phút sau khi check-in. | Kiểm thử đầu cuối | 01 G7, AC-UC29 | Đã có |
-| NFR-AI-002 | Bản nháp 1-1 sẵn sàng trong vòng 1 giờ sau khi đóng đợt. | Kiểm thử đầu cuối với đợt 300 người | 01 G7, AC-UC31 | Đã có |
-| NFR-AI-003 | Cảnh báo nhận xét 360 trả kết quả trong tối đa 5 giây, quá giờ thì cho nộp. | Kiểm thử với dịch vụ AI giả chậm | UC19, AC-UC19 | Đã có |
-| NFR-AI-004 | Mỗi lần gọi dịch vụ AI ở luồng chạy nền chờ tối đa 30 giây. | Kiểm thử với dịch vụ AI giả chậm | `aiPipeline.js` | Đề xuất |
-| NFR-AI-005 | Hạn mức gọi AI được áp theo từng luồng, mỗi ngày. Số lần gọi ghi nhận khớp với số lần gọi thật. | Kiểm thử tích hợp | UC27, 05 §7.2 | Đã có |
-| NFR-AI-006 | Phần gọi dịch vụ AI nằm sau một lớp giao tiếp riêng, để đổi nhà cung cấp mà không sửa nghiệp vụ. | Rà soát kiến trúc | — | Đề xuất |
+| NFR-AI-001 | Cross-department blockers routed to the assignee within 15 minutes of check-in. | End-to-end testing | 01 G7, AC-UC29 | Baseline |
+| NFR-AI-002 | 1-on-1 draft ready within 1 hour after campaign closure. | End-to-end testing with a 300-user campaign | 01 G7, AC-UC31 | Baseline |
+| NFR-AI-003 | 360 review comment guard returns results within 5 seconds; allow submission upon timeout. | Testing with slow mock AI service | UC19, AC-UC19 | Baseline |
+| NFR-AI-004 | Background AI service calls time out at 30 seconds per invocation. | Testing with slow mock AI service | `aiPipeline.js` | Proposed |
+| NFR-AI-005 | AI rate limits applied per flow on a daily basis. Recorded invocation count matches actual invocation count. | Integration testing | UC27, 05 §7.2 | Baseline |
+| NFR-AI-006 | AI service calls abstracted behind a dedicated gateway interface to allow switching providers without modifying business logic. | Architecture review | — | Proposed |
 
-## Bảo mật
+## Security
 
-| Mã | Yêu cầu | Cách kiểm tra | Nguồn | Trạng thái |
+| ID | Requirement | Verification Method | Source | Status |
 |---|---|---|---|---|
-| NFR-SEC-001 | JWT hết hạn sau 30 phút. V1 không có refresh token. | Kiểm thử API | UC01, 01 | Đã có |
-| NFR-SEC-002 | Mật khẩu mới có tối thiểu 8 ký tự. | Kiểm thử biên | UC03, AC-UC03 | Đã có |
-| NFR-SEC-003 | Mật khẩu chỉ lưu dạng băm, dùng Argon2id (ADR-006). | Rà soát database, kiểm thử | AC-UC01, `password_hash` | Đã có |
-| NFR-SEC-004 | Quá 5 lần sai trong 15 phút với một tài khoản thì trả `429`. Sai thông tin và tài khoản bị khóa có cùng một phản hồi `401`. | Kiểm thử API | AC-UC01 | Đã có |
-| NFR-SEC-005 | Mọi API trừ đăng nhập đều xác thực và kiểm tra quyền ở backend. | Kiểm thử phân quyền theo từng API | BR-002 | Đã có |
-| NFR-SEC-006 | Mọi kết nối dùng HTTPS. | Rà soát triển khai | 01 §6 | Đã có |
-| NFR-SEC-007 | Khóa dịch vụ AI chỉ nằm ở backend. Trình duyệt không bao giờ gọi AI trực tiếp. | Rà soát code và bản build frontend | `AiWorker.jsx` | Đã có |
-| NFR-SEC-008 | Mật khẩu, token và khóa bí mật không xuất hiện trong log hay nhật ký. | Rà soát mẫu log | 05 §6 | Đã có |
+| NFR-SEC-001 | JWT expires after 30 minutes. V1 has no refresh tokens. | API testing | UC01, 01 | Baseline |
+| NFR-SEC-002 | New passwords must be at least 8 characters. | Boundary testing | UC03, AC-UC03 | Baseline |
+| NFR-SEC-003 | Passwords stored as hashes only, using Argon2id (ADR-006). | Database review, testing | AC-UC01, `password_hash` | Baseline |
+| NFR-SEC-004 | More than 5 failed attempts in 15 minutes for an account returns `429`. Invalid credentials and locked accounts return an identical `401` response. | API testing | AC-UC01 | Baseline |
+| NFR-SEC-005 | All APIs except login authenticate and authorize at the backend. | Per-API authorization testing | BR-002 | Baseline |
+| NFR-SEC-006 | All connections use HTTPS. | Deployment review | 01 §6 | Baseline |
+| NFR-SEC-007 | AI service keys reside strictly in backend. Browser never invokes AI directly. | Code and frontend build review | `AiWorker.jsx` | Baseline |
+| NFR-SEC-008 | Passwords, tokens, and secret keys never appear in logs or audit trails. | Log sample review | 05 §6 | Baseline |
 
-## Ẩn danh và riêng tư
+## Anonymity and Privacy
 
-| Mã | Yêu cầu | Cách kiểm tra | Nguồn | Trạng thái |
+| ID | Requirement | Verification Method | Source | Status |
 |---|---|---|---|---|
-| NFR-PRIV-001 | Sau khi đóng đợt, ngay cả người đọc được toàn bộ database cũng không nối được điểm với người chấm. | Kiểm thử schema | 05 §3.1 | Đã có |
-| NFR-PRIV-002 | Mọi API, báo cáo, file xuất và nhật ký không chứa cặp người chấm và người được chấm của nhóm ẩn danh. | Kiểm thử API, rà soát file xuất | BR-060 | Đã có |
-| NFR-PRIV-003 | Nhận xét không kèm tên và không hiện theo thứ tự nộp. | Kiểm thử API | `review.js` | Đã có |
-| NFR-PRIV-004 | Nội dung gửi cho dịch vụ AI không chứa họ tên, email hay số điện thoại; đơn vị chỉ xuất hiện dạng mã kèm danh bạ. | Ghi lại nội dung gửi đi trong môi trường test | AC-UC32 | Đã có |
-| NFR-PRIV-005 | Lịch sử chạy và hộp thư sự kiện không có cột chứa nội dung. | Kiểm thử schema | 05 §7.1, 05 §7.4 | Đã có |
-| NFR-PRIV-006 | Cảnh báo nhận xét 360 không tạo dòng lịch sử chạy, để thời điểm chạy không giúp đoán ai đã chấm. | Kiểm thử schema | 05 §7.4 | Đã có |
+| NFR-PRIV-001 | After campaign closure, even a user with full database read access cannot associate scores with reviewers. | Schema testing | 05 §3.1 | Baseline |
+| NFR-PRIV-002 | All APIs, reports, exports, and audit logs do not contain reviewer-reviewee pairs for anonymous groups. | API testing, export review | BR-060 | Baseline |
+| NFR-PRIV-003 | Comments are unattributed and not displayed in submission order. | API testing | `review.js` | Baseline |
+| NFR-PRIV-004 | Content sent to AI services contains no full names, emails, or phone numbers; units appear as codes with an accompanying directory. | Record outgoing payloads in test environment | AC-UC32 | Baseline |
+| NFR-PRIV-005 | Automation run history and event outbox do not contain content columns. | Schema testing | 05 §7.1, 05 §7.4 | Baseline |
+| NFR-PRIV-006 | 360 review comment guard does not create run history records, ensuring execution timestamps cannot be used to deduce reviewer identity. | Schema testing | 05 §7.4 | Baseline |
 
-## Trải nghiệm và trợ năng
+## User Experience and Accessibility
 
-| Mã | Yêu cầu | Cách kiểm tra | Nguồn | Trạng thái |
+| ID | Requirement | Verification Method | Source | Status |
 |---|---|---|---|---|
-| NFR-UX-001 | Dùng tốt từ màn hình rộng 375 px. | Kiểm thử giao diện | 04 | Đã có |
-| NFR-UX-002 | Mức tự tin và tiến độ không chỉ thể hiện bằng màu, luôn kèm chữ và phần trăm. | Rà soát giao diện | 04 | Đã có |
-| NFR-UX-003 | Các chức năng chính dùng được bằng bàn phím; modal khóa phím Tab và đóng được bằng `Escape`. | Kiểm thử bàn phím | 04 | Đã có |
-| NFR-UX-004 | Mọi ô nhập có nhãn; nút chỉ có biểu tượng có tên cho trình đọc màn hình. | Rà soát giao diện | 04 | Đã có |
-| NFR-UX-005 | Hỗ trợ hai phiên bản gần nhất của Chrome, Edge và Firefox. | Kiểm thử giao diện | — | Đề xuất |
+| NFR-UX-001 | Fully usable on screens from 375 px wide. | UI testing | 04 | Baseline |
+| NFR-UX-002 | Confidence level and progress not conveyed by color alone; always accompanied by text and percentage. | UI review | 04 | Baseline |
+| NFR-UX-003 | Core features navigable via keyboard; modals trap Tab focus and close via `Escape`. | Keyboard testing | 04 | Baseline |
+| NFR-UX-004 | All input fields have labels; icon-only buttons include accessible names for screen readers. | UI review | 04 | Baseline |
+| NFR-UX-005 | Support the last two major versions of Chrome, Edge, and Firefox. | UI testing | — | Proposed |
 
-## Vận hành
+## Operations
 
-| Mã | Yêu cầu | Cách kiểm tra | Nguồn | Trạng thái |
+| ID | Requirement | Verification Method | Source | Status |
 |---|---|---|---|---|
-| NFR-OPS-001 | Lỗi API dùng định dạng `ProblemDetails`. Giao diện chỉ hiện thông báo ngắn kèm mã tra cứu, không hiện chi tiết kỹ thuật. | Kiểm thử API | 08, 04 | Đã có |
-| NFR-OPS-002 | Admin và HR xem được trạng thái, số lần thử, thời gian chạy và lỗi của từng lần chạy tự động. | Kiểm thử API | UC28, AC-UC28 | Đã có |
-| NFR-OPS-003 | Khi đóng đợt 360 có nhiều bản nháp cần tạo, các việc được xử lý dần qua hàng đợi, không làm chậm API. | Kiểm thử tải | 01 §6 | Đã có |
+| NFR-OPS-001 | API errors use `ProblemDetails` format. UI displays only concise messages with tracking codes, omitting technical details. | API testing | 08, 04 | Baseline |
+| NFR-OPS-002 | Admin and HR can view status, retry counts, execution duration, and errors for each automated run. | API testing | UC28, AC-UC28 | Baseline |
+| NFR-OPS-003 | When closing a 360 campaign with numerous drafts to generate, tasks are processed asynchronously via a queue without degrading API responsiveness. | Load testing | 01 §6 | Baseline |
 
-**Liên quan:** [Quy tắc nghiệp vụ](business-rules.md) · [Phạm vi](../01-scope.md) · [Thiết kế dữ liệu](../05-data-model.md)
+**Related:** [Business Rules](business-rules.md) · [Scope](../01-scope.md) · [Data Model](../05-data-model.md)

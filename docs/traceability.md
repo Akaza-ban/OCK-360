@@ -1,27 +1,27 @@
-# Bảng truy vết — OKR360 V1
+# Traceability Matrix — OKR360 V1
 
-> Trạng thái thiết kế: TARGET V1
+> Design status: TARGET V1
 >
-> Trạng thái kiểm thử: đã có mã test trong [danh mục test](test-cases.md); chưa có test nào được viết
+> Testing status: Test case IDs defined in [test cases](test-cases.md); no tests implemented yet.
 
-Bảng nối mỗi user story qua toàn bộ thiết kế, để kiểm tra không có yêu cầu nào bị sót và biết sửa một yêu cầu thì phải sửa những đâu. Khi thêm hoặc đổi một story, cập nhật hàng của story đó.
+This table traces each user story across the entire design, ensuring no requirements are missed and clarifying the impact radius when modifying a requirement. When adding or changing a story, update its corresponding row.
 
-| Cột | Lấy từ |
+| Column | Source |
 |---|---|
-| Story, Ưu tiên | [User stories](08-invest-requirements.md) |
-| UC | [Use case](03-use-cases.md) |
-| AC | [Tiêu chí chấp nhận](06-acceptance-criteria.md) |
-| Màn hình | [Kiến trúc thông tin](04-information-architecture.md) |
-| Quy tắc | [Quy tắc nghiệp vụ](requirements/business-rules.md) |
-| API | `operationId` trong [OpenAPI](api/openapi.yaml), theo `x-use-case` |
-| Module | Module backend ở [sơ đồ class](architecture/class-diagrams.md) |
-| Database | Bảng trong [okr360.sql](../src/database/okr360.sql) mà use case đọc hoặc ghi |
-| Sequence | [Sơ đồ sequence](architecture/sequence-diagrams.md), cùng số với use case |
-| Test | Mã test trong [danh mục test](test-cases.md), sinh từ tiêu chí chấp nhận |
+| Story, Priority | [User stories](08-invest-requirements.md) |
+| UC | [Use cases](03-use-cases.md) |
+| AC | [Acceptance criteria](06-acceptance-criteria.md) |
+| Screen | [Information architecture](04-information-architecture.md) |
+| Rules | [Business rules](requirements/business-rules.md) |
+| API | `operationId` in [OpenAPI](api/openapi.yaml), grouped by `x-use-case` |
+| Module | Backend module in [class diagrams](architecture/class-diagrams.md) |
+| Database | Table in [okr360.sql](../src/database/okr360.sql) read or written by the use case |
+| Sequence | [Sequence diagrams](architecture/sequence-diagrams.md), matching the use case number |
+| Test | Test case ID in [test cases](test-cases.md), derived from acceptance criteria |
 
-## Truy vết theo user story
+## Traceability by User Story
 
-| Story | Ưu tiên | UC | AC | Màn hình | Quy tắc | API | Module | Database | Sequence | Test |
+| Story | Priority | UC | AC | Screen | Rules | API | Module | Database | Sequence | Test |
 |---|---|---|---|---|---|---|---|---|---|---|
 | US01 | Must | UC01 | AC-UC01 | SCR-01 | BR-001, BR-002 | `login` | `auth` | `app_users`, `audit_logs` | SD-01 | TC-UC01-01 … TC-UC01-04 |
 | US02 | Must | UC02 | AC-UC02 | SCR-01 | BR-001, BR-002 | `logout` | `auth` | — | SD-02 | TC-UC02-01 … TC-UC02-02 |
@@ -58,17 +58,17 @@ Bảng nối mỗi user story qua toàn bộ thiết kế, để kiểm tra khô
 | US33 | Should | UC08, UC12, UC32 | AC-UC32 | SCR-12 | BR-001, BR-002, BR-091, BR-104 | `listObjectiveReviewNotes`, `dismissObjectiveReviewNote`, `listCheckins` | `okr` | `objectives`, `key_results`, `domain_events`, `audit_logs`, `checkins`, `notifications`, `automation_runs`, `automation_daily_usage`, `checkin_insights`, `objective_review_notes`, `weekly_digests`, `one_on_one_drafts` | SD-08, SD-12, SD-32 | TC-UC08-01 … TC-UC08-04, TC-UC12-01 … TC-UC12-05, TC-UC32-01 … TC-UC32-09 |
 | US34 | Should | UC19 | AC-UC19 | SCR-21 | BR-001, BR-002, BR-091, BR-094, BR-101 | `checkReviewComment` | `reviews` | `review_assignments`, `review_answers`, `automation_daily_usage`, `audit_logs` | SD-19 | TC-UC19-01 … TC-UC19-05 |
 
-US32–US34 chỉ ghi các thao tác API riêng của phần AI. Các luồng AI chạy nền không có API; chúng chạy trong `worker` theo [đặc tả luồng AI](architecture/ai-flows.md).
+US32–US34 specify API operations dedicated to the AI subsystem. Background AI automation flows have no direct client API; they run inside `worker` as defined in [AI flows specification](architecture/ai-flows.md).
 
-## Kiểm tra độ phủ
+## Coverage Check
 
-Phần này được tính từ bảng trên. Mục nào có giá trị nghĩa là có phần thiết kế chưa nối với story nào. Trang `SCR-90` (403) không tính, vì nó dùng chung cho mọi story khi người dùng không có quyền (BR-002).
+This section is verified against the table above. Any non-zero count indicates a design artifact not linked to a user story. Page `SCR-90` (403 Forbidden) is omitted here, as it serves as a shared generic error page for all stories when authorization fails (BR-002).
 
-| Kiểm tra | Kết quả |
+| Check | Result |
 |---|---|
-| Thao tác API không thuộc story nào | Không có |
-| Quy tắc nghiệp vụ không thuộc story nào | Không có |
-| Màn hình không thuộc story nào | Không có |
-| Bảng database không được dùng | Không có |
+| Unmapped API operations | None |
+| Unmapped business rules | None |
+| Unmapped screens | None |
+| Unused database tables | None |
 
-**Liên quan:** [User stories](08-invest-requirements.md) · [Use case](03-use-cases.md) · [Tiêu chí chấp nhận](06-acceptance-criteria.md) · [OpenAPI](api/openapi.yaml)
+**Related:** [User stories](08-invest-requirements.md) · [Use cases](03-use-cases.md) · [Acceptance criteria](06-acceptance-criteria.md) · [OpenAPI](api/openapi.yaml)

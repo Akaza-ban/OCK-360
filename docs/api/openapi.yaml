@@ -2,51 +2,51 @@ openapi: 3.0.3
 info:
   title: OKR360 API
   version: 1.0.0
-  description: 'Hợp đồng REST của OKR360 V1. Backend NestJS phải tuân theo tài liệu này.
+  description: 'REST contract of OKR360 V1. The NestJS backend must conform to this document.
 
 
-    Backend là nơi kiểm tra quyền cuối cùng. `x-roles` là các vai trò được gọi; phạm vi dữ liệu theo quan hệ báo cáo được
-    ghi trong mô tả từng thao tác. `x-use-case` và `x-business-rules` trỏ tới `docs/03-use-cases.md` và `docs/requirements/business-rules.md`.
+    The backend is the final place where permissions are checked. `x-roles` lists the roles that may call; the data scope by reporting relationship is
+    described in the description of each operation. `x-use-case` and `x-business-rules` point to `docs/03-use-cases.md` and `docs/requirements/business-rules.md`.
 
     '
 servers:
 - url: /api/v1
-  description: Cùng host với Web App
+  description: Same host as the Web App
 - url: http://localhost:3000/api/v1
-  description: Máy phát triển
+  description: Development machine
 tags:
-- name: Đăng nhập
-- name: Hồ sơ
-- name: Tổ chức
-- name: Người dùng
-- name: Chu kỳ
+- name: Login
+- name: Profile
+- name: Organization
+- name: Users
+- name: Cycles
 - name: OKR
 - name: Check-in
-- name: Mẫu phiếu 360
-- name: Đợt 360
-- name: Đề cử
-- name: Phiếu 360
-- name: Kết quả 360
-- name: Kết quả cuối kỳ
+- name: 360 Form Templates
+- name: 360 Rounds
+- name: Nominations
+- name: 360 Forms
+- name: 360 Results
+- name: Final Results
 - name: Dashboard
-- name: Báo cáo
-- name: Thông báo
-- name: Nhật ký
-- name: Tự động hóa
-- name: Vướng mắc
-- name: Bản tin tuần
-- name: Bản nháp 1-1
+- name: Reports
+- name: Notifications
+- name: Audit Log
+- name: Automation
+- name: Blockers
+- name: Weekly Digests
+- name: 1-1 Drafts
 security:
 - bearerAuth: []
 paths:
   /auth/login:
     post:
       tags:
-      - Đăng nhập
-      summary: Đăng nhập
+      - Login
+      summary: Log in
       operationId: login
-      description: Sai email, sai mật khẩu hay tài khoản bị khóa đều trả cùng một phản hồi 401. Quá 5 lần sai trong 15 phút
-        trả 429.
+      description: A wrong email, a wrong password, or a locked account all return the same 401 response. More than 5 failures within 15 minutes
+        return 429.
       security: []
       x-use-case: UC01
       requestBody:
@@ -57,7 +57,7 @@ paths:
               $ref: '#/components/schemas/LoginRequest'
       responses:
         '200':
-          description: Thành công
+          description: Success
           content:
             application/json:
               schema:
@@ -71,10 +71,10 @@ paths:
   /auth/logout:
     post:
       tags:
-      - Đăng nhập
-      summary: Đăng xuất
+      - Login
+      summary: Log out
       operationId: logout
-      description: V1 không thu hồi token ở server. Client xóa token và token tự hết hạn.
+      description: V1 does not revoke tokens on the server. The client deletes the token, and the token expires on its own.
       x-use-case: UC02
       x-roles:
       - ADMIN
@@ -83,14 +83,14 @@ paths:
       - EMPLOYEE
       responses:
         '204':
-          description: Thành công, không có nội dung
+          description: Success, no content
         '401':
           $ref: '#/components/responses/Unauthorized'
   /me:
     get:
       tags:
-      - Hồ sơ
-      summary: Xem hồ sơ của tôi
+      - Profile
+      summary: View my profile
       operationId: getProfile
       x-use-case: UC03
       x-roles:
@@ -100,7 +100,7 @@ paths:
       - EMPLOYEE
       responses:
         '200':
-          description: Thành công
+          description: Success
           content:
             application/json:
               schema:
@@ -111,8 +111,8 @@ paths:
           $ref: '#/components/responses/Forbidden'
     patch:
       tags:
-      - Hồ sơ
-      summary: Sửa hồ sơ của tôi
+      - Profile
+      summary: Edit my profile
       operationId: updateProfile
       x-use-case: UC03
       x-roles:
@@ -130,7 +130,7 @@ paths:
               $ref: '#/components/schemas/ProfileUpdate'
       responses:
         '200':
-          description: Thành công
+          description: Success
           content:
             application/json:
               schema:
@@ -144,10 +144,10 @@ paths:
   /me/password:
     post:
       tags:
-      - Hồ sơ
-      summary: Đổi mật khẩu
+      - Profile
+      summary: Change password
       operationId: changePassword
-      description: Sai mật khẩu cũ trả 400.
+      description: A wrong old password returns 400.
       x-use-case: UC03
       x-roles:
       - ADMIN
@@ -162,7 +162,7 @@ paths:
               $ref: '#/components/schemas/PasswordChange'
       responses:
         '204':
-          description: Thành công, không có nội dung
+          description: Success, no content
         '400':
           $ref: '#/components/responses/ValidationError'
         '401':
@@ -172,10 +172,10 @@ paths:
   /me/final-results:
     get:
       tags:
-      - Kết quả cuối kỳ
-      summary: Xem kết quả cuối kỳ của tôi
+      - Final Results
+      summary: View my final result
       operationId: getMyFinalResult
-      description: Chỉ có dữ liệu sau khi công bố; trước đó trả 404.
+      description: Data is available only after publication; before that, returns 404.
       x-use-case: UC22
       x-roles:
       - ADMIN
@@ -193,7 +193,7 @@ paths:
           format: int64
       responses:
         '200':
-          description: Thành công
+          description: Success
           content:
             application/json:
               schema:
@@ -209,10 +209,10 @@ paths:
   /departments:
     get:
       tags:
-      - Tổ chức
-      summary: Danh sách phòng ban và team
+      - Organization
+      summary: List departments and teams
       operationId: listDepartments
-      description: Mọi vai trò đọc được để dùng làm bộ lọc và danh sách chọn.
+      description: Readable by every role, for use as filters and selection lists.
       x-use-case: UC04
       x-roles:
       - ADMIN
@@ -226,7 +226,7 @@ paths:
           type: boolean
       responses:
         '200':
-          description: Thành công
+          description: Success
           content:
             application/json:
               schema:
@@ -241,8 +241,8 @@ paths:
           $ref: '#/components/responses/Forbidden'
     post:
       tags:
-      - Tổ chức
-      summary: Thêm phòng ban hoặc team
+      - Organization
+      summary: Add a department or team
       operationId: createDepartment
       x-use-case: UC04
       x-roles:
@@ -259,7 +259,7 @@ paths:
               $ref: '#/components/schemas/DepartmentCreate'
       responses:
         '201':
-          description: Tạo thành công
+          description: Created successfully
           content:
             application/json:
               schema:
@@ -271,7 +271,7 @@ paths:
         '403':
           $ref: '#/components/responses/Forbidden'
         '409':
-          description: 'Xung đột: Đơn vị cha tạo vòng lặp.'
+          description: 'Conflict: The parent unit creates a cycle.'
           content:
             application/problem+json:
               schema:
@@ -279,8 +279,8 @@ paths:
   /departments/{departmentId}:
     patch:
       tags:
-      - Tổ chức
-      summary: Sửa phòng ban hoặc team
+      - Organization
+      summary: Edit a department or team
       operationId: updateDepartment
       x-use-case: UC04
       x-roles:
@@ -304,7 +304,7 @@ paths:
               $ref: '#/components/schemas/DepartmentUpdate'
       responses:
         '200':
-          description: Thành công
+          description: Success
           content:
             application/json:
               schema:
@@ -318,7 +318,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
         '409':
-          description: 'Xung đột: Đơn vị cha tạo vòng lặp.'
+          description: 'Conflict: The parent unit creates a cycle.'
           content:
             application/problem+json:
               schema:
@@ -326,8 +326,8 @@ paths:
   /departments/{departmentId}/deactivate:
     post:
       tags:
-      - Tổ chức
-      summary: Ngưng hoạt động đơn vị
+      - Organization
+      summary: Deactivate a unit
       operationId: deactivateDepartment
       x-use-case: UC04
       x-roles:
@@ -345,7 +345,7 @@ paths:
           format: int64
       responses:
         '200':
-          description: Thành công
+          description: Success
           content:
             application/json:
               schema:
@@ -357,7 +357,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
         '409':
-          description: 'Xung đột: Đơn vị còn nhân viên đang hoạt động.'
+          description: 'Conflict: The unit still has active employees.'
           content:
             application/problem+json:
               schema:
@@ -365,8 +365,8 @@ paths:
   /users:
     get:
       tags:
-      - Người dùng
-      summary: Danh sách người dùng
+      - Users
+      summary: List users
       operationId: listUsers
       x-use-case: UC05
       x-roles:
@@ -395,7 +395,7 @@ paths:
           type: boolean
       responses:
         '200':
-          description: Thành công
+          description: Success
           content:
             application/json:
               schema:
@@ -408,10 +408,10 @@ paths:
           $ref: '#/components/responses/Forbidden'
     post:
       tags:
-      - Người dùng
-      summary: Thêm người dùng
+      - Users
+      summary: Add a user
       operationId: createUser
-      description: HR gán vai trò ADMIN trả 403.
+      description: HR assigning the ADMIN role returns 403.
       x-use-case: UC05
       x-roles:
       - ADMIN
@@ -429,7 +429,7 @@ paths:
               $ref: '#/components/schemas/UserCreate'
       responses:
         '201':
-          description: Tạo thành công
+          description: Created successfully
           content:
             application/json:
               schema:
@@ -441,7 +441,7 @@ paths:
         '403':
           $ref: '#/components/responses/Forbidden'
         '409':
-          description: 'Xung đột: Email trùng hoặc quản lý tạo vòng lặp.'
+          description: 'Conflict: Duplicate email, or the manager creates a cycle.'
           content:
             application/problem+json:
               schema:
@@ -449,10 +449,10 @@ paths:
   /users/directory:
     get:
       tags:
-      - Người dùng
-      summary: Tìm đồng nghiệp
+      - Users
+      summary: Search colleagues
       operationId: listUserDirectory
-      description: Dùng cho ô tìm đồng nghiệp, chọn người sở hữu và bộ lọc. Không trả email hay vai trò.
+      description: Used for the colleague search box, owner picker, and filters. Does not return email or role.
       x-use-case: UC17
       x-roles:
       - ADMIN
@@ -473,7 +473,7 @@ paths:
           format: int64
       responses:
         '200':
-          description: Thành công
+          description: Success
           content:
             application/json:
               schema:
@@ -487,8 +487,8 @@ paths:
   /users/{userId}:
     get:
       tags:
-      - Người dùng
-      summary: Xem một người dùng
+      - Users
+      summary: View a user
       operationId: getUser
       x-use-case: UC05
       x-roles:
@@ -504,7 +504,7 @@ paths:
           format: int64
       responses:
         '200':
-          description: Thành công
+          description: Success
           content:
             application/json:
               schema:
@@ -517,10 +517,10 @@ paths:
           $ref: '#/components/responses/NotFound'
     patch:
       tags:
-      - Người dùng
-      summary: Sửa người dùng
+      - Users
+      summary: Edit a user
       operationId: updateUser
-      description: HR gán vai trò ADMIN trả 403.
+      description: HR assigning the ADMIN role returns 403.
       x-use-case: UC05
       x-roles:
       - ADMIN
@@ -545,7 +545,7 @@ paths:
               $ref: '#/components/schemas/UserUpdate'
       responses:
         '200':
-          description: Thành công
+          description: Success
           content:
             application/json:
               schema:
@@ -559,7 +559,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
         '409':
-          description: 'Xung đột: Email trùng hoặc quản lý tạo vòng lặp.'
+          description: 'Conflict: Duplicate email, or the manager creates a cycle.'
           content:
             application/problem+json:
               schema:
@@ -567,8 +567,8 @@ paths:
   /users/{userId}/status:
     patch:
       tags:
-      - Người dùng
-      summary: Bật hoặc tắt tài khoản
+      - Users
+      summary: Enable or disable an account
       operationId: updateUserStatus
       x-use-case: UC05
       x-roles:
@@ -592,7 +592,7 @@ paths:
               $ref: '#/components/schemas/UserStatusUpdate'
       responses:
         '200':
-          description: Thành công
+          description: Success
           content:
             application/json:
               schema:
@@ -608,10 +608,10 @@ paths:
   /cycles:
     get:
       tags:
-      - Chu kỳ
-      summary: Danh sách chu kỳ
+      - Cycles
+      summary: List cycles
       operationId: listCycles
-      description: Mọi vai trò đọc được để dùng cho bộ chọn chu kỳ.
+      description: Readable by every role, for use in the cycle picker.
       x-use-case: UC06
       x-roles:
       - ADMIN
@@ -625,7 +625,7 @@ paths:
           $ref: '#/components/schemas/CycleStatus'
       responses:
         '200':
-          description: Thành công
+          description: Success
           content:
             application/json:
               schema:
@@ -640,8 +640,8 @@ paths:
           $ref: '#/components/responses/Forbidden'
     post:
       tags:
-      - Chu kỳ
-      summary: Tạo chu kỳ
+      - Cycles
+      summary: Create a cycle
       operationId: createCycle
       x-use-case: UC06
       x-roles:
@@ -656,7 +656,7 @@ paths:
               $ref: '#/components/schemas/CycleCreate'
       responses:
         '201':
-          description: Tạo thành công
+          description: Created successfully
           content:
             application/json:
               schema:
@@ -670,8 +670,8 @@ paths:
   /cycles/{cycleId}:
     patch:
       tags:
-      - Chu kỳ
-      summary: Sửa chu kỳ
+      - Cycles
+      summary: Edit a cycle
       operationId: updateCycle
       x-use-case: UC06
       x-roles:
@@ -695,7 +695,7 @@ paths:
               $ref: '#/components/schemas/CycleUpdate'
       responses:
         '200':
-          description: Thành công
+          description: Success
           content:
             application/json:
               schema:
@@ -709,7 +709,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
         '409':
-          description: 'Xung đột: Chu kỳ đã đóng, hoặc đổi tỷ trọng sau khi đã khóa.'
+          description: 'Conflict: The cycle is closed, or the weights are changed after being locked.'
           content:
             application/problem+json:
               schema:
@@ -717,8 +717,8 @@ paths:
   /cycles/{cycleId}/activate:
     post:
       tags:
-      - Chu kỳ
-      summary: Kích hoạt chu kỳ
+      - Cycles
+      summary: Activate a cycle
       operationId: activateCycle
       x-use-case: UC06
       x-roles:
@@ -737,7 +737,7 @@ paths:
           format: int64
       responses:
         '200':
-          description: Thành công
+          description: Success
           content:
             application/json:
               schema:
@@ -749,7 +749,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
         '409':
-          description: 'Xung đột: Đã có chu kỳ ACTIVE khác, hoặc sai trạng thái.'
+          description: 'Conflict: Another ACTIVE cycle already exists, or the status is invalid.'
           content:
             application/problem+json:
               schema:
@@ -757,10 +757,10 @@ paths:
   /cycles/{cycleId}/close:
     post:
       tags:
-      - Chu kỳ
-      summary: Đóng chu kỳ
+      - Cycles
+      summary: Close a cycle
       operationId: closeCycle
-      description: Chốt tiến độ cuối kỳ của mọi Objective.
+      description: Finalizes the end-of-cycle progress of every Objective.
       x-use-case: UC06
       x-roles:
       - ADMIN
@@ -778,7 +778,7 @@ paths:
           format: int64
       responses:
         '200':
-          description: Thành công
+          description: Success
           content:
             application/json:
               schema:
@@ -790,7 +790,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
         '409':
-          description: 'Xung đột: Sai trạng thái.'
+          description: 'Conflict: Invalid status.'
           content:
             application/problem+json:
               schema:
@@ -799,9 +799,9 @@ paths:
     get:
       tags:
       - OKR
-      summary: Danh sách Objective
+      summary: List Objectives
       operationId: listObjectives
-      description: OKR đã xóa mềm không xuất hiện. departmentId của phòng ban gồm cả các team bên trong.
+      description: Soft-deleted OKRs do not appear. The departmentId of a department includes the teams within it.
       x-use-case: UC07
       x-roles:
       - ADMIN
@@ -838,7 +838,7 @@ paths:
           $ref: '#/components/schemas/ConfidenceLevel'
       responses:
         '200':
-          description: Thành công
+          description: Success
           content:
             application/json:
               schema:
@@ -852,9 +852,9 @@ paths:
     post:
       tags:
       - OKR
-      summary: Tạo Objective
+      summary: Create an Objective
       operationId: createObjective
-      description: Quyền theo cấp OKR và quan hệ báo cáo. Sau khi lưu, luồng Rà soát OKR chạy nền; API không chờ AI.
+      description: Permissions depend on the OKR level and the reporting relationship. After saving, the OKR Review workflow runs in the background; the API does not wait for the AI.
       x-use-case: UC08
       x-roles:
       - ADMIN
@@ -876,7 +876,7 @@ paths:
               $ref: '#/components/schemas/ObjectiveCreate'
       responses:
         '201':
-          description: Tạo thành công
+          description: Created successfully
           content:
             application/json:
               schema:
@@ -888,7 +888,7 @@ paths:
         '403':
           $ref: '#/components/responses/Forbidden'
         '409':
-          description: 'Xung đột: Chu kỳ đã đóng.'
+          description: 'Conflict: The cycle is closed.'
           content:
             application/problem+json:
               schema:
@@ -897,7 +897,7 @@ paths:
     get:
       tags:
       - OKR
-      summary: Cây OKR
+      summary: OKR tree
       operationId: getObjectiveTree
       x-use-case: UC07
       x-roles:
@@ -933,7 +933,7 @@ paths:
           $ref: '#/components/schemas/ConfidenceLevel'
       responses:
         '200':
-          description: Thành công
+          description: Success
           content:
             application/json:
               schema:
@@ -950,7 +950,7 @@ paths:
     get:
       tags:
       - OKR
-      summary: Chi tiết Objective
+      summary: Objective details
       operationId: getObjective
       x-use-case: UC07
       x-roles:
@@ -968,7 +968,7 @@ paths:
           format: int64
       responses:
         '200':
-          description: Thành công
+          description: Success
           content:
             application/json:
               schema:
@@ -982,7 +982,7 @@ paths:
     patch:
       tags:
       - OKR
-      summary: Sửa Objective
+      summary: Edit an Objective
       operationId: updateObjective
       x-use-case: UC08
       x-roles:
@@ -1009,7 +1009,7 @@ paths:
               $ref: '#/components/schemas/ObjectiveUpdate'
       responses:
         '200':
-          description: Thành công
+          description: Success
           content:
             application/json:
               schema:
@@ -1023,7 +1023,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
         '409':
-          description: 'Xung đột: Chu kỳ đã đóng.'
+          description: 'Conflict: The cycle is closed.'
           content:
             application/problem+json:
               schema:
@@ -1031,7 +1031,7 @@ paths:
     delete:
       tags:
       - OKR
-      summary: Xóa mềm Objective
+      summary: Soft-delete an Objective
       operationId: deleteObjective
       x-use-case: UC11
       x-roles:
@@ -1051,7 +1051,7 @@ paths:
           format: int64
       responses:
         '204':
-          description: Thành công, không có nội dung
+          description: Success, no content
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -1059,7 +1059,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
         '409':
-          description: 'Xung đột: Còn Objective con, hoặc chu kỳ đã đóng.'
+          description: 'Conflict: Child Objectives remain, or the cycle is closed.'
           content:
             application/problem+json:
               schema:
@@ -1068,9 +1068,9 @@ paths:
     put:
       tags:
       - OKR
-      summary: Liên kết hoặc gỡ liên kết cấp trên
+      summary: Link or unlink a parent
       operationId: linkParentObjective
-      description: Sai cấp hoặc khác chu kỳ trả 400.
+      description: A wrong level or a different cycle returns 400.
       x-use-case: UC10
       x-roles:
       - ADMIN
@@ -1096,7 +1096,7 @@ paths:
               $ref: '#/components/schemas/ParentLink'
       responses:
         '200':
-          description: Thành công
+          description: Success
           content:
             application/json:
               schema:
@@ -1110,7 +1110,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
         '409':
-          description: 'Xung đột: Liên kết tạo vòng lặp.'
+          description: 'Conflict: The link creates a cycle.'
           content:
             application/problem+json:
               schema:
@@ -1119,7 +1119,7 @@ paths:
     get:
       tags:
       - OKR
-      summary: Ghi chú rà soát do AI tạo
+      summary: AI-generated review notes
       operationId: listObjectiveReviewNotes
       x-use-case: UC08
       x-roles:
@@ -1137,7 +1137,7 @@ paths:
           format: int64
       responses:
         '200':
-          description: Thành công
+          description: Success
           content:
             application/json:
               schema:
@@ -1154,7 +1154,7 @@ paths:
     post:
       tags:
       - OKR
-      summary: Bỏ qua ghi chú rà soát
+      summary: Dismiss a review note
       operationId: dismissObjectiveReviewNote
       x-use-case: UC08
       x-roles:
@@ -1178,7 +1178,7 @@ paths:
           format: int64
       responses:
         '200':
-          description: Thành công
+          description: Success
           content:
             application/json:
               schema:
@@ -1193,9 +1193,9 @@ paths:
     post:
       tags:
       - OKR
-      summary: Thêm Key Result
+      summary: Add a Key Result
       operationId: createKeyResult
-      description: Thêm KR thứ 6 trả 400.
+      description: Adding a 6th KR returns 400.
       x-use-case: UC09
       x-roles:
       - ADMIN
@@ -1221,7 +1221,7 @@ paths:
               $ref: '#/components/schemas/KeyResultInput'
       responses:
         '201':
-          description: Tạo thành công
+          description: Created successfully
           content:
             application/json:
               schema:
@@ -1235,7 +1235,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
         '409':
-          description: 'Xung đột: Chu kỳ đã đóng.'
+          description: 'Conflict: The cycle is closed.'
           content:
             application/problem+json:
               schema:
@@ -1244,9 +1244,9 @@ paths:
     patch:
       tags:
       - OKR
-      summary: Sửa Key Result
+      summary: Edit a Key Result
       operationId: updateKeyResult
-      description: Sửa giá trị đầu hoặc đích thì tiến độ được tính lại, lịch sử check-in giữ nguyên.
+      description: Editing the start or target value recalculates progress; the check-in history is kept as is.
       x-use-case: UC09
       x-roles:
       - ADMIN
@@ -1271,7 +1271,7 @@ paths:
               $ref: '#/components/schemas/KeyResultUpdate'
       responses:
         '200':
-          description: Thành công
+          description: Success
           content:
             application/json:
               schema:
@@ -1285,7 +1285,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
         '409':
-          description: 'Xung đột: Chu kỳ đã đóng.'
+          description: 'Conflict: The cycle is closed.'
           content:
             application/problem+json:
               schema:
@@ -1293,7 +1293,7 @@ paths:
     delete:
       tags:
       - OKR
-      summary: Xóa mềm Key Result
+      summary: Soft-delete a Key Result
       operationId: deleteKeyResult
       x-use-case: UC09
       x-roles:
@@ -1313,7 +1313,7 @@ paths:
           format: int64
       responses:
         '204':
-          description: Thành công, không có nội dung
+          description: Success, no content
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -1321,7 +1321,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
         '409':
-          description: 'Xung đột: Là KR cuối cùng của Objective, hoặc chu kỳ đã đóng.'
+          description: 'Conflict: This is the last KR of the Objective, or the cycle is closed.'
           content:
             application/problem+json:
               schema:
@@ -1330,9 +1330,9 @@ paths:
     get:
       tags:
       - Check-in
-      summary: Lịch sử check-in
+      summary: Check-in history
       operationId: listCheckins
-      description: Mới nhất trước, kèm bình luận và nhãn AI.
+      description: Newest first, with comments and the AI label.
       x-use-case: UC13
       x-roles:
       - ADMIN
@@ -1349,7 +1349,7 @@ paths:
           format: int64
       responses:
         '200':
-          description: Thành công
+          description: Success
           content:
             application/json:
               schema:
@@ -1367,8 +1367,8 @@ paths:
       - Check-in
       summary: Check-in Key Result
       operationId: createCheckin
-      description: Chỉ người phụ trách KR. Tiến độ được cộng dồn trong cùng transaction. Luồng AI chạy nền; API không chờ
-        AI.
+      description: Only the KR owner. Progress is accumulated in the same transaction. The AI workflow runs in the background; the API does not wait for
+        the AI.
       x-use-case: UC12
       x-roles:
       - ADMIN
@@ -1397,7 +1397,7 @@ paths:
               $ref: '#/components/schemas/CheckinCreate'
       responses:
         '201':
-          description: Tạo thành công
+          description: Created successfully
           content:
             application/json:
               schema:
@@ -1411,7 +1411,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
         '409':
-          description: 'Xung đột: Chu kỳ không ở trạng thái ACTIVE.'
+          description: 'Conflict: The cycle is not in ACTIVE status.'
           content:
             application/problem+json:
               schema:
@@ -1420,7 +1420,7 @@ paths:
     post:
       tags:
       - Check-in
-      summary: Bình luận vào check-in
+      summary: Comment on a check-in
       operationId: createCheckinComment
       x-use-case: UC14
       x-roles:
@@ -1443,7 +1443,7 @@ paths:
               $ref: '#/components/schemas/CheckinCommentCreate'
       responses:
         '201':
-          description: Tạo thành công
+          description: Created successfully
           content:
             application/json:
               schema:
@@ -1459,8 +1459,8 @@ paths:
   /review-templates:
     get:
       tags:
-      - Mẫu phiếu 360
-      summary: Danh sách mẫu phiếu
+      - 360 Form Templates
+      summary: List form templates
       operationId: listTemplates
       x-use-case: UC15
       x-roles:
@@ -1468,7 +1468,7 @@ paths:
       x-permission: reviewTemplateManage
       responses:
         '200':
-          description: Thành công
+          description: Success
           content:
             application/json:
               schema:
@@ -1481,8 +1481,8 @@ paths:
           $ref: '#/components/responses/Forbidden'
     post:
       tags:
-      - Mẫu phiếu 360
-      summary: Tạo mẫu phiếu
+      - 360 Form Templates
+      summary: Create a form template
       operationId: createTemplate
       x-use-case: UC15
       x-roles:
@@ -1498,7 +1498,7 @@ paths:
               $ref: '#/components/schemas/ReviewTemplateInput'
       responses:
         '201':
-          description: Tạo thành công
+          description: Created successfully
           content:
             application/json:
               schema:
@@ -1512,8 +1512,8 @@ paths:
   /review-templates/{templateId}:
     put:
       tags:
-      - Mẫu phiếu 360
-      summary: Sửa mẫu phiếu
+      - 360 Form Templates
+      summary: Edit a form template
       operationId: updateTemplate
       x-use-case: UC15
       x-roles:
@@ -1536,7 +1536,7 @@ paths:
               $ref: '#/components/schemas/ReviewTemplateInput'
       responses:
         '200':
-          description: Thành công
+          description: Success
           content:
             application/json:
               schema:
@@ -1550,7 +1550,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
         '409':
-          description: 'Xung đột: Mẫu đã được đợt ngoài DRAFT sử dụng.'
+          description: 'Conflict: The template is already used by a round that is not in DRAFT.'
           content:
             application/problem+json:
               schema:
@@ -1558,8 +1558,8 @@ paths:
   /review-templates/{templateId}/duplicate:
     post:
       tags:
-      - Mẫu phiếu 360
-      summary: Nhân bản mẫu phiếu
+      - 360 Form Templates
+      summary: Duplicate a form template
       operationId: duplicateTemplate
       x-use-case: UC15
       x-roles:
@@ -1574,7 +1574,7 @@ paths:
           format: int64
       responses:
         '201':
-          description: Tạo thành công
+          description: Created successfully
           content:
             application/json:
               schema:
@@ -1588,10 +1588,10 @@ paths:
   /campaigns:
     get:
       tags:
-      - Đợt 360
-      summary: Danh sách đợt
+      - 360 Rounds
+      summary: List rounds
       operationId: listCampaigns
-      description: Mọi vai trò đọc được để chọn đợt khi đề cử và xem kết quả.
+      description: Readable by every role, to pick a round when nominating and viewing results.
       x-use-case: UC16
       x-roles:
       - ADMIN
@@ -1610,7 +1610,7 @@ paths:
           $ref: '#/components/schemas/CampaignStatus'
       responses:
         '200':
-          description: Thành công
+          description: Success
           content:
             application/json:
               schema:
@@ -1625,10 +1625,10 @@ paths:
           $ref: '#/components/responses/Forbidden'
     post:
       tags:
-      - Đợt 360
-      summary: Tạo đợt
+      - 360 Rounds
+      summary: Create a round
       operationId: createCampaign
-      description: Hạn đề cử phải trước hạn nộp phiếu.
+      description: The nomination deadline must be before the form submission deadline.
       x-use-case: UC16
       x-roles:
       - HR
@@ -1643,7 +1643,7 @@ paths:
               $ref: '#/components/schemas/CampaignCreate'
       responses:
         '201':
-          description: Tạo thành công
+          description: Created successfully
           content:
             application/json:
               schema:
@@ -1655,7 +1655,7 @@ paths:
         '403':
           $ref: '#/components/responses/Forbidden'
         '409':
-          description: 'Xung đột: Chu kỳ đã có đợt 360.'
+          description: 'Conflict: The cycle already has a 360 round.'
           content:
             application/problem+json:
               schema:
@@ -1663,8 +1663,8 @@ paths:
   /campaigns/{campaignId}:
     get:
       tags:
-      - Đợt 360
-      summary: Chi tiết đợt
+      - 360 Rounds
+      summary: Round details
       operationId: getCampaign
       x-use-case: UC16
       x-roles:
@@ -1681,7 +1681,7 @@ paths:
           format: int64
       responses:
         '200':
-          description: Thành công
+          description: Success
           content:
             application/json:
               schema:
@@ -1694,8 +1694,8 @@ paths:
           $ref: '#/components/responses/NotFound'
     patch:
       tags:
-      - Đợt 360
-      summary: Sửa đợt
+      - 360 Rounds
+      summary: Edit a round
       operationId: updateCampaign
       x-use-case: UC16
       x-roles:
@@ -1716,7 +1716,7 @@ paths:
               $ref: '#/components/schemas/CampaignUpdate'
       responses:
         '200':
-          description: Thành công
+          description: Success
           content:
             application/json:
               schema:
@@ -1730,7 +1730,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
         '409':
-          description: 'Xung đột: Đợt không còn ở DRAFT.'
+          description: 'Conflict: The round is no longer in DRAFT.'
           content:
             application/problem+json:
               schema:
@@ -1738,8 +1738,8 @@ paths:
   /campaigns/{campaignId}/open-nomination:
     post:
       tags:
-      - Đợt 360
-      summary: Mở đề cử
+      - 360 Rounds
+      summary: Open nominations
       operationId: openNomination
       x-use-case: UC16
       x-roles:
@@ -1756,7 +1756,7 @@ paths:
           format: int64
       responses:
         '200':
-          description: Thành công
+          description: Success
           content:
             application/json:
               schema:
@@ -1768,7 +1768,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
         '409':
-          description: 'Xung đột: Sai trạng thái.'
+          description: 'Conflict: Invalid status.'
           content:
             application/problem+json:
               schema:
@@ -1776,10 +1776,10 @@ paths:
   /campaigns/{campaignId}/open-collection:
     post:
       tags:
-      - Đợt 360
-      summary: Mở thu phiếu
+      - 360 Rounds
+      summary: Open form collection
       operationId: openCollection
-      description: Chụp quan hệ báo cáo, sinh phiếu và khóa tỷ trọng OKR/360.
+      description: Snapshots reporting relationships, generates forms, and locks the OKR/360 weights.
       x-use-case: UC16
       x-roles:
       - HR
@@ -1796,7 +1796,7 @@ paths:
           format: int64
       responses:
         '200':
-          description: Thành công
+          description: Success
           content:
             application/json:
               schema:
@@ -1808,7 +1808,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
         '409':
-          description: 'Xung đột: Sai trạng thái.'
+          description: 'Conflict: Invalid status.'
           content:
             application/problem+json:
               schema:
@@ -1816,8 +1816,8 @@ paths:
   /campaigns/{campaignId}/progress:
     get:
       tags:
-      - Đợt 360
-      summary: Tiến độ nộp phiếu
+      - 360 Rounds
+      summary: Form submission progress
       operationId: getCampaignProgress
       x-use-case: UC20
       x-roles:
@@ -1834,7 +1834,7 @@ paths:
           format: int64
       responses:
         '200':
-          description: Thành công
+          description: Success
           content:
             application/json:
               schema:
@@ -1848,8 +1848,8 @@ paths:
   /campaigns/{campaignId}/remind:
     post:
       tags:
-      - Đợt 360
-      summary: Nhắc người chưa nộp
+      - 360 Rounds
+      summary: Remind those who have not submitted
       operationId: remindReviewers
       x-use-case: UC20
       x-roles:
@@ -1864,7 +1864,7 @@ paths:
           format: int64
       responses:
         '200':
-          description: Thành công
+          description: Success
           content:
             application/json:
               schema:
@@ -1876,7 +1876,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
         '409':
-          description: 'Xung đột: Đợt không ở COLLECTING.'
+          description: 'Conflict: The round is not in COLLECTING.'
           content:
             application/problem+json:
               schema:
@@ -1884,10 +1884,10 @@ paths:
   /campaigns/{campaignId}/close:
     post:
       tags:
-      - Đợt 360
-      summary: Đóng đợt
+      - 360 Rounds
+      summary: Close a round
       operationId: closeCampaign
-      description: Hủy phiếu chưa nộp, tách câu trả lời khỏi người chấm, ghi sự kiện cho luồng Bản nháp 1-1.
+      description: Cancels unsubmitted forms, detaches answers from the reviewers, and records an event for the 1-1 Drafts workflow.
       x-use-case: UC20
       x-roles:
       - HR
@@ -1904,7 +1904,7 @@ paths:
           format: int64
       responses:
         '200':
-          description: Thành công
+          description: Success
           content:
             application/json:
               schema:
@@ -1916,7 +1916,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
         '409':
-          description: 'Xung đột: Sai trạng thái.'
+          description: 'Conflict: Invalid status.'
           content:
             application/problem+json:
               schema:
@@ -1924,8 +1924,8 @@ paths:
   /campaigns/{campaignId}/nominations/me:
     get:
       tags:
-      - Đề cử
-      summary: Xem đề cử của tôi
+      - Nominations
+      summary: View my nominations
       operationId: getMyNomination
       x-use-case: UC17
       x-roles:
@@ -1943,7 +1943,7 @@ paths:
           format: int64
       responses:
         '200':
-          description: Thành công
+          description: Success
           content:
             application/json:
               schema:
@@ -1956,10 +1956,10 @@ paths:
           $ref: '#/components/responses/NotFound'
     put:
       tags:
-      - Đề cử
-      summary: Gửi đề cử
+      - Nominations
+      summary: Submit nominations
       operationId: submitNomination
-      description: Người không hợp lệ trả 400.
+      description: An invalid person returns 400.
       x-use-case: UC17
       x-roles:
       - ADMIN
@@ -1984,7 +1984,7 @@ paths:
               $ref: '#/components/schemas/NominationSubmit'
       responses:
         '200':
-          description: Thành công
+          description: Success
           content:
             application/json:
               schema:
@@ -1998,7 +1998,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
         '409':
-          description: 'Xung đột: Đợt không ở NOMINATION.'
+          description: 'Conflict: The round is not in NOMINATION.'
           content:
             application/problem+json:
               schema:
@@ -2006,11 +2006,11 @@ paths:
   /campaigns/{campaignId}/nominations:
     get:
       tags:
-      - Đề cử
-      summary: Danh sách đề cử cần duyệt
+      - Nominations
+      summary: List nominations to review
       operationId: listPendingNominations
-      description: Manager thấy nhân viên dưới quyền trực tiếp; HR thấy nhân viên không có quản lý trực tiếp. Gồm cả người
-        chưa đề cử.
+      description: Managers see their direct reports; HR sees employees without a direct manager. Includes people who
+        have not yet nominated.
       x-use-case: UC18
       x-roles:
       - MANAGER
@@ -2025,7 +2025,7 @@ paths:
           format: int64
       responses:
         '200':
-          description: Thành công
+          description: Success
           content:
             application/json:
               schema:
@@ -2041,10 +2041,10 @@ paths:
   /campaigns/{campaignId}/nominations/{revieweeUserId}/approve:
     post:
       tags:
-      - Đề cử
-      summary: Duyệt người đánh giá
+      - Nominations
+      summary: Approve reviewers
       operationId: approveNomination
-      description: Dùng được cả khi nhân viên chưa đề cử.
+      description: Also usable when the employee has not yet nominated.
       x-use-case: UC18
       x-roles:
       - MANAGER
@@ -2073,7 +2073,7 @@ paths:
               $ref: '#/components/schemas/NominationApprove'
       responses:
         '200':
-          description: Thành công
+          description: Success
           content:
             application/json:
               schema:
@@ -2087,7 +2087,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
         '409':
-          description: 'Xung đột: Đợt không ở NOMINATION.'
+          description: 'Conflict: The round is not in NOMINATION.'
           content:
             application/problem+json:
               schema:
@@ -2095,10 +2095,10 @@ paths:
   /review-forms:
     get:
       tags:
-      - Phiếu 360
-      summary: Phiếu cần điền
+      - 360 Forms
+      summary: Forms to complete
       operationId: listMyReviewForms
-      description: Chỉ trả phiếu được giao cho người gọi.
+      description: Returns only forms assigned to the caller.
       x-use-case: UC19
       x-roles:
       - ADMIN
@@ -2118,7 +2118,7 @@ paths:
           $ref: '#/components/schemas/AssignmentStatus'
       responses:
         '200':
-          description: Thành công
+          description: Success
           content:
             application/json:
               schema:
@@ -2134,11 +2134,11 @@ paths:
   /review-forms/{formId}:
     get:
       tags:
-      - Phiếu 360
-      summary: Xem phiếu
+      - 360 Forms
+      summary: View a form
       operationId: getReviewForm
-      description: Sau khi đóng đợt, câu trả lời đã tách khỏi người chấm nên trả 404. listMyReviewForms vẫn cho thấy trạng
-        thái phiếu.
+      description: After the round is closed, answers are detached from the reviewer, so this returns 404. listMyReviewForms still shows the form
+        status.
       x-use-case: UC19
       x-roles:
       - ADMIN
@@ -2157,7 +2157,7 @@ paths:
           format: int64
       responses:
         '200':
-          description: Thành công
+          description: Success
           content:
             application/json:
               schema:
@@ -2171,8 +2171,8 @@ paths:
   /review-forms/{formId}/draft:
     put:
       tags:
-      - Phiếu 360
-      summary: Lưu nháp
+      - 360 Forms
+      summary: Save draft
       operationId: saveReviewDraft
       x-use-case: UC19
       x-roles:
@@ -2196,7 +2196,7 @@ paths:
               $ref: '#/components/schemas/ReviewFormInput'
       responses:
         '200':
-          description: Thành công
+          description: Success
           content:
             application/json:
               schema:
@@ -2210,7 +2210,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
         '409':
-          description: 'Xung đột: Đợt không ở COLLECTING.'
+          description: 'Conflict: The round is not in COLLECTING.'
           content:
             application/problem+json:
               schema:
@@ -2218,11 +2218,11 @@ paths:
   /review-forms/{formId}/comment-check:
     post:
       tags:
-      - Phiếu 360
-      summary: Kiểm tra nhận xét trước khi nộp
+      - 360 Forms
+      summary: Check comments before submitting
       operationId: checkReviewComment
-      description: Trả lời tối đa trong 5 giây. AI lỗi vẫn trả 200 với checked false. Không lưu cảnh báo và không ghi lịch
-        sử chạy.
+      description: Responds within 5 seconds at most. An AI error still returns 200 with checked false. Warnings are not saved and no run history is
+        recorded.
       x-use-case: UC19
       x-roles:
       - ADMIN
@@ -2248,7 +2248,7 @@ paths:
               $ref: '#/components/schemas/CommentCheckRequest'
       responses:
         '200':
-          description: Thành công
+          description: Success
           content:
             application/json:
               schema:
@@ -2264,10 +2264,10 @@ paths:
   /review-forms/{formId}/submit:
     post:
       tags:
-      - Phiếu 360
-      summary: Nộp phiếu
+      - 360 Forms
+      summary: Submit a form
       operationId: submitReviewForm
-      description: Nộp lại được để sửa khi đợt còn COLLECTING. Thiếu tiêu chí trả 400.
+      description: Can be resubmitted to make corrections while the round is still COLLECTING. A missing criterion returns 400.
       x-use-case: UC19
       x-roles:
       - ADMIN
@@ -2293,7 +2293,7 @@ paths:
               $ref: '#/components/schemas/ReviewFormInput'
       responses:
         '200':
-          description: Thành công
+          description: Success
           content:
             application/json:
               schema:
@@ -2307,7 +2307,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
         '409':
-          description: 'Xung đột: Đợt không ở COLLECTING.'
+          description: 'Conflict: The round is not in COLLECTING.'
           content:
             application/problem+json:
               schema:
@@ -2315,10 +2315,10 @@ paths:
   /campaigns/{campaignId}/results:
     get:
       tags:
-      - Kết quả 360
-      summary: Danh sách người xem được kết quả
+      - 360 Results
+      summary: List people whose results can be viewed
       operationId: listReviewResultSubjects
-      description: Bản thân, nhân viên dưới quyền trực tiếp, hoặc mọi người với HR. Admin chỉ thấy bản thân.
+      description: Oneself, direct reports, or everyone for HR. Admin sees only oneself.
       x-use-case: UC21
       x-roles:
       - ADMIN
@@ -2338,7 +2338,7 @@ paths:
           format: int64
       responses:
         '200':
-          description: Thành công
+          description: Success
           content:
             application/json:
               schema:
@@ -2354,10 +2354,10 @@ paths:
   /campaigns/{campaignId}/results/{revieweeUserId}:
     get:
       tags:
-      - Kết quả 360
-      summary: Xem kết quả 360
+      - 360 Results
+      summary: View 360 results
       operationId: getReviewResult
-      description: Nhân viên xem của mình khi PUBLISHED, trước đó trả 403. Kết quả đã áp ngưỡng ẩn danh.
+      description: Employees view their own once PUBLISHED; before that, returns 403. Results have the anonymity threshold applied.
       x-use-case: UC21
       x-roles:
       - ADMIN
@@ -2386,7 +2386,7 @@ paths:
           format: int64
       responses:
         '200':
-          description: Thành công
+          description: Success
           content:
             application/json:
               schema:
@@ -2400,10 +2400,10 @@ paths:
   /cycles/{cycleId}/final-results/calculate:
     post:
       tags:
-      - Kết quả cuối kỳ
-      summary: Tổng hợp kết quả
+      - Final Results
+      summary: Aggregate results
       operationId: calculateFinalResults
-      description: Chạy lại được và ghi đè kết quả cũ cho tới khi công bố.
+      description: Can be rerun and overwrites the previous results until publication.
       x-use-case: UC22
       x-roles:
       - HR
@@ -2423,7 +2423,7 @@ paths:
           format: int64
       responses:
         '200':
-          description: Thành công
+          description: Success
           content:
             application/json:
               schema:
@@ -2435,7 +2435,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
         '409':
-          description: 'Xung đột: Chu kỳ hoặc đợt chưa CLOSED, hoặc đã công bố.'
+          description: 'Conflict: The cycle or round is not yet CLOSED, or has already been published.'
           content:
             application/problem+json:
               schema:
@@ -2443,8 +2443,8 @@ paths:
   /cycles/{cycleId}/final-results:
     get:
       tags:
-      - Kết quả cuối kỳ
-      summary: Xem kết quả toàn công ty
+      - Final Results
+      summary: View company-wide results
       operationId: listFinalResults
       x-use-case: UC22
       x-roles:
@@ -2459,7 +2459,7 @@ paths:
           format: int64
       responses:
         '200':
-          description: Thành công
+          description: Success
           content:
             application/json:
               schema:
@@ -2473,8 +2473,8 @@ paths:
   /cycles/{cycleId}/final-results/export:
     get:
       tags:
-      - Kết quả cuối kỳ
-      summary: Xuất kết quả
+      - Final Results
+      summary: Export results
       operationId: exportFinalResults
       x-use-case: UC22
       x-roles:
@@ -2494,7 +2494,7 @@ paths:
           $ref: '#/components/schemas/ExportFormat'
       responses:
         '200':
-          description: File báo cáo
+          description: Report file
           content:
             application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
               schema:
@@ -2515,10 +2515,10 @@ paths:
   /cycles/{cycleId}/final-results/publish:
     post:
       tags:
-      - Kết quả cuối kỳ
-      summary: Công bố kết quả
+      - Final Results
+      summary: Publish results
       operationId: publishFinalResults
-      description: Đợt chuyển PUBLISHED và từng nhân viên nhận thông báo.
+      description: The round moves to PUBLISHED and each employee receives a notification.
       x-use-case: UC22
       x-roles:
       - HR
@@ -2535,7 +2535,7 @@ paths:
           format: int64
       responses:
         '200':
-          description: Thành công
+          description: Success
           content:
             application/json:
               schema:
@@ -2547,7 +2547,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
         '409':
-          description: 'Xung đột: Chưa tổng hợp, hoặc đã công bố.'
+          description: 'Conflict: Not yet aggregated, or already published.'
           content:
             application/problem+json:
               schema:
@@ -2556,7 +2556,7 @@ paths:
     get:
       tags:
       - Dashboard
-      summary: Dashboard cá nhân
+      summary: Personal dashboard
       operationId: getMyDashboard
       x-use-case: UC23
       x-roles:
@@ -2574,7 +2574,7 @@ paths:
           format: int64
       responses:
         '200':
-          description: Thành công
+          description: Success
           content:
             application/json:
               schema:
@@ -2589,7 +2589,7 @@ paths:
     get:
       tags:
       - Dashboard
-      summary: Dashboard đội nhóm
+      summary: Team dashboard
       operationId: getTeamDashboard
       x-use-case: UC23
       x-roles:
@@ -2606,7 +2606,7 @@ paths:
           format: int64
       responses:
         '200':
-          description: Thành công
+          description: Success
           content:
             application/json:
               schema:
@@ -2621,7 +2621,7 @@ paths:
     get:
       tags:
       - Dashboard
-      summary: Dashboard công ty
+      summary: Company dashboard
       operationId: getCompanyDashboard
       x-use-case: UC23
       x-roles:
@@ -2637,7 +2637,7 @@ paths:
           format: int64
       responses:
         '200':
-          description: Thành công
+          description: Success
           content:
             application/json:
               schema:
@@ -2651,11 +2651,11 @@ paths:
   /reports/{reportType}:
     get:
       tags:
-      - Báo cáo
-      summary: Xem báo cáo
+      - Reports
+      summary: View a report
       operationId: getReport
-      description: Manager chỉ thấy đơn vị mình phụ trách; riêng FINAL_RESULTS chỉ gồm nhân viên dưới quyền trực tiếp. Admin
-        gọi FINAL_RESULTS trả 403.
+      description: Managers see only the units they are responsible for; FINAL_RESULTS alone includes only direct reports. Admin
+        calling FINAL_RESULTS returns 403.
       x-use-case: UC24
       x-roles:
       - ADMIN
@@ -2684,7 +2684,7 @@ paths:
           format: int64
       responses:
         '200':
-          description: Thành công
+          description: Success
           content:
             application/json:
               schema:
@@ -2700,10 +2700,10 @@ paths:
   /reports/{reportType}/export:
     get:
       tags:
-      - Báo cáo
-      summary: Xuất báo cáo
+      - Reports
+      summary: Export a report
       operationId: exportReport
-      description: File khớp số liệu với cùng bộ lọc. Quyền như getReport.
+      description: The file matches the figures for the same filters. Permissions are the same as getReport.
       x-use-case: UC24
       x-roles:
       - ADMIN
@@ -2737,7 +2737,7 @@ paths:
           $ref: '#/components/schemas/ExportFormat'
       responses:
         '200':
-          description: File báo cáo
+          description: Report file
           content:
             application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
               schema:
@@ -2758,8 +2758,8 @@ paths:
   /notifications:
     get:
       tags:
-      - Thông báo
-      summary: Danh sách thông báo
+      - Notifications
+      summary: List notifications
       operationId: listNotifications
       x-use-case: UC25
       x-roles:
@@ -2776,7 +2776,7 @@ paths:
           type: boolean
       responses:
         '200':
-          description: Thành công
+          description: Success
           content:
             application/json:
               schema:
@@ -2790,8 +2790,8 @@ paths:
   /notifications/read-all:
     post:
       tags:
-      - Thông báo
-      summary: Đánh dấu tất cả đã đọc
+      - Notifications
+      summary: Mark all as read
       operationId: markAllNotificationsRead
       x-use-case: UC25
       x-roles:
@@ -2801,7 +2801,7 @@ paths:
       - EMPLOYEE
       responses:
         '200':
-          description: Thành công
+          description: Success
           content:
             application/json:
               schema:
@@ -2813,8 +2813,8 @@ paths:
   /notifications/{notificationId}/read:
     post:
       tags:
-      - Thông báo
-      summary: Đánh dấu đã đọc
+      - Notifications
+      summary: Mark as read
       operationId: markNotificationRead
       x-use-case: UC25
       x-roles:
@@ -2831,7 +2831,7 @@ paths:
           format: int64
       responses:
         '200':
-          description: Thành công
+          description: Success
           content:
             application/json:
               schema:
@@ -2845,8 +2845,8 @@ paths:
   /audit-logs:
     get:
       tags:
-      - Nhật ký
-      summary: Nhật ký hoạt động
+      - Audit Log
+      summary: Activity log
       operationId: listAuditLogs
       x-use-case: UC26
       x-roles:
@@ -2883,7 +2883,7 @@ paths:
           format: date-time
       responses:
         '200':
-          description: Thành công
+          description: Success
           content:
             application/json:
               schema:
@@ -2897,8 +2897,8 @@ paths:
   /automation/flows:
     get:
       tags:
-      - Tự động hóa
-      summary: Danh sách luồng
+      - Automation
+      summary: List workflows
       operationId: listAutomationFlows
       x-use-case: UC27
       x-roles:
@@ -2907,7 +2907,7 @@ paths:
       x-permission: automationRead
       responses:
         '200':
-          description: Thành công
+          description: Success
           content:
             application/json:
               schema:
@@ -2921,11 +2921,11 @@ paths:
   /automation/flows/{flow}:
     patch:
       tags:
-      - Tự động hóa
-      summary: Cấu hình luồng
+      - Automation
+      summary: Configure a workflow
       operationId: updateAutomationFlow
-      description: Hạn mức không hợp lệ hoặc lịch sai định dạng trả 400. Chưa cấu hình khóa dịch vụ AI thì không bật được,
-        trả 409.
+      description: An invalid quota or a malformed schedule returns 400. It cannot be enabled until the AI service key is configured,
+        which returns 409.
       x-use-case: UC27
       x-roles:
       - ADMIN
@@ -2947,7 +2947,7 @@ paths:
               $ref: '#/components/schemas/AutomationFlowUpdate'
       responses:
         '200':
-          description: Thành công
+          description: Success
           content:
             application/json:
               schema:
@@ -2961,7 +2961,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
         '409':
-          description: 'Xung đột: Chưa cấu hình khóa dịch vụ AI.'
+          description: 'Conflict: The AI service key is not configured.'
           content:
             application/problem+json:
               schema:
@@ -2969,8 +2969,8 @@ paths:
   /automation/runs:
     get:
       tags:
-      - Tự động hóa
-      summary: Lịch sử chạy
+      - Automation
+      summary: Run history
       operationId: listAutomationRuns
       x-use-case: UC28
       x-roles:
@@ -3002,7 +3002,7 @@ paths:
           format: date-time
       responses:
         '200':
-          description: Thành công
+          description: Success
           content:
             application/json:
               schema:
@@ -3016,8 +3016,8 @@ paths:
   /automation/runs/{runId}:
     get:
       tags:
-      - Tự động hóa
-      summary: Chi tiết lần chạy
+      - Automation
+      summary: Run details
       operationId: getAutomationRun
       x-use-case: UC28
       x-roles:
@@ -3035,7 +3035,7 @@ paths:
           format: int64
       responses:
         '200':
-          description: Thành công
+          description: Success
           content:
             application/json:
               schema:
@@ -3049,8 +3049,8 @@ paths:
   /automation/runs/{runId}/retry:
     post:
       tags:
-      - Tự động hóa
-      summary: Chạy lại lần lỗi
+      - Automation
+      summary: Retry a failed run
       operationId: retryAutomationRun
       x-use-case: UC28
       x-roles:
@@ -3065,7 +3065,7 @@ paths:
           format: int64
       responses:
         '200':
-          description: Thành công
+          description: Success
           content:
             application/json:
               schema:
@@ -3077,7 +3077,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
         '409':
-          description: 'Xung đột: Lần chạy không ở trạng thái lỗi.'
+          description: 'Conflict: The run is not in a failed state.'
           content:
             application/problem+json:
               schema:
@@ -3085,11 +3085,11 @@ paths:
   /automation/runs/{runId}/explanation:
     get:
       tags:
-      - Tự động hóa
-      summary: AI đã làm gì?
+      - Automation
+      summary: What did the AI do?
       operationId: getAiRunExplanation
-      description: Chỉ người xem được kết quả của lần chạy mới gọi được. Nội dung được dựng lại từ dữ liệu người đó có quyền
-        đọc.
+      description: Only someone who can view the results of the run may call this. The content is rebuilt from data that person is permitted to
+        read.
       x-use-case: UC32
       x-roles:
       - ADMIN
@@ -3108,7 +3108,7 @@ paths:
           format: int64
       responses:
         '200':
-          description: Thành công
+          description: Success
           content:
             application/json:
               schema:
@@ -3122,10 +3122,10 @@ paths:
   /blockers:
     get:
       tags:
-      - Vướng mắc
-      summary: Vướng mắc chuyển đến
+      - Blockers
+      summary: Incoming blockers
       operationId: listRoutedBlockers
-      description: Chỉ vướng mắc chuyển tới đơn vị người gọi phụ trách.
+      description: Only blockers routed to the unit the caller is responsible for.
       x-use-case: UC29
       x-roles:
       - ADMIN
@@ -3141,7 +3141,7 @@ paths:
           $ref: '#/components/schemas/RoutingStatus'
       responses:
         '200':
-          description: Thành công
+          description: Success
           content:
             application/json:
               schema:
@@ -3155,8 +3155,8 @@ paths:
   /blockers/{checkinId}/acknowledge:
     post:
       tags:
-      - Vướng mắc
-      summary: Nhận xử lý
+      - Blockers
+      summary: Take ownership
       operationId: acknowledgeBlocker
       x-use-case: UC29
       x-roles:
@@ -3179,7 +3179,7 @@ paths:
               $ref: '#/components/schemas/BlockerAcknowledge'
       responses:
         '200':
-          description: Thành công
+          description: Success
           content:
             application/json:
               schema:
@@ -3193,7 +3193,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
         '409':
-          description: 'Xung đột: Vướng mắc đã được xử lý.'
+          description: 'Conflict: The blocker has already been handled.'
           content:
             application/problem+json:
               schema:
@@ -3201,10 +3201,10 @@ paths:
   /blockers/{checkinId}/reject:
     post:
       tags:
-      - Vướng mắc
-      summary: Không liên quan phòng tôi
+      - Blockers
+      summary: Not related to my department
       operationId: rejectBlocker
-      description: Chuyển về quản lý trực tiếp của người check-in và tính là một lần phân loại sai.
+      description: Routes to the direct manager of the person who checked in and counts as one misclassification.
       x-use-case: UC29
       x-roles:
       - ADMIN
@@ -3228,7 +3228,7 @@ paths:
               $ref: '#/components/schemas/BlockerReject'
       responses:
         '200':
-          description: Thành công
+          description: Success
           content:
             application/json:
               schema:
@@ -3242,7 +3242,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
         '409':
-          description: 'Xung đột: Vướng mắc đã được xử lý.'
+          description: 'Conflict: The blocker has already been handled.'
           content:
             application/problem+json:
               schema:
@@ -3250,8 +3250,8 @@ paths:
   /weekly-digests:
     get:
       tags:
-      - Bản tin tuần
-      summary: Danh sách bản tin
+      - Weekly Digests
+      summary: List digests
       operationId: listWeeklyDigests
       x-use-case: UC30
       x-roles:
@@ -3259,7 +3259,7 @@ paths:
       x-permission: digestRead
       responses:
         '200':
-          description: Thành công
+          description: Success
           content:
             application/json:
               schema:
@@ -3273,10 +3273,10 @@ paths:
   /weekly-digests/{digestId}:
     get:
       tags:
-      - Bản tin tuần
-      summary: Xem bản tin
+      - Weekly Digests
+      summary: View a digest
       operationId: getWeeklyDigest
-      description: Lần mở đầu tiên ghi nhận đã đọc.
+      description: The first open records it as read.
       x-use-case: UC30
       x-roles:
       - MANAGER
@@ -3292,7 +3292,7 @@ paths:
           format: int64
       responses:
         '200':
-          description: Thành công
+          description: Success
           content:
             application/json:
               schema:
@@ -3306,10 +3306,10 @@ paths:
   /one-on-one-drafts:
     get:
       tags:
-      - Bản nháp 1-1
-      summary: Danh sách bản nháp
+      - 1-1 Drafts
+      summary: List drafts
       operationId: listOneOnOneDrafts
-      description: Theo bản chụp quan hệ báo cáo lúc mở thu phiếu.
+      description: Based on the snapshot of reporting relationships taken when form collection opened.
       x-use-case: UC31
       x-roles:
       - MANAGER
@@ -3327,7 +3327,7 @@ paths:
           $ref: '#/components/schemas/DraftStatus'
       responses:
         '200':
-          description: Thành công
+          description: Success
           content:
             application/json:
               schema:
@@ -3343,8 +3343,8 @@ paths:
   /one-on-one-drafts/{draftId}:
     get:
       tags:
-      - Bản nháp 1-1
-      summary: Xem bản nháp
+      - 1-1 Drafts
+      summary: View a draft
       operationId: getOneOnOneDraft
       x-use-case: UC31
       x-roles:
@@ -3360,7 +3360,7 @@ paths:
           format: int64
       responses:
         '200':
-          description: Thành công
+          description: Success
           content:
             application/json:
               schema:
@@ -3373,10 +3373,10 @@ paths:
           $ref: '#/components/responses/NotFound'
     patch:
       tags:
-      - Bản nháp 1-1
-      summary: Sửa bản nháp
+      - 1-1 Drafts
+      summary: Edit a draft
       operationId: updateOneOnOneDraft
-      description: Chỉ sửa nội dung gửi đi; đề xuất gốc của AI không đổi.
+      description: Only the content to be sent is edited; the original AI suggestion is unchanged.
       x-use-case: UC31
       x-roles:
       - MANAGER
@@ -3399,7 +3399,7 @@ paths:
               $ref: '#/components/schemas/OneOnOneDraftUpdate'
       responses:
         '200':
-          description: Thành công
+          description: Success
           content:
             application/json:
               schema:
@@ -3413,7 +3413,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
         '409':
-          description: 'Xung đột: Bản nháp đã gửi hoặc đã bỏ.'
+          description: 'Conflict: The draft has already been sent or discarded.'
           content:
             application/problem+json:
               schema:
@@ -3421,8 +3421,8 @@ paths:
   /one-on-one-drafts/{draftId}/send:
     post:
       tags:
-      - Bản nháp 1-1
-      summary: Gửi cho nhân viên
+      - 1-1 Drafts
+      summary: Send to the employee
       operationId: sendOneOnOneDraft
       x-use-case: UC31
       x-roles:
@@ -3441,7 +3441,7 @@ paths:
           format: int64
       responses:
         '200':
-          description: Thành công
+          description: Success
           content:
             application/json:
               schema:
@@ -3453,7 +3453,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
         '409':
-          description: 'Xung đột: Đợt chưa PUBLISHED, hoặc bản nháp đã gửi hay đã bỏ.'
+          description: 'Conflict: The round is not yet PUBLISHED, or the draft has already been sent or discarded.'
           content:
             application/problem+json:
               schema:
@@ -3461,8 +3461,8 @@ paths:
   /one-on-one-drafts/{draftId}/discard:
     post:
       tags:
-      - Bản nháp 1-1
-      summary: Bỏ bản nháp
+      - 1-1 Drafts
+      summary: Discard a draft
       operationId: discardOneOnOneDraft
       x-use-case: UC31
       x-roles:
@@ -3478,7 +3478,7 @@ paths:
           format: int64
       responses:
         '200':
-          description: Thành công
+          description: Success
           content:
             application/json:
               schema:
@@ -3490,7 +3490,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
         '409':
-          description: 'Xung đột: Bản nháp đã gửi hoặc đã bỏ.'
+          description: 'Conflict: The draft has already been sent or discarded.'
           content:
             application/problem+json:
               schema:
@@ -3501,7 +3501,7 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
-      description: Token hết hạn sau 30 phút. V1 không có refresh token.
+      description: The token expires after 30 minutes. V1 has no refresh token.
   parameters:
     Page:
       name: page
@@ -3520,31 +3520,31 @@ components:
         default: 20
   responses:
     ValidationError:
-      description: Dữ liệu không hợp lệ
+      description: Invalid data
       content:
         application/problem+json:
           schema:
             $ref: '#/components/schemas/ValidationProblemDetails'
     Unauthorized:
-      description: Thiếu token, token sai hoặc hết hạn; với đăng nhập là thông tin không đúng
+      description: Missing token, or an invalid or expired token; for login, incorrect credentials
       content:
         application/problem+json:
           schema:
             $ref: '#/components/schemas/ProblemDetails'
     Forbidden:
-      description: Không có quyền với vai trò hoặc dữ liệu này
+      description: No permission for this role or data
       content:
         application/problem+json:
           schema:
             $ref: '#/components/schemas/ProblemDetails'
     NotFound:
-      description: Không tìm thấy, hoặc đã bị xóa mềm
+      description: Not found, or soft-deleted
       content:
         application/problem+json:
           schema:
             $ref: '#/components/schemas/ProblemDetails'
     TooManyRequests:
-      description: Quá 5 lần đăng nhập sai trong 15 phút
+      description: More than 5 failed logins within 15 minutes
       content:
         application/problem+json:
           schema:
@@ -3604,7 +3604,7 @@ components:
       - DIRECT_REPORT
     ResultGroup:
       type: string
-      description: Nhóm hiển thị trong kết quả. PEER_AND_REPORT là nhóm gộp khi dưới ngưỡng ẩn danh.
+      description: The group shown in the results. PEER_AND_REPORT is the merged group used when below the anonymity threshold.
       enum:
       - MANAGER
       - PEER
@@ -3754,7 +3754,7 @@ components:
           minimum: 0
     ProblemDetails:
       type: object
-      description: Lỗi theo RFC 9457. traceId là mã tra cứu hiển thị cho người dùng.
+      description: Error per RFC 9457. traceId is a lookup code shown to the user.
       required:
       - type
       - title
@@ -3789,14 +3789,14 @@ components:
         properties:
           errors:
             type: object
-            description: Lỗi theo tên trường.
+            description: Errors by field name.
             additionalProperties:
               type: array
               items:
                 type: string
     UserRef:
       type: object
-      description: Thông tin tối thiểu của một người.
+      description: Minimal information about a person.
       required:
       - id
       - fullName
@@ -3854,7 +3854,7 @@ components:
           $ref: '#/components/schemas/Profile'
     Profile:
       type: object
-      description: 'Hồ sơ an toàn: không có mật khẩu hay hash.'
+      description: 'Safe profile: no password or hash.'
       required:
       - id
       - email
@@ -3897,7 +3897,7 @@ components:
             format: int64
     ProfileUpdate:
       type: object
-      description: Chỉ các trường người dùng tự sửa được (BR-015). V1 lưu ảnh dạng đường dẫn, chưa có API tải file lên.
+      description: Only the fields users can edit themselves (BR-015). V1 stores the avatar as a URL; there is no file upload API yet.
       properties:
         fullName:
           type: string
@@ -4087,7 +4087,7 @@ components:
           type: boolean
     DirectoryEntry:
       type: object
-      description: Danh bạ nội bộ, không có email hay vai trò.
+      description: Internal directory, without email or role.
       required:
       - id
       - fullName
@@ -4279,7 +4279,7 @@ components:
           type: integer
     KeyResultInput:
       type: object
-      description: Kiểu BOOLEAN dùng startValue 0, targetValue 1. Kiểu khác cần giá trị đầu khác giá trị đích (BR-034).
+      description: The BOOLEAN type uses startValue 0 and targetValue 1. Other types need a start value different from the target value (BR-034).
       required:
       - title
       - krType
@@ -4328,7 +4328,7 @@ components:
           type: integer
     ObjectiveSummary:
       type: object
-      description: progress lưu dạng 0–1. confidence là mức xấu nhất trong các KR đã có check-in (BR-045).
+      description: progress is stored as 0–1. confidence is the worst level among the KRs that have check-ins (BR-045).
       required:
       - id
       - cycleId
@@ -4415,7 +4415,7 @@ components:
               $ref: '#/components/schemas/ObjectiveTreeNode'
     ObjectiveCreate:
       type: object
-      description: departmentId bắt buộc với cấp DEPARTMENT và TEAM (BR-031).
+      description: departmentId is required for the DEPARTMENT and TEAM levels (BR-031).
       required:
       - cycleId
       - level
@@ -4467,7 +4467,7 @@ components:
           format: int64
     ParentLink:
       type: object
-      description: null để gỡ liên kết.
+      description: null to unlink.
       required:
       - parentId
       properties:
@@ -4524,7 +4524,7 @@ components:
               $ref: '#/components/schemas/ObjectiveSummary'
     CheckinCreate:
       type: object
-      description: Kiểu BOOLEAN chỉ nhận 0 hoặc 1.
+      description: The BOOLEAN type accepts only 0 or 1.
       required:
       - value
       - confidence
@@ -4541,7 +4541,7 @@ components:
           nullable: true
     CheckinInsight:
       type: object
-      description: Nhãn AI. Có thể chưa có ngay sau khi lưu, vì AI chạy nền.
+      description: AI label. May not be present right after saving, because the AI runs in the background.
       required:
       - aiGenerated
       properties:
@@ -4650,7 +4650,7 @@ components:
           type: object
     CheckinResult:
       type: object
-      description: Trả về các Objective đã được cộng dồn lại, để giao diện cập nhật ngay.
+      description: Returns the Objectives that have been re-aggregated, so the UI can update immediately.
       required:
       - checkin
       - keyResult
@@ -4882,7 +4882,7 @@ components:
           maximum: 1
     ReviewerProgress:
       type: object
-      description: Không có người được đánh giá (BR-061).
+      description: No one is being evaluated (BR-061).
       required:
       - reviewer
       - remainingForms
@@ -4967,7 +4967,7 @@ components:
           maxItems: 5
     NominationApprove:
       type: object
-      description: Danh sách cuối sau khi quản lý giữ, thêm hoặc bớt.
+      description: The final list after the manager keeps, adds, or removes people.
       required:
       - peerUserIds
       properties:
@@ -5008,7 +5008,7 @@ components:
           format: date
     ReviewScore:
       type: object
-      description: null nghĩa là Không đủ thông tin.
+      description: null means Insufficient information.
       required:
       - criterionId
       - score
@@ -5099,7 +5099,7 @@ components:
           type: string
     CommentCheckResult:
       type: object
-      description: checked false khi AI lỗi, quá 5 giây, luồng tắt hoặc vượt hạn mức; khi đó phiếu vẫn nộp được.
+      description: checked is false when the AI fails, exceeds 5 seconds, the workflow is off, or the quota is exceeded; the form can still be submitted in that case.
       required:
       - checked
       - warnings
@@ -5128,7 +5128,7 @@ components:
           nullable: true
     HiddenGroup:
       type: object
-      description: Nhóm bị ẩn vì chưa đủ ngưỡng.
+      description: The group is hidden because it does not meet the threshold.
       required:
       - group
       - formCount
@@ -5173,7 +5173,7 @@ components:
           nullable: true
     QuestionResult:
       type: object
-      description: Nhận xét không kèm tên và không theo thứ tự nộp (NFR-PRIV-003).
+      description: Comments carry no names and are not in submission order (NFR-PRIV-003).
       required:
       - questionId
       - questionText
@@ -5190,7 +5190,7 @@ components:
             type: string
     ManagerSummary:
       type: object
-      description: Chỉ là nội dung người duyệt đã gửi, không bao giờ là bản gốc của AI (BR-092).
+      description: Only the content the reviewer sent, never the original AI version (BR-092).
       required:
       - text
       - sentBy
@@ -5205,7 +5205,7 @@ components:
           format: date-time
     ReviewResult:
       type: object
-      description: Không có trường nào cho biết ai đã chấm (BR-060).
+      description: No field reveals who gave the rating (BR-060).
       required:
       - campaignId
       - reviewee
@@ -5595,7 +5595,7 @@ components:
           type: integer
     AuditLog:
       type: object
-      description: Không có nội dung phiếu hay cặp người chấm ẩn danh (BR-083).
+      description: No form content or anonymous reviewer pairs (BR-083).
       required:
       - id
       - action
@@ -5690,7 +5690,7 @@ components:
           type: integer
     AutomationFlowUpdate:
       type: object
-      description: scheduleCron chỉ áp dụng cho luồng SCHEDULE.
+      description: scheduleCron applies only to the SCHEDULE workflow.
       properties:
         isEnabled:
           type: boolean
@@ -5703,7 +5703,7 @@ components:
           minimum: 1
     AutomationRun:
       type: object
-      description: Chỉ có số liệu kỹ thuật, không có nội dung (BR-100).
+      description: Technical metrics only, no content (BR-100).
       required:
       - id
       - flow
@@ -5769,7 +5769,7 @@ components:
           nullable: true
     AiExplanation:
       type: object
-      description: Dựng lại từ dữ liệu người xem có quyền đọc, không đọc từ log.
+      description: Rebuilt from data the viewer is permitted to read, not read from logs.
       required:
       - runId
       - flow

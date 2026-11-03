@@ -1,75 +1,75 @@
-# API OKR360
+# OKR360 API
 
-> Trạng thái thiết kế: TARGET V1
+> Design status: TARGET V1
 >
-> Trạng thái triển khai: CHƯA BẮT ĐẦU; backend chưa có
+> Implementation status: NOT STARTED; no backend yet
 
-[`openapi.yaml`](openapi.yaml) là hợp đồng giữa frontend và backend, gồm 89 thao tác. Khi hợp đồng và code khác nhau, sửa hợp đồng trước rồi mới sửa code.
+[`openapi.yaml`](openapi.yaml) is the contract between frontend and backend, with 89 operations. When the contract and the code differ, fix the contract first, then the code.
 
-Xem dễ nhất bằng cách dán file vào [Swagger Editor](https://editor.swagger.io), hoặc chạy:
+The easiest way to view it is to paste the file into [Swagger Editor](https://editor.swagger.io), or run:
 
 ```bash
 npx @redocly/cli@1.25.15 preview-docs docs/api/openapi.yaml
 ```
 
-## Quy ước
+## Conventions
 
-| Mục | Quy ước |
+| Item | Convention |
 |---|---|
-| Địa chỉ gốc | `/api/v1` |
-| Xác thực | `Authorization: Bearer <token>`, hết hạn sau 30 phút, không có refresh token. Chỉ `login` không cần token |
-| Định dạng | JSON; xuất file dùng `.xlsx` hoặc `.pdf` |
-| Ngày giờ | `YYYY-MM-DD` cho ngày, ISO 8601 cho thời điểm |
-| Tiến độ | Số từ 0 đến 1; giao diện nhân 100 khi hiển thị |
-| Phân trang | `page` và `pageSize` (tối đa 100); kết quả có `items`, `page`, `pageSize`, `total` |
-| ID | Số nguyên 64 bit |
+| Base URL | `/api/v1` |
+| Authentication | `Authorization: Bearer <token>`, expires after 30 minutes, no refresh token. Only `login` needs no token |
+| Format | JSON; file export uses `.xlsx` or `.pdf` |
+| Date and time | `YYYY-MM-DD` for dates, ISO 8601 for timestamps |
+| Progress | A number from 0 to 1; the UI multiplies by 100 for display |
+| Pagination | `page` and `pageSize` (max 100); results contain `items`, `page`, `pageSize`, `total` |
+| ID | 64-bit integer |
 
-Mỗi thao tác có thêm các trường riêng:
+Each operation also has its own fields:
 
-| Trường | Ý nghĩa |
+| Field | Meaning |
 |---|---|
-| `x-use-case` | Use case trong [03-use-cases.md](../03-use-cases.md) |
-| `x-roles` | Vai trò được gọi. Phạm vi dữ liệu theo quan hệ báo cáo nằm ở phần mô tả |
-| `x-permission` | Tên quyền trong use case |
-| `x-business-rules` | Mã quy tắc trong [business-rules.md](../requirements/business-rules.md) |
+| `x-use-case` | Use case in [03-use-cases.md](../03-use-cases.md) |
+| `x-roles` | Roles allowed to call. Data scope by reporting relationship is in the description |
+| `x-permission` | Permission name in the use case |
+| `x-business-rules` | Rule codes in [business-rules.md](../requirements/business-rules.md) |
 
-## Lỗi
+## Errors
 
-Mọi lỗi trả về `application/problem+json`, gồm `type`, `title`, `status`, `errorCode` và `traceId`. Giao diện hiện `traceId` làm mã tra cứu.
+Every error is returned as `application/problem+json`, with `type`, `title`, `status`, `errorCode` and `traceId`. The UI shows `traceId` as a lookup code.
 
-| Mã | Khi nào |
+| Code | When |
 |---|---|
-| `400` | Dữ liệu không hợp lệ; `errors` liệt kê lỗi theo từng trường |
-| `401` | Thiếu token, token sai hoặc hết hạn; sai thông tin đăng nhập |
-| `403` | Không có quyền với vai trò hoặc dữ liệu này |
-| `404` | Không tìm thấy, hoặc đã bị xóa mềm |
-| `409` | Sai trạng thái nghiệp vụ, ví dụ chu kỳ đã đóng |
-| `429` | Đăng nhập sai quá 5 lần trong 15 phút |
+| `400` | Invalid data; `errors` lists errors per field |
+| `401` | Missing token, wrong or expired token; wrong login credentials |
+| `403` | No permission for this role or this data |
+| `404` | Not found, or soft-deleted |
+| `409` | Wrong business state, e.g. the cycle is closed |
+| `429` | More than 5 failed logins in 15 minutes |
 
-## AI trong API
+## AI in the API
 
-- Check-in, tạo Objective và đóng đợt 360 không chờ AI. Nhãn AI xuất hiện sau, nên `insight` có thể là `null`.
-- `checkReviewComment` là thao tác duy nhất chờ AI, tối đa 5 giây. AI lỗi vẫn trả `200` với `checked: false`, để giao diện cho nộp bình thường.
-- Không thao tác nào cho sửa nhãn AI hay đề xuất gốc của AI.
-- `AutomationRun` chỉ có số liệu kỹ thuật, không có nội dung gửi cho AI.
+- Check-in, creating an Objective and closing a 360 campaign do not wait for AI. AI labels appear later, so `insight` can be `null`.
+- `checkReviewComment` is the only operation that waits for AI, at most 5 seconds. If AI fails it still returns `200` with `checked: false`, so the UI lets the user submit normally.
+- No operation allows editing an AI label or the original AI suggestion.
+- `AutomationRun` holds only technical metrics, not the content sent to AI.
 
-## Thao tác thêm so với thiết kế màn hình
+## Operations added beyond the screen design
 
-Khi viết hợp đồng, 6 thao tác sau được thêm vào vì màn hình cần mà danh sách dự kiến chưa có:
+When writing the contract, the following 6 operations were added because the screens need them but the planned list did not have them:
 
-| Thao tác | Lý do |
+| Operation | Reason |
 |---|---|
-| `listUserDirectory` | `listUsers` chỉ dành cho Admin và HR, trong khi mọi nhân viên cần tìm đồng nghiệp để đề cử |
-| `getCampaign` | Màn hình chi tiết đợt cần thông tin của đợt |
-| `listReviewResultSubjects` | Quản lý và HR cần biết xem được kết quả của những ai |
-| `getMyFinalResult` | Nhân viên cần xem kết quả cuối kỳ của chính mình |
-| `getAutomationRun` | UC28 mở chi tiết một lần chạy |
-| `getAiRunExplanation` | Ngăn "AI đã làm gì?" (`SCR-84`) |
+| `listUserDirectory` | `listUsers` is for Admin and HR only, while every employee needs to find colleagues to nominate |
+| `getCampaign` | The campaign detail screen needs the campaign's information |
+| `listReviewResultSubjects` | Managers and HR need to know whose results they can view |
+| `getMyFinalResult` | Employees need to see their own final result |
+| `getAutomationRun` | UC28 opens the details of one run |
+| `getAiRunExplanation` | The "What did AI do?" panel (`SCR-84`) |
 
-## Quyết định khi viết hợp đồng
+## Decisions made while writing the contract
 
-- Báo cáo `FINAL_RESULTS` của Manager chỉ gồm nhân viên dưới quyền trực tiếp, vì có điểm 360 (BR-080, BR-063).
-- Sau khi đóng đợt, `getReviewForm` trả `404` vì câu trả lời đã tách khỏi người chấm. `listMyReviewForms` vẫn cho thấy trạng thái phiếu (BR-057).
-- V1 lưu ảnh đại diện dạng đường dẫn `avatarUrl`, chưa có API tải file lên.
+- A Manager's `FINAL_RESULTS` report includes only direct reports, because it contains the 360 score (BR-080, BR-063).
+- After a campaign is closed, `getReviewForm` returns `404` because the answers have been separated from the reviewer. `listMyReviewForms` still shows the form status (BR-057).
+- V1 stores the avatar as a path in `avatarUrl`; there is no file upload API yet.
 
-**Liên quan:** [Kiến trúc C4](../architecture/c4.md) · [Quy tắc nghiệp vụ](../requirements/business-rules.md) · [Tiêu chí chấp nhận](../06-acceptance-criteria.md)
+**Related:** [C4 Architecture](../architecture/c4.md) · [Business Rules](../requirements/business-rules.md) · [Acceptance Criteria](../06-acceptance-criteria.md)

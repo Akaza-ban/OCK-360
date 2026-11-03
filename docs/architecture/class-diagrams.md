@@ -1,20 +1,20 @@
-# Sơ đồ class — OKR360 V1
+# Class diagrams — OKR360 V1
 
-> Trạng thái thiết kế: TARGET V1
+> Design status: TARGET V1
 >
-> Trạng thái triển khai: CHƯA BẮT ĐẦU; backend chưa có
+> Implementation status: NOT STARTED; no backend yet
 
-Đây là cấp 4 (code) của [kiến trúc C4](c4.md): các class chính của backend NestJS, chia theo module ở [C3](c4.md#c3--component) và theo thư mục ở [cấu trúc thư mục](../07-folder-structure.md). Cách các class phối hợp trong từng thao tác nằm ở [sơ đồ sequence](sequence-diagrams.md).
+This is level 4 (code) of the [C4 architecture](c4.md): the main classes of the NestJS backend, grouped by module as in [C3](c4.md#c3--component) and by folder as in the [folder structure](../07-folder-structure.md). How the classes cooperate in each operation is shown in the [sequence diagrams](sequence-diagrams.md).
 
-## Quy ước
+## Conventions
 
-- Mỗi module chia ba tầng: **Controller** (tầng API), **Service** (tầng nghiệp vụ), **Repository** (giao diện ở tầng nghiệp vụ, cài đặt bằng Kysely ở tầng hạ tầng).
-- Mỗi hàm của controller là đúng một `operationId` trong [OpenAPI](../api/openapi.yaml); tham số và kiểu trả về là schema cùng tên.
-- Sơ đồ chỉ ghi các hàm chính của service và repository; hàm phụ, constructor và DTO không vẽ.
-- Mọi controller trừ `AuthController.login` đi qua `JwtAuthGuard` và `RolesGuard`. Đường nối tới hai guard này không vẽ lại ở từng module.
-- Quan hệ: `..>` là phụ thuộc, `..|>` là cài đặt giao diện.
+- Each module is split into three layers: **Controller** (API layer), **Service** (business layer), **Repository** (interface in the business layer, implemented with Kysely in the infrastructure layer).
+- Each controller method corresponds to exactly one `operationId` in the [OpenAPI](../api/openapi.yaml); its parameters and return type are the schemas of the same name.
+- The diagrams show only the main service and repository methods; helper methods, constructors and DTOs are not drawn.
+- Every controller except `AuthController.login` goes through `JwtAuthGuard` and `RolesGuard`. The links to these two guards are not redrawn in each module.
+- Relationships: `..>` is a dependency, `..|>` is an interface implementation.
 
-## 1. Phần dùng chung
+## 1. Shared part
 
 ```mermaid
 classDiagram
@@ -49,18 +49,18 @@ classDiagram
     class NotificationService {
         +notify(userId, type, body, link, dedupeKey)
     }
-    JwtAuthGuard ..> CurrentUser : tạo
-    RolesGuard ..> CurrentUser : đọc vai trò
-    AccessPolicy ..> Database : đọc quan hệ báo cáo
+    JwtAuthGuard ..> CurrentUser : creates
+    RolesGuard ..> CurrentUser : reads role
+    AccessPolicy ..> Database : reads reporting relationships
     AuditLogService ..> Database
     NotificationService ..> Database
 ```
 
-- `AccessPolicy` đọc quan hệ báo cáo từ database ở mỗi lần kiểm tra, nên đổi quản lý có hiệu lực ngay (ADR-006). Với đợt 360, hàm dùng bản chụp lúc mở thu phiếu (BR-055).
-- `NotificationService` dùng `dedupeKey` để mỗi người nhận tối đa một lần nhắc cho mỗi sự kiện mỗi ngày (BR-081).
-- `AuditLogService` không nhận điểm, nhận xét hay cặp người chấm ẩn danh (BR-083).
+- `AccessPolicy` reads reporting relationships from the database on every check, so a manager change takes effect immediately (ADR-006). For a 360 campaign, the methods use the snapshot taken when form collection opened (BR-055).
+- `NotificationService` uses `dedupeKey` so that each recipient gets at most one reminder per event per day (BR-081).
+- `AuditLogService` does not accept scores, comments or anonymous reviewer pairs (BR-083).
 
-## 2. Đăng nhập và tổ chức
+## 2. Login and organization
 
 ```mermaid
 classDiagram
@@ -146,9 +146,9 @@ classDiagram
     KyselyOrganizationRepository ..|> OrganizationRepository
 ```
 
-- `UserService.create` từ chối HR gán vai trò Admin (BR-004). Vòng lặp tổ chức và vòng lặp quản lý được database chặn thêm một lớp bằng trigger (BR-010, BR-013).
+- `UserService.create` rejects HR assigning the Admin role (BR-004). Organization loops and manager loops are additionally blocked by the database with triggers (BR-010, BR-013).
 
-## 3. OKR và check-in
+## 3. OKR and check-in
 
 ```mermaid
 classDiagram
@@ -233,10 +233,10 @@ classDiagram
     KyselyOkrRepository ..|> OkrRepository
 ```
 
-- `ProgressRollup` tính tiến độ Objective là trung bình cộng của KR và Objective con, đi ngược lên tới gốc, trong cùng transaction với thao tác gốc (BR-043, BR-044).
-- Sự kiện `CHECKIN_CREATED` và `OBJECTIVE_CREATED` do trigger trong database ghi, nên không có class nào trong API gọi AI hay ghi hàng đợi (NFR-REL-001).
+- `ProgressRollup` computes an Objective's progress as the average of its KRs and child Objectives, walking up to the root, in the same transaction as the originating operation (BR-043, BR-044).
+- The `CHECKIN_CREATED` and `OBJECTIVE_CREATED` events are written by database triggers, so no class in the API calls AI or writes to a queue (NFR-REL-001).
 
-## 4. Đánh giá 360
+## 4. 360 review
 
 ```mermaid
 classDiagram
@@ -332,11 +332,11 @@ classDiagram
     KyselyReviewRepository ..|> ReviewRepository
 ```
 
-- `ReviewResultService` là nơi duy nhất đọc điểm theo nhóm (`vw_review_group_scores`) và áp ngưỡng ẩn danh qua `AnonymityAggregator` (BR-059). Module khác lấy điểm 360 qua `overallScore`.
-- `ReviewRepository.closeCampaign` gọi hàm `close_review_campaign()` của database, hàm tách câu trả lời khỏi người chấm trong một transaction (BR-058).
-- `CommentGuardService` không lưu cảnh báo và không ghi lịch sử chạy (BR-101).
+- `ReviewResultService` is the only place that reads group scores (`vw_review_group_scores`) and applies the anonymity threshold via `AnonymityAggregator` (BR-059). Other modules get the 360 score through `overallScore`.
+- `ReviewRepository.closeCampaign` calls the database function `close_review_campaign()`, which separates answers from reviewers in one transaction (BR-058).
+- `CommentGuardService` does not store warnings and does not write run history (BR-101).
 
-## 5. Kết quả, dashboard, báo cáo, hệ thống
+## 5. Results, dashboard, reports, system
 
 ```mermaid
 classDiagram
@@ -395,19 +395,19 @@ classDiagram
     NotificationsController ..> NotificationService
     AuditLogsController ..> AuditLogService
     FinalResultService ..> ScoreCalculator
-    FinalResultService ..> ReviewResultService : điểm 360
+    FinalResultService ..> ReviewResultService : 360 score
     FinalResultService ..> NotificationService
     ReportService ..> AccessPolicy
     XlsxReportExporter ..|> ReportExporter
     PdfReportExporter ..|> ReportExporter
 ```
 
-- `ScoreCalculator` là code thuần, không truy cập database: điểm OKR = 1 + 4 × tiến độ, điểm cuối kỳ theo tỷ trọng, xếp loại theo ngưỡng; thiếu điểm thì trả "Thiếu dữ liệu" (BR-071 đến BR-074).
-- `ReportService` lọc theo phạm vi quyền; báo cáo kết quả cuối kỳ của Manager chỉ gồm nhân viên dưới quyền trực tiếp (BR-080).
+- `ScoreCalculator` is pure code with no database access: OKR score = 1 + 4 × progress, final score by weighting, grade by thresholds; when a score is missing it returns "Insufficient data" (BR-071 to BR-074).
+- `ReportService` filters by permission scope; a Manager's final-result report includes only direct reports (BR-080).
 
-## 6. Tự động hóa và AI Gateway
+## 6. Automation and AI Gateway
 
-### 6.1 Trong API
+### 6.1 In the API
 
 ```mermaid
 classDiagram
@@ -470,7 +470,7 @@ classDiagram
     BlockersController ..> BlockerService
     WeeklyDigestsController ..> DigestService
     OneOnOneDraftsController ..> OneOnOneDraftService
-    AiExplanationService ..> Masker : dựng lại bảng mã
+    AiExplanationService ..> Masker : rebuilds the masking map
     BlockerService ..> AccessPolicy
     BlockerService ..> NotificationService
     OneOnOneDraftService ..> AccessPolicy
@@ -483,9 +483,9 @@ classDiagram
     KyselyAutomationRepository ..|> AutomationRepository
 ```
 
-- Không service nào ở đây sửa được nhãn hay đề xuất gốc của AI; chỉ cập nhật phần của con người như trạng thái xử lý, nội dung đã sửa (05 §7.3).
+- No service here can modify the AI's original labels or suggestions; they only update the human part, such as handling status and edited content (05 §7.3).
 
-### 6.2 AI Gateway và Worker
+### 6.2 AI Gateway and Worker
 
 ```mermaid
 classDiagram
@@ -558,7 +558,7 @@ classDiagram
     LlmProviderAdapter ..|> AiProvider
     FakeAiProvider ..|> AiProvider
     OutboxPoller ..> FlowRunner
-    WorkerScheduler ..> FlowRunner : bản tin tuần
+    WorkerScheduler ..> FlowRunner : weekly digest
     WorkerScheduler ..> ReminderJob
     WorkerScheduler ..> EmailSender
     FlowRunner ..> AutomationFlowHandler
@@ -572,34 +572,34 @@ classDiagram
     OneOnOneDraftFlow ..|> AutomationFlowHandler
 ```
 
-- Năm luồng chạy nền chỉ khác nhau ở `AutomationFlowHandler`: dữ liệu lấy gì, khuôn JSON nào, hành động gì, đúng như [đặc tả luồng AI](ai-flows.md). `FlowRunner` lo phần chung: bật/tắt, hạn mức, chống trùng, thử lại, ghi lịch sử.
-- `AiGateway` là đường duy nhất tới dịch vụ AI (ADR-005). `FakeAiProvider` ghi lại nội dung gửi đi để kiểm thử NFR-PRIV-004.
-- `ReminderJob` và `EmailSender` không dùng AI.
+- The five background flows differ only in their `AutomationFlowHandler`: what data is fetched, which JSON schema, which action, exactly as in the [AI flow specification](ai-flows.md). `FlowRunner` handles the shared parts: enable/disable, quota, deduplication, retry, history logging.
+- `AiGateway` is the only path to the AI service (ADR-005). `FakeAiProvider` records the content sent out to test NFR-PRIV-004.
+- `ReminderJob` and `EmailSender` do not use AI.
 
-## 7. Controller và nhóm API
+## 7. Controllers and API groups
 
-| Nhóm API (tag OpenAPI) | Controller | Module |
+| API group (OpenAPI tag) | Controller | Module |
 |---|---|---|
-| Đăng nhập | `AuthController` | `auth` |
-| Hồ sơ | `ProfileController` | `organization` |
-| Tổ chức | `DepartmentsController` | `organization` |
-| Người dùng | `UsersController` | `organization` |
-| Chu kỳ | `CyclesController` | `okr` |
-| OKR | `ObjectivesController`, `KeyResultsController` | `okr` |
-| Check-in | `CheckinsController` | `okr` |
-| Mẫu phiếu 360 | `ReviewTemplatesController` | `reviews` |
-| Đợt 360 | `CampaignsController` | `reviews` |
-| Đề cử | `NominationsController` | `reviews` |
-| Phiếu 360 | `ReviewFormsController` | `reviews` |
-| Kết quả 360 | `ReviewResultsController` | `reviews` |
-| Kết quả cuối kỳ | `FinalResultsController` | `results` |
-| Dashboard | `DashboardsController` | `results` |
-| Báo cáo | `ReportsController` | `results` |
-| Thông báo | `NotificationsController` | `system` |
-| Nhật ký | `AuditLogsController` | `system` |
-| Tự động hóa | `AutomationController` | `automation` |
-| Vướng mắc | `BlockersController` | `automation` |
-| Bản tin tuần | `WeeklyDigestsController` | `automation` |
-| Bản nháp 1-1 | `OneOnOneDraftsController` | `automation` |
+| Authentication | `AuthController` | `auth` |
+| Profile | `ProfileController` | `organization` |
+| Organization | `DepartmentsController` | `organization` |
+| Users | `UsersController` | `organization` |
+| Cycles | `CyclesController` | `okr` |
+| OKRs | `ObjectivesController`, `KeyResultsController` | `okr` |
+| Check-ins | `CheckinsController` | `okr` |
+| Review templates | `ReviewTemplatesController` | `reviews` |
+| Review campaigns | `CampaignsController` | `reviews` |
+| Nominations | `NominationsController` | `reviews` |
+| Review forms | `ReviewFormsController` | `reviews` |
+| Review results | `ReviewResultsController` | `reviews` |
+| Final results | `FinalResultsController` | `results` |
+| Dashboards | `DashboardsController` | `results` |
+| Reports | `ReportsController` | `results` |
+| Notifications | `NotificationsController` | `system` |
+| Audit logs | `AuditLogsController` | `system` |
+| Automation | `AutomationController` | `automation` |
+| Blockers | `BlockersController` | `automation` |
+| Weekly digests | `WeeklyDigestsController` | `automation` |
+| 1-on-1 drafts | `OneOnOneDraftsController` | `automation` |
 
-**Liên quan:** [Sơ đồ sequence](sequence-diagrams.md) · [Kiến trúc C4](c4.md) · [Cấu trúc thư mục](../07-folder-structure.md) · [OpenAPI](../api/openapi.yaml)
+**Related:** [Sequence diagrams](sequence-diagrams.md) · [C4 architecture](c4.md) · [Folder structure](../07-folder-structure.md) · [OpenAPI](../api/openapi.yaml)

@@ -1,91 +1,91 @@
-# Thuật ngữ — OKR360
+# Glossary — OKR360
 
-Các thuật ngữ dùng trong tài liệu, giao diện và code. Cột **Trong code** là tên bảng, enum hay class tương ứng, để đọc tài liệu và đọc code dùng cùng một từ.
+Terms used in the documents, the UI and the code. The **In code** column gives the corresponding table, enum or class name, so that reading the documents and reading the code use the same words.
 
-## OKR và tiến độ
+## OKR and progress
 
-| Thuật ngữ | Nghĩa | Trong code |
+| Term | Meaning | In code |
 |---|---|---|
-| OKR | Objectives and Key Results: đặt mục tiêu (Objective) và đo bằng kết quả then chốt (Key Result) | — |
-| Objective | Mục tiêu định tính cần đạt trong chu kỳ | `objectives` |
-| Key Result (KR) | Kết quả đo được của một Objective; mỗi Objective có 1–5 KR | `key_results` |
-| Kiểu đo của KR | Số (đầu → đích, hỗ trợ mục tiêu giảm), Phần trăm, Hoàn thành (0 hoặc 1) | `kr_type`: `NUMBER`, `PERCENT`, `BOOLEAN` |
-| Cấp OKR | Công ty, phòng ban, team, cá nhân | `okr_level` |
-| Liên kết cấp trên | Nối Objective vào Objective cha để tiến độ đóng góp lên trên | `objectives.parent_id` |
-| Nối vượt cấp | Bỏ qua một cấp khi liên kết, ví dụ OKR cá nhân nối thẳng lên OKR phòng ban chưa chia team | — |
-| Chu kỳ OKR | Kỳ làm việc chung, thường là một quý; đi một chiều Nháp → Đang chạy → Đã đóng | `okr_cycles`, `cycle_status` |
-| Check-in | Lần cập nhật giá trị hiện tại của một KR, kèm mức tự tin, ghi chú, vướng mắc; chỉ thêm mới, không sửa | `checkins` |
-| Mức tự tin | Đúng hướng, Có rủi ro, Chệch hướng; mức của Objective là mức xấu nhất trong các KR | `confidence_level` |
-| Vướng mắc | Việc đang cản trở KR, người check-in ghi bằng văn bản tự do | `checkins.blocker` |
-| Tiến độ KR | (hiện tại − ban đầu) / (đích − ban đầu), giới hạn 0–100% | `vw_key_result_progress` |
-| Cộng dồn tiến độ | Tiến độ Objective là trung bình cộng các KR và Objective con, tính lại ngược lên tới gốc | `ProgressRollup` |
-| Tiến độ kỳ vọng | Phần thời gian đã trôi qua của chu kỳ, vẽ thành vạch trên thanh tiến độ | — |
-| Xóa mềm | Ẩn khỏi cây và báo cáo nhưng vẫn giữ trong database để truy vết | `deleted_at` |
+| OKR | Objectives and Key Results: set goals (Objective) and measure them with key results (Key Result) | — |
+| Objective | A qualitative goal to achieve within the cycle | `objectives` |
+| Key Result (KR) | A measurable result of an Objective; each Objective has 1–5 KRs | `key_results` |
+| KR measurement type | Number (start → target, supports decreasing goals), Percent, Completion (0 or 1) | `kr_type`: `NUMBER`, `PERCENT`, `BOOLEAN` |
+| OKR level | Company, department, team, individual | `okr_level` |
+| Parent link | Connects an Objective to a parent Objective so progress contributes upward | `objectives.parent_id` |
+| Skip-level link | Skipping a level when linking, e.g. an individual OKR linked straight to a department OKR that has no teams | — |
+| OKR cycle | A shared working period, usually one quarter; moves one way Draft → Active → Closed | `okr_cycles`, `cycle_status` |
+| Check-in | An update of a KR's current value, with confidence level, note and blocker; append-only, never edited | `checkins` |
+| Confidence level | On track, At risk, Off track; an Objective's level is the worst level among its KRs | `confidence_level` |
+| Blocker | Something obstructing a KR, written by the person checking in as free text | `checkins.blocker` |
+| KR progress | (current − start) / (target − start), clamped to 0–100% | `vw_key_result_progress` |
+| Progress roll-up | An Objective's progress is the average of its KRs and child Objectives, recalculated upward to the root | `ProgressRollup` |
+| Expected progress | The fraction of the cycle's time that has elapsed, drawn as a marker on the progress bar | — |
+| Soft delete | Hidden from the tree and reports but kept in the database for traceability | `deleted_at` |
 
-## Tổ chức và phân quyền
+## Organization and authorization
 
-| Thuật ngữ | Nghĩa | Trong code |
+| Term | Meaning | In code |
 |---|---|---|
-| Đơn vị | Phòng ban hoặc team; team nằm ngay dưới một phòng ban | `departments`, `org_unit_type` |
-| Trưởng phòng, team lead | Người phụ trách phòng ban hoặc team, thường mang vai trò Manager | `departments.head_user_id` |
-| Đơn vị mình phụ trách | Với trưởng phòng: phòng ban và mọi team bên trong; với team lead: team của mình | `AccessPolicy.managesUnit` |
-| Quản lý trực tiếp | Người mà một nhân viên báo cáo trực tiếp; không suy ra từ cây đơn vị | `app_users.manager_id` |
-| Nhân viên dưới quyền trực tiếp | Những người có quản lý trực tiếp là người dùng đang xét | `AccessPolicy.isDirectManager` |
+| Unit | A department or team; a team sits directly under a department | `departments`, `org_unit_type` |
+| Department head, team lead | The person in charge of a department or team, usually holding the Manager role | `departments.head_user_id` |
+| Unit one manages | For a department head: the department and every team inside it; for a team lead: their own team | `AccessPolicy.managesUnit` |
+| Direct manager | The person an employee reports to directly; not inferred from the unit tree | `app_users.manager_id` |
+| Direct report | People whose direct manager is the user in question | `AccessPolicy.isDirectManager` |
 
-## Đánh giá 360 độ
+## 360-degree review
 
-| Thuật ngữ | Nghĩa | Trong code |
+| Term | Meaning | In code |
 |---|---|---|
-| Đánh giá 360 độ | Đánh giá từ tự đánh giá, quản lý, đồng nghiệp và cấp dưới | — |
-| Đợt 360 | Một lần đánh giá gắn với một chu kỳ; đi một chiều Nháp → Đề cử → Thu phiếu → Đã đóng → Đã công bố | `review_campaigns`, `campaign_status` |
-| Mẫu phiếu | Bộ tiêu chí chấm 1–5 và câu hỏi mở dùng chung cho các đợt | `review_templates` |
-| Nhóm người đánh giá | Tự đánh giá, Quản lý, Đồng nghiệp, Cấp dưới | `reviewer_group` |
-| Đề cử | Người được đánh giá chọn 3–5 đồng nghiệp chấm mình | `nominations` |
-| Phiếu, phân công | Việc một người phải chấm một người; không chứa điểm | `review_assignments` |
-| Bản chụp quan hệ báo cáo | Quản lý trực tiếp và đơn vị của từng người được ghi lại lúc mở thu phiếu; mọi tính toán của đợt dùng bản chụp này | `campaign_participants` |
-| Tách câu trả lời khỏi người chấm | Khi đóng đợt, liên kết giữa điểm và phiếu bị xóa, nên không ai nối được điểm với người chấm | `close_review_campaign()` |
-| Ngưỡng ẩn danh | Nhóm Đồng nghiệp hoặc Cấp dưới chỉ hiện khi có từ 3 phiếu | `anonymity_threshold` |
-| Nhóm gộp | Hai nhóm Đồng nghiệp và Cấp dưới gộp lại khi một nhóm dưới ngưỡng | `PEER_AND_REPORT` |
+| 360-degree review | Evaluation from self-assessment, manager, peers and direct reports | — |
+| 360 campaign | One review tied to a cycle; moves one way Draft → Nomination → Collecting forms → Closed → Published | `review_campaigns`, `campaign_status` |
+| Form template | A set of 1–5 rated criteria and open questions shared across campaigns | `review_templates` |
+| Reviewer group | Self, Manager, Peer, Direct report | `reviewer_group` |
+| Nomination | The reviewee picks 3–5 colleagues to rate them | `nominations` |
+| Form, assignment | The task of one person having to rate one person; contains no scores | `review_assignments` |
+| Reporting-relationship snapshot | Each person's direct manager and unit recorded when form collection opens; all campaign calculations use this snapshot | `campaign_participants` |
+| Separating answers from reviewers | When the campaign closes, the link between scores and forms is deleted, so no one can connect a score to a reviewer | `close_review_campaign()` |
+| Anonymity threshold | The Peer or Direct report group is shown only when it has at least 3 forms | `anonymity_threshold` |
+| Merged group | The Peer and Direct report groups are merged when one of them is below the threshold | `PEER_AND_REPORT` |
 
-## Kết quả cuối kỳ
+## Final results
 
-| Thuật ngữ | Nghĩa | Trong code |
+| Term | Meaning | In code |
 |---|---|---|
-| Điểm OKR | 1 + 4 × tiến độ OKR, thang 1–5 | `ScoreCalculator.okrScore` |
-| Điểm 360 | Trung bình các nhóm được hiển thị, không tính tự đánh giá | `ReviewResultService.overallScore` |
-| Tỷ trọng | Phần của điểm OKR trong điểm cuối kỳ, mặc định 0,6; khóa khi mở thu phiếu | `okr_cycles.okr_weight` |
-| Điểm cuối kỳ | Tỷ trọng × điểm OKR + (1 − tỷ trọng) × điểm 360 | `final_results.final_score` |
-| Xếp loại | Xuất sắc, Tốt, Đạt, Cần cải thiện, hoặc Thiếu dữ liệu | `result_grade` |
-| Công bố | Đưa kết quả tới từng nhân viên; sau đó kết quả không đổi | `publishFinalResults` |
+| OKR score | 1 + 4 × OKR progress, on a 1–5 scale | `ScoreCalculator.okrScore` |
+| 360 score | Average of the displayed groups, excluding self-assessment | `ReviewResultService.overallScore` |
+| Weight | The share of the OKR score in the final score, default 0.6; locked when form collection opens | `okr_cycles.okr_weight` |
+| Final score | Weight × OKR score + (1 − weight) × 360 score | `final_results.final_score` |
+| Grade | Excellent, Good, Satisfactory, Needs improvement, or Insufficient data | `result_grade` |
+| Publish | Releases results to each employee; afterwards the results do not change | `publishFinalResults` |
 
-## Tự động hóa và AI
+## Automation and AI
 
-| Thuật ngữ | Nghĩa | Trong code |
+| Term | Meaning | In code |
 |---|---|---|
-| Tự động | Việc hệ thống tự làm theo luật cố định, không cần ai bấm nút, không gọi AI | — |
-| Luồng tự động AI | Một trong 6 luồng dựng sẵn có bước gọi dịch vụ AI | `automation_flows`, `automation_flow` |
-| Bộ lập lịch | Phần của Worker chạy việc theo giờ: bản tin tuần, nhắc nhở | `WorkerScheduler` |
-| Bộ xử lý AI, Worker | Tiến trình chạy nền, nhận sự kiện và chạy luồng AI; là code, không phải AI | `main.worker.ts`, `FlowRunner` |
-| Hộp thư sự kiện (outbox) | Bảng sự kiện do trigger ghi cùng transaction với thao tác gốc, Worker đọc sau | `domain_events` |
-| Lần chạy, `run_key` | Một lần xử lý của một luồng trên một đối tượng; `run_key` chống chạy trùng | `automation_runs` |
-| Hạn mức | Số lần gọi AI tối đa mỗi luồng mỗi ngày | `automation_flows.daily_quota` |
-| AI Gateway | Đường duy nhất tới dịch vụ AI: đổi tên thành mã, gọi, kiểm tra khuôn | `AiGateway` |
-| Đổi tên thành mã | Thay tên người bằng `NV-01`, đơn vị bằng `DV-01` kèm danh bạ trước khi gửi AI | `Masker` |
-| Khuôn JSON | Cấu trúc câu trả lời AI bắt buộc phải theo; sai khuôn thì không hành động | `OutputValidator` |
-| Do AI tạo | Nhãn bắt buộc trên mọi nội dung AI tạo | — |
-| Nhãn AI | Kết quả phân loại vướng mắc và phát hiện check-in không khớp | `checkin_insights` |
-| Ghi chú rà soát | Gợi ý của AI về chất lượng Objective mới tạo | `objective_review_notes` |
-| Bản tin tuần | Số liệu đội và tối đa 3 việc cần chú ý, gửi Manager 8h sáng thứ Hai | `weekly_digests` |
-| Bản nháp 1-1 | Tóm tắt nhận xét 360 do AI soạn, chờ người duyệt sửa rồi gửi | `one_on_one_drafts` |
-| Cảnh báo nhận xét | Cảnh báo riêng người viết khi nhận xét dễ lộ danh tính hoặc xúc phạm; không lưu | `REVIEW_COMMENT_GUARD` |
+| Automatic | Work the system does itself by fixed rules, with no one pressing a button and no AI call | — |
+| AI automated flow | One of 6 prebuilt flows that has a step calling the AI service | `automation_flows`, `automation_flow` |
+| Scheduler | The part of the Worker that runs time-based jobs: weekly digest, reminders | `WorkerScheduler` |
+| AI processor, Worker | A background process that receives events and runs AI flows; it is code, not an AI | `main.worker.ts`, `FlowRunner` |
+| Event outbox | A table of events written by a trigger in the same transaction as the original operation, which the Worker reads later | `domain_events` |
+| Run, `run_key` | One processing of a flow on one object; `run_key` prevents duplicate runs | `automation_runs` |
+| Quota | Maximum number of AI calls per flow per day | `automation_flows.daily_quota` |
+| AI Gateway | The only path to the AI service: replaces names with codes, calls, validates the schema | `AiGateway` |
+| Replace names with codes | Replacing people's names with `NV-01` and units with `DV-01`, with a lookup list, before sending to the AI | `Masker` |
+| JSON schema | The structure the AI's answer must follow; if it does not match, no action is taken | `OutputValidator` |
+| AI-generated | A mandatory label on all AI-generated content | — |
+| AI label | The result of classifying blockers and detecting mismatched check-ins | `checkin_insights` |
+| Review note | AI suggestions on the quality of a newly created Objective | `objective_review_notes` |
+| Weekly digest | Team metrics and up to 3 items needing attention, sent to the Manager at 8 AM on Monday | `weekly_digests` |
+| 1-1 draft | A summary of 360 comments drafted by the AI, awaiting a person to review, edit and send | `one_on_one_drafts` |
+| Comment warning | A warning shown only to the writer when a comment could reveal identity or is offensive; not stored | `REVIEW_COMMENT_GUARD` |
 
-## Kỹ thuật
+## Technical
 
-| Thuật ngữ | Nghĩa | Trong code |
+| Term | Meaning | In code |
 |---|---|---|
-| JWT | Token đăng nhập, hết hạn sau 30 phút, gửi qua header `Authorization: Bearer` | `TokenService` |
-| Problem Details | Định dạng lỗi chuẩn của API, có `errorCode` và `traceId` (mã tra cứu) | `ProblemDetailsFilter` |
-| `operationId` | Tên duy nhất của một thao tác trong OpenAPI, trùng tên hàm controller | `openapi.yaml` |
-| ADR | Bản ghi một quyết định kiến trúc kèm lý do và cái giá | `decisions.md` |
+| JWT | Login token, expires after 30 minutes, sent via the `Authorization: Bearer` header | `TokenService` |
+| Problem Details | The API's standard error format, with `errorCode` and `traceId` (lookup code) | `ProblemDetailsFilter` |
+| `operationId` | The unique name of an operation in OpenAPI, identical to the controller function name | `openapi.yaml` |
+| ADR | A record of an architecture decision with its reason and cost | `decisions.md` |
 
-**Liên quan:** [Use case](03-use-cases.md) · [Quy tắc nghiệp vụ](requirements/business-rules.md) · [Đặc tả luồng AI](architecture/ai-flows.md)
+**Related:** [Use cases](03-use-cases.md) · [Business rules](requirements/business-rules.md) · [AI flow specification](architecture/ai-flows.md)

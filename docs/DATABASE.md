@@ -1,54 +1,54 @@
 # OKR360 — Database Diagrams
 
-Các sơ đồ dưới đây vẽ từ [`src/database/okr360.sql`](../src/database/okr360.sql) (PostgreSQL 15+, schema `okr360`). Giải thích thiết kế nằm ở [05-data-model.md](05-data-model.md). Muốn xem sơ đồ kéo thả được, dán [`okr360.dbml`](../src/database/okr360.dbml) vào [dbdiagram.io](https://dbdiagram.io).
+The diagrams below are drawn from [`src/database/okr360.sql`](../src/database/okr360.sql) (PostgreSQL 15+, schema `okr360`). Design rationale and details are documented in [05-data-model.md](05-data-model.md). For an interactive diagram, paste [`okr360.dbml`](../src/database/okr360.dbml) into [dbdiagram.io](https://dbdiagram.io).
 
-## Quan hệ tổng quan
+## Entity Relationship Overview
 
-Sơ đồ chia 27 bảng thành năm nhóm. Mũi tên đi từ bảng cha sang bảng con; nhãn ghi ý nghĩa của khóa ngoại.
+The diagram divides the 27 tables into five groups. Arrows point from parent tables to child tables; labels describe the foreign key relationships.
 
 ```mermaid
 flowchart TB
-    subgraph ORG["Tổ chức"]
+    subgraph ORG["Organization"]
         direction LR
-        DEP["departments<br/>phòng ban + team"] -->|thuộc đơn vị| USR["app_users"]
-        DEP -->|đơn vị cha| DEP
-        USR -->|quản lý trực tiếp| USR
+        DEP["departments<br/>departments + teams"] -->|belongs to unit| USR["app_users"]
+        DEP -->|parent unit| DEP
+        USR -->|direct manager| USR
     end
 
     subgraph OKR["OKR"]
         direction LR
-        CYC["okr_cycles"] -->|trong chu kỳ| OBJ["objectives"]
-        OBJ -->|Objective cha| OBJ
-        OBJ -->|1–5 KR| KR["key_results"]
-        KR -->|lịch sử| CHK["checkins"]
-        CHK -->|bình luận| CMT["checkin_comments"]
+        CYC["okr_cycles"] -->|in cycle| OBJ["objectives"]
+        OBJ -->|parent objective| OBJ
+        OBJ -->|1–5 KRs| KR["key_results"]
+        KR -->|history| CHK["checkins"]
+        CHK -->|comments| CMT["checkin_comments"]
     end
 
-    subgraph REV["Đánh giá 360"]
+    subgraph REV["360 Review"]
         direction LR
         TPL["review_templates"] --> CRI["review_criteria"]
         TPL --> QST["review_questions"]
-        TPL -->|dùng mẫu| CMP["review_campaigns"]
+        TPL -->|uses template| CMP["review_campaigns"]
         CMP --> PAR["campaign_participants"]
         CMP --> NOM["nominations"] --> NPE["nomination_peers"]
         CMP --> ASG["review_assignments"]
-        ASG -.->|tách khi đóng đợt| ANS["review_answers"]
+        ASG -.->|detached on campaign close| ANS["review_answers"]
         CRI --> ANS
         QST --> ANS
     end
 
-    subgraph SYS["Kết quả và hệ thống"]
+    subgraph SYS["Results & System"]
         direction LR
         FIN["final_results"]
         NOT["notifications"]
         AUD["audit_logs"]
     end
 
-    ORG ==>|chủ sở hữu, người phụ trách, người check-in| OKR
-    ORG ==>|người được đánh giá, người chấm| REV
-    CYC -->|tối đa 1 đợt| CMP
-    CYC -->|kết quả cuối kỳ| FIN
-    subgraph AI["Tự động hóa AI"]
+    ORG ==>|owner, assignee, check-in user| OKR
+    ORG ==>|reviewee, reviewer| REV
+    CYC -->|max 1 campaign| CMP
+    CYC -->|cycle final results| FIN
+    subgraph AI["AI Automation"]
         direction LR
         FLW["automation_flows"] --> RUN["automation_runs"]
         FLW --> USE["automation_daily_usage"]
@@ -59,98 +59,98 @@ flowchart TB
         RUN --> DRF["one_on_one_drafts"]
     end
 
-    ORG ==>|người nhận, người thao tác| SYS
-    OKR -.->|trigger ghi sự kiện| AI
-    REV -.->|đóng đợt → sự kiện, bản nháp 1-1| AI
+    ORG ==>|recipient, actor| SYS
+    OKR -.->|triggers event logging| AI
+    REV -.->|campaign close → events, 1-on-1 draft| AI
 ```
 
-Nhóm Tự động hóa AI chỉ **đọc** từ OKR và Đánh giá 360 (mũi tên nét đứt): trigger ghi sự kiện vào `domain_events`, kết quả AI nằm ở các bảng riêng của nhóm này, không bảng OKR hay 360 nào bị AI sửa.
+The AI Automation group only **reads** from OKR and 360 Review (dashed arrows): database triggers log events into `domain_events`, AI results reside in dedicated tables within this group, and no OKR or 360 Review tables are modified by AI.
 
-Đường nét đứt giữa `review_assignments` và `review_answers` là chỗ quan trọng nhất về ẩn danh: liên kết chỉ tồn tại trong lúc đợt đang thu phiếu, và bị xóa khi đóng đợt (xem [Ràng buộc ẩn danh](#ràng-buộc-ẩn-danh-nhật-ký-và-tự-động-hóa-ai)).
+The dashed line between `review_assignments` and `review_answers` represents the core anonymity boundary: this association exists only while the campaign is actively collecting responses, and is detached when the campaign is closed (see [Anonymity, Audit Log, and AI Automation Constraints](#anonymity-audit-log-and-ai-automation-constraints)).
 
-Mũi tên đậm đi từ nhóm Tổ chức gom chung các khóa ngoại tới `app_users` (chủ Objective, người phụ trách KR, người check-in, người được đánh giá, người chấm, người nhận thông báo…) để sơ đồ dễ đọc; sơ đồ chi tiết bên dưới vẽ từng quan hệ.
+Thick arrows originating from the Organization group consolidate multiple foreign keys pointing to `app_users` (Objective owners, KR assignees, check-in users, reviewees, reviewers, notification recipients, etc.) to keep the overview readable; detailed relationships are shown in the ER diagrams below.
 
 ## Enums
 
-| Enum | Giá trị | Hiển thị trên giao diện |
+| Enum | Values | UI Display |
 |---|---|---|
-| `user_role` | ADMIN, HR, MANAGER, EMPLOYEE | Quản trị viên, Nhân sự, Quản lý, Nhân viên |
-| `cycle_status` | DRAFT, ACTIVE, CLOSED | Nháp, Đang chạy, Đã đóng |
-| `okr_level` | COMPANY, DEPARTMENT, TEAM, INDIVIDUAL | Công ty, Phòng ban, Team, Cá nhân |
-| `org_unit_type` | DEPARTMENT, TEAM | Phòng ban, Team |
-| `kr_type` | NUMBER, PERCENT, BOOLEAN | Số, Phần trăm, Có/Không |
-| `confidence_level` | ON_TRACK, AT_RISK, OFF_TRACK | Đúng tiến độ, Có rủi ro, Chệch hướng |
-| `campaign_status` | DRAFT, NOMINATION, COLLECTING, CLOSED, PUBLISHED | Nháp, Đề cử, Thu phiếu, Đã đóng, Đã công bố |
-| `reviewer_group` | SELF, MANAGER, PEER, DIRECT_REPORT | Tự đánh giá, Quản lý, Đồng nghiệp, Cấp dưới |
-| `assignment_status` | NOT_STARTED, DRAFT, SUBMITTED, CANCELLED | Chưa làm, Đang điền, Đã nộp, Đã hủy |
-| `nomination_status` | DRAFT, PENDING, APPROVED | Đang chọn, Chờ duyệt, Đã duyệt |
-| `result_grade` | EXCELLENT, GOOD, MEETS, NEEDS_IMPROVEMENT, INSUFFICIENT_DATA | Xuất sắc, Tốt, Đạt, Cần cải thiện, Thiếu dữ liệu |
-| `notification_type` | CHECKIN_REMINDER, CHECKIN_OFF_TRACK, CHECKIN_COMMENT, PLANNING_REMINDER, NOMINATION_REMINDER, NOMINATION_PENDING, REVIEW_REMINDER, RESULT_PUBLISHED, BLOCKER_ROUTED, BLOCKER_UPDATED, WEEKLY_DIGEST, CHECKIN_MISMATCH, AI_DRAFT_READY, ONE_ON_ONE_SENT, AUTOMATION_ALERT | Nhắc check-in, KR chệch hướng, Bình luận mới, Nhắc lập OKR, Nhắc đề cử, Chờ duyệt đề cử, Nhắc điền phiếu, Đã công bố kết quả, Vướng mắc chuyển đến, Vướng mắc đã có người nhận, Bản tin tuần, Check-in không khớp, Có bản nháp chờ duyệt, Đã nhận tóm tắt 1-1, Cảnh báo luồng tự động |
-| `audit_action` | CREATE, UPDATE, SOFT_DELETE, RESTORE, STATUS_CHANGE, CHECKIN, SUBMIT, PUBLISH, LOGIN, LOGIN_FAILED, EXPORT | Tạo, Sửa, Xóa, Khôi phục, Đổi trạng thái, Check-in, Nộp phiếu, Công bố, Đăng nhập, Đăng nhập lỗi, Xuất file |
-| `automation_flow` | BLOCKER_ROUTING, WEEKLY_DIGEST, ONE_ON_ONE_DRAFT, CHECKIN_MISMATCH, OKR_REVIEW, REVIEW_COMMENT_GUARD | Chuyển vướng mắc, Bản tin tuần, Bản nháp 1-1, Check-in không khớp, Rà soát OKR, Cảnh báo nhận xét 360 |
-| `trigger_kind` | EVENT, SCHEDULE, ON_SUBMIT | Theo sự kiện, Theo lịch, Khi bấm nộp |
-| `domain_event_type` | CHECKIN_CREATED, OBJECTIVE_CREATED, CAMPAIGN_CLOSED | Có check-in mới, Có Objective mới, Đợt 360 đã đóng |
-| `run_status` | PENDING, RUNNING, SUCCEEDED, FAILED, SKIPPED | Đang chờ, Đang chạy, Thành công, Lỗi, Bỏ qua |
-| `blocker_category` | DEPENDENCY, RESOURCE, TECHNICAL, PRIORITY_CHANGE, OTHER | Phụ thuộc phòng khác, Thiếu nguồn lực, Kỹ thuật, Ưu tiên thay đổi, Khác |
-| `severity_level` | LOW, MEDIUM, HIGH | Thấp, Trung bình, Cao |
-| `routing_status` | OPEN, ACKNOWLEDGED, REJECTED | Chờ nhận, Đã nhận xử lý, Không liên quan |
-| `review_issue` | NOT_MEASURABLE, OUTPUT_ONLY, DUPLICATE, NOT_ALIGNED | KR khó đo, Chỉ đếm việc làm, Trùng KR khác, Chưa liên kết cấp trên |
-| `draft_status` | PENDING_REVIEW, SENT, DISCARDED | Chờ duyệt, Đã gửi, Đã bỏ |
+| `user_role` | ADMIN, HR, MANAGER, EMPLOYEE | Administrator, HR, Manager, Employee |
+| `cycle_status` | DRAFT, ACTIVE, CLOSED | Draft, Active, Closed |
+| `okr_level` | COMPANY, DEPARTMENT, TEAM, INDIVIDUAL | Company, Department, Team, Individual |
+| `org_unit_type` | DEPARTMENT, TEAM | Department, Team |
+| `kr_type` | NUMBER, PERCENT, BOOLEAN | Number, Percentage, Boolean |
+| `confidence_level` | ON_TRACK, AT_RISK, OFF_TRACK | On Track, At Risk, Off Track |
+| `campaign_status` | DRAFT, NOMINATION, COLLECTING, CLOSED, PUBLISHED | Draft, Nomination, Collecting, Closed, Published |
+| `reviewer_group` | SELF, MANAGER, PEER, DIRECT_REPORT | Self, Manager, Peer, Direct Report |
+| `assignment_status` | NOT_STARTED, DRAFT, SUBMITTED, CANCELLED | Not Started, Draft, Submitted, Cancelled |
+| `nomination_status` | DRAFT, PENDING, APPROVED | Draft, Pending, Approved |
+| `result_grade` | EXCELLENT, GOOD, MEETS, NEEDS_IMPROVEMENT, INSUFFICIENT_DATA | Excellent, Good, Meets Expectations, Needs Improvement, Insufficient Data |
+| `notification_type` | CHECKIN_REMINDER, CHECKIN_OFF_TRACK, CHECKIN_COMMENT, PLANNING_REMINDER, NOMINATION_REMINDER, NOMINATION_PENDING, REVIEW_REMINDER, RESULT_PUBLISHED, BLOCKER_ROUTED, BLOCKER_UPDATED, WEEKLY_DIGEST, CHECKIN_MISMATCH, AI_DRAFT_READY, ONE_ON_ONE_SENT, AUTOMATION_ALERT | Check-in reminder, KR off track, New comment, OKR planning reminder, Nomination reminder, Pending nomination approval, Review form reminder, Results published, Blocker routed, Blocker acknowledged, Weekly digest, Check-in mismatch, AI draft ready for review, 1-on-1 summary received, Automation alert |
+| `audit_action` | CREATE, UPDATE, SOFT_DELETE, RESTORE, STATUS_CHANGE, CHECKIN, SUBMIT, PUBLISH, LOGIN, LOGIN_FAILED, EXPORT | Create, Update, Delete (Soft Delete), Restore, Status Change, Check-in, Submit, Publish, Login, Login Failed, Export |
+| `automation_flow` | BLOCKER_ROUTING, WEEKLY_DIGEST, ONE_ON_ONE_DRAFT, CHECKIN_MISMATCH, OKR_REVIEW, REVIEW_COMMENT_GUARD | Blocker routing, Weekly digest, 1-on-1 draft, Check-in mismatch, OKR review, Review comment guard |
+| `trigger_kind` | EVENT, SCHEDULE, ON_SUBMIT | Event-based, Scheduled, On submit |
+| `domain_event_type` | CHECKIN_CREATED, OBJECTIVE_CREATED, CAMPAIGN_CLOSED | New check-in created, New objective created, 360 campaign closed |
+| `run_status` | PENDING, RUNNING, SUCCEEDED, FAILED, SKIPPED | Pending, Running, Succeeded, Failed, Skipped |
+| `blocker_category` | DEPENDENCY, RESOURCE, TECHNICAL, PRIORITY_CHANGE, OTHER | Cross-department dependency, Resource constraint, Technical issue, Priority change, Other |
+| `severity_level` | LOW, MEDIUM, HIGH | Low, Medium, High |
+| `routing_status` | OPEN, ACKNOWLEDGED, REJECTED | Open, Acknowledged, Rejected |
+| `review_issue` | NOT_MEASURABLE, OUTPUT_ONLY, DUPLICATE, NOT_ALIGNED | Difficult to measure, Output-only activity, Duplicate KR, Not aligned with parent |
+| `draft_status` | PENDING_REVIEW, SENT, DISCARDED | Pending review, Sent, Discarded |
 
 ## Views
 
-| View | Trả về | Ai dùng |
+| View | Returns | Consumers / Usage |
 |---|---|---|
-| `vw_key_result_progress` | Tiến độ 0–1 của từng KR theo công thức (hiện tại − ban đầu) / (đích − ban đầu), giới hạn 0–1; KR Có/Không là 0 hoặc 1 | Màn chi tiết Objective, dashboard |
-| `vw_objective_tree` | Mỗi Objective kèm gốc (`root_id`), độ sâu (`depth`) và đường dẫn từ gốc (`path`), bằng CTE đệ quy | Cây OKR, breadcrumb |
-| `vw_campaign_reviewer_progress` | Mỗi người chấm còn bao nhiêu phiếu chưa nộp. **Không có cột người được đánh giá** | Nhân sự theo dõi đợt, nhắc nhở |
-| `vw_automation_flow_status` | Mỗi luồng: bật/tắt, hạn mức, số lần gọi AI hôm nay, lần chạy gần nhất, số lần lỗi 7 ngày, số lần đang chờ | Màn hình Tự động hóa (Admin, HR) |
-| `vw_open_blockers` | Vướng mắc đang chờ trưởng phòng được chuyển đến nhận, kèm người báo và KR | Màn hình Vướng mắc chuyển đến (trưởng phòng) |
-| `vw_review_group_scores` | Điểm trung bình theo đợt, người được đánh giá, nhóm người chấm, tiêu chí; số phiếu đếm theo `response_key`. Chỉ có dữ liệu khi đợt đã CLOSED hoặc PUBLISHED | **Chỉ tầng nghiệp vụ.** Chưa áp ngưỡng 3 phiếu nên API không được trả thẳng view này |
+| `vw_key_result_progress` | Progress 0–1 for each KR calculated as (current − initial) / (target − initial), clamped to 0–1; Boolean KR is 0 or 1 | Objective detail screen, dashboard |
+| `vw_objective_tree` | Each Objective with root (`root_id`), depth (`depth`), and path from root (`path`), via recursive CTE | OKR tree, breadcrumb |
+| `vw_campaign_reviewer_progress` | Remaining unsubmitted forms for each reviewer. **Contains no reviewee column** | HR campaign monitoring, reminders |
+| `vw_automation_flow_status` | Per flow: enabled/disabled, quota, AI calls today, last run timestamp, 7-day error count, pending count | Automation screen (Admin, HR) |
+| `vw_open_blockers` | Open blockers pending acknowledgment by target department head, with reporter and KR details | Routed blockers screen (Department head) |
+| `vw_review_group_scores` | Average scores by campaign, reviewee, reviewer group, criterion; form count calculated via `response_key`. Populated only when campaign is CLOSED or PUBLISHED | **Business logic layer only.** Does not enforce the 3-review threshold, so API must not expose this view directly. |
 
-## Sơ đồ ER chi tiết
+## Detailed ER Diagram
 
-Chỉ ghi các cột chính. Đủ cột, kiểu dữ liệu và giá trị mặc định xem trong file SQL hoặc DBML.
+Displays primary columns only. For full columns, data types, and default values, refer to the SQL or DBML file.
 
 ```mermaid
 erDiagram
-    departments ||--o{ departments : "đơn vị cha"
-    departments ||--o{ app_users : "nhân viên"
-    app_users ||--o{ app_users : "quản lý trực tiếp"
-    app_users |o--o{ departments : "trưởng phòng"
+    departments ||--o{ departments : "parent unit"
+    departments ||--o{ app_users : "employees"
+    app_users ||--o{ app_users : "direct manager"
+    app_users |o--o{ departments : "department head"
 
-    okr_cycles ||--o{ objectives : "chứa"
-    objectives |o--o{ objectives : "Objective cha"
-    app_users ||--o{ objectives : "sở hữu"
-    departments |o--o{ objectives : "OKR phòng ban, team"
-    objectives ||--|{ key_results : "1–5 KR"
-    app_users ||--o{ key_results : "phụ trách"
-    key_results ||--o{ checkins : "lịch sử"
-    checkins ||--o{ checkin_comments : "bình luận"
+    okr_cycles ||--o{ objectives : "contains"
+    objectives |o--o{ objectives : "parent objective"
+    app_users ||--o{ objectives : "owns"
+    departments |o--o{ objectives : "department / team OKRs"
+    objectives ||--|{ key_results : "1–5 KRs"
+    app_users ||--o{ key_results : "assignee"
+    key_results ||--o{ checkins : "history"
+    checkins ||--o{ checkin_comments : "comments"
 
-    review_templates ||--|{ review_criteria : "tiêu chí"
-    review_templates ||--o{ review_questions : "câu hỏi mở"
-    okr_cycles ||--o| review_campaigns : "tối đa 1 đợt"
-    review_templates ||--o{ review_campaigns : "dùng mẫu"
-    review_campaigns ||--o{ campaign_participants : "người được đánh giá"
-    review_campaigns ||--o{ nominations : "đề cử"
-    nominations ||--o{ nomination_peers : "đồng nghiệp"
-    review_campaigns ||--o{ review_assignments : "phân công"
-    review_assignments |o--o{ review_answers : "chỉ khi đang thu phiếu"
-    review_criteria |o--o{ review_answers : "điểm"
-    review_questions |o--o{ review_answers : "nhận xét"
+    review_templates ||--|{ review_criteria : "criteria"
+    review_templates ||--o{ review_questions : "open questions"
+    okr_cycles ||--o| review_campaigns : "max 1 campaign"
+    review_templates ||--o{ review_campaigns : "uses template"
+    review_campaigns ||--o{ campaign_participants : "reviewees"
+    review_campaigns ||--o{ nominations : "nominations"
+    nominations ||--o{ nomination_peers : "peers"
+    review_campaigns ||--o{ review_assignments : "assignments"
+    review_assignments |o--o{ review_answers : "active collection only"
+    review_criteria |o--o{ review_answers : "scores"
+    review_questions |o--o{ review_answers : "feedback"
 
-    okr_cycles ||--o{ final_results : "kết quả"
-    app_users ||--o{ final_results : "của"
-    app_users ||--o{ notifications : "nhận"
-    app_users |o--o{ audit_logs : "thao tác"
+    okr_cycles ||--o{ final_results : "results"
+    app_users ||--o{ final_results : "for user"
+    app_users ||--o{ notifications : "receives"
+    app_users |o--o{ audit_logs : "performed by"
 
     departments {
         bigint id PK
         varchar name
         bigint parent_id FK
-        org_unit_type unit_type "phòng ban / team"
-        bigint head_user_id FK "trưởng phòng / team lead"
+        org_unit_type unit_type "department / team"
+        bigint head_user_id FK "department head / team lead"
         boolean is_active
     }
     app_users {
@@ -184,8 +184,8 @@ erDiagram
         bigint owner_user_id FK
         bigint department_id FK
         bigint parent_id FK
-        numeric progress "lưu đệm"
-        numeric final_progress "chốt khi đóng"
+        numeric progress "cached"
+        numeric final_progress "finalized on close"
         timestamptz deleted_at
     }
     key_results {
@@ -197,8 +197,8 @@ erDiagram
         numeric target_value
         varchar unit
         bigint assignee_user_id FK
-        numeric current_value "lưu đệm"
-        confidence_level current_confidence "lưu đệm"
+        numeric current_value "cached"
+        confidence_level current_confidence "cached"
         timestamptz last_checkin_at
     }
     checkins {
@@ -249,8 +249,8 @@ erDiagram
     campaign_participants {
         bigint campaign_id PK,FK
         bigint reviewee_user_id PK,FK
-        bigint manager_user_id "bản chụp"
-        bigint department_id "bản chụp"
+        bigint manager_user_id "snapshot"
+        bigint department_id "snapshot"
     }
     nominations {
         bigint id PK
@@ -277,8 +277,8 @@ erDiagram
         bigint campaign_id FK
         bigint reviewee_user_id FK
         reviewer_group reviewer_group
-        bigint assignment_id FK "NULL sau khi đóng"
-        uuid response_key "gom câu trả lời của 1 phiếu"
+        bigint assignment_id FK "NULL after close"
+        uuid response_key "groups answers of 1 form"
         bigint criterion_id FK
         bigint question_id FK
         smallint score "1–5, NULL = N/A"
@@ -317,24 +317,24 @@ erDiagram
     }
 ```
 
-## Sơ đồ ER — Tự động hóa AI
+## ER Diagram — AI Automation
 
-Các bảng của phần tự động hóa, tách riêng để sơ đồ chính dễ đọc. Các bảng `checkins`, `departments`, `objectives`, `app_users`, `campaign_participants` chỉ vẽ khóa chính để thấy chỗ nối.
+Automation tables are separated to keep the primary diagram clear and readable. Tables `checkins`, `departments`, `objectives`, `app_users`, and `campaign_participants` show primary keys only to indicate join points.
 
 ```mermaid
 erDiagram
-    automation_flows ||--o{ automation_runs : "lần chạy"
-    automation_flows ||--o{ automation_daily_usage : "hạn mức"
-    domain_events |o--o{ automation_runs : "kích hoạt"
-    checkins ||--o| checkin_insights : "nhãn AI"
-    departments |o--o{ checkin_insights : "chuyển đến"
-    automation_runs ||--o{ checkin_insights : "tạo bởi"
-    objectives ||--o{ objective_review_notes : "rà soát"
-    automation_runs ||--o{ objective_review_notes : "tạo bởi"
-    app_users ||--o{ weekly_digests : "nhận"
-    automation_runs ||--o{ weekly_digests : "tạo bởi"
-    campaign_participants ||--o| one_on_one_drafts : "bản nháp 1-1"
-    automation_runs ||--o{ one_on_one_drafts : "tạo bởi"
+    automation_flows ||--o{ automation_runs : "runs"
+    automation_flows ||--o{ automation_daily_usage : "quota"
+    domain_events |o--o{ automation_runs : "triggers"
+    checkins ||--o| checkin_insights : "AI labels"
+    departments |o--o{ checkin_insights : "routed to"
+    automation_runs ||--o{ checkin_insights : "generated by"
+    objectives ||--o{ objective_review_notes : "reviews"
+    automation_runs ||--o{ objective_review_notes : "generated by"
+    app_users ||--o{ weekly_digests : "receives"
+    automation_runs ||--o{ weekly_digests : "generated by"
+    campaign_participants ||--o| one_on_one_drafts : "1-on-1 draft"
+    automation_runs ||--o{ one_on_one_drafts : "generated by"
 
     checkins {
         bigint id PK
@@ -363,14 +363,14 @@ erDiagram
     domain_events {
         bigint id PK
         domain_event_type event_type
-        bigint entity_id "chỉ id, không nội dung"
+        bigint entity_id "ID only, no payload content"
         timestamptz processed_at
     }
     automation_runs {
         bigint id PK
         automation_flow flow FK
         bigint event_id FK
-        varchar run_key "UNIQUE cùng flow"
+        varchar run_key "UNIQUE per flow"
         run_status status
         smallint attempt_count
         int input_tokens
@@ -403,34 +403,34 @@ erDiagram
         bigint id PK
         bigint manager_user_id FK
         date week_start
-        jsonb stats "từ database"
-        jsonb highlights "AI viết, tối đa 3"
+        jsonb stats "from database"
+        jsonb highlights "AI generated, max 3"
     }
     one_on_one_drafts {
         bigint id PK
         bigint campaign_id FK
         bigint reviewee_user_id FK
-        bigint reviewer_user_id FK "NULL = HR duyệt"
-        jsonb ai_strengths "không đổi"
-        jsonb ai_improvements "không đổi"
-        text edited_text "bản đã duyệt"
+        bigint reviewer_user_id FK "NULL = HR approval"
+        jsonb ai_strengths "immutable"
+        jsonb ai_improvements "immutable"
+        text edited_text "approved version"
         draft_status status
     }
 ```
 
-## Ràng buộc ẩn danh, nhật ký và tự động hóa AI
+## Anonymity, Audit Log, and AI Automation Constraints
 
-Đây là các quy tắc mà **mọi** truy vấn, API và báo cáo phải tôn trọng. Một số được database tự chặn; số còn lại là trách nhiệm của tầng nghiệp vụ.
+These are constraints that **every** query, API, and report must adhere to. Some are strictly enforced by the database; the remainder are the responsibility of the business logic layer.
 
-| Quy tắc | Database tự đảm bảo | Tầng nghiệp vụ phải làm |
+| Rule | Database Enforced | Business Layer Responsibility |
 |---|---|---|
-| Sau khi đóng đợt, không ai (kể cả Admin có quyền đọc database) biết ai chấm điểm nào | `close_review_campaign()` đặt `review_answers.assignment_id = NULL`; `review_assignments` không có cột điểm | Chỉ đóng đợt qua hàm này, không UPDATE trạng thái tay |
-| Nhóm Đồng nghiệp/Cấp dưới dưới 3 phiếu không được hiện riêng | `vw_review_group_scores` trả `form_count` theo `response_key` | Gộp hai nhóm nếu một nhóm < 3; vẫn < 3 thì ẩn và không tính vào điểm 360 |
-| Trong lúc thu phiếu, Nhân sự chỉ thấy ai còn nợ bao nhiêu phiếu | `vw_campaign_reviewer_progress` không có cột người được đánh giá | API theo dõi tiến độ chỉ đọc view này |
-| Nhật ký không làm lộ ẩn danh hay bí mật | `audit_logs` không sửa, không xóa được | `metadata` không chứa mật khẩu, hash, token, nội dung phiếu, hay cặp người chấm–người được chấm của nhóm ẩn danh |
-| Check-in là lịch sử thật | `checkins` không sửa, không xóa được | Sửa sai bằng một check-in mới |
-| AI không sửa dữ liệu nghiệp vụ | Kết quả AI chỉ nằm ở bảng riêng; trigger giữ nguyên đề xuất gốc của AI | Tài khoản của AI worker chỉ có quyền ghi vào các bảng tự động hóa và `notifications` |
-| Admin xem lịch sử chạy không đọc được nội dung | `automation_runs` và `domain_events` không có cột nội dung | Không ghi prompt hay câu trả lời của AI vào log ứng dụng |
-| Thời điểm nộp phiếu không lộ qua tự động hóa | Luồng cảnh báo nhận xét 360 bị chặn ghi `automation_runs` | Chỉ cộng `automation_daily_usage` |
-| Tên thật không rời khỏi hệ thống | — | Đổi tên người, phòng ban thành mã trước khi gọi AI; bảng ánh xạ chỉ nằm trong bộ nhớ |
-| Nhân viên chỉ thấy nội dung đã duyệt | `one_on_one_drafts`: chỉ người duyệt gửi được, chỉ sau khi đợt đã công bố | API trả cho nhân viên đúng `edited_text`, không trả `ai_strengths`/`ai_improvements` |
+| After campaign closure, no one (including Admins with database read privileges) can identify which reviewer submitted which score | `close_review_campaign()` sets `review_answers.assignment_id = NULL`; `review_assignments` contains no score column | Campaign closure must only execute via this function; manual state UPDATE operations are prohibited |
+| Peer/Direct Report groups with fewer than 3 reviews cannot be displayed separately | `vw_review_group_scores` returns `form_count` based on `response_key` | Merge both groups if either has < 3; if the merged group is still < 3, hide completely and exclude from 360 review score calculation |
+| During active response collection, HR can only view how many unsubmitted forms each reviewer has pending | `vw_campaign_reviewer_progress` contains no reviewee column | Campaign progress tracking APIs must query this view only |
+| Audit logs must never compromise anonymity or sensitive secrets | `audit_logs` is append-only (cannot be updated or deleted) | `metadata` must not contain passwords, hashes, tokens, form response answers, or reviewer-reviewee mappings for anonymous groups |
+| Check-in entries represent immutable history | `checkins` cannot be updated or deleted | Corrections must be submitted as a new check-in |
+| AI never modifies business data | AI outputs are stored exclusively in dedicated automation tables; database triggers preserve original AI suggestions | The AI worker account has write permissions restricted solely to automation tables and `notifications` |
+| Admins inspecting execution history cannot view payload content | `automation_runs` and `domain_events` contain no content or prompt columns | Application logs must never write AI prompts or generated response content |
+| Review submission timestamps cannot be leaked via automation | The review comment guard flow is prohibited from inserting into `automation_runs` | Increments only `automation_daily_usage` |
+| Real identities never leave the system | — | Pseudonymize user and department names to random identifiers before sending requests to AI; mapping tables reside exclusively in memory |
+| Employees can only view approved content | `one_on_one_drafts`: can only be sent by the approver, and only after the campaign is published | The employee-facing API returns strictly `edited_text`, never exposing `ai_strengths` or `ai_improvements` |
