@@ -94,8 +94,8 @@ US27–US34   Tự động hóa bằng AI             (F13)
 | US19 | PASS | PASS | PASS | PASS | PASS | PASS | Ẩn danh và "Không đủ thông tin". |
 | US20 | PASS | PASS | PASS | PASS | PASS | PASS | HR chỉ thấy số phiếu còn thiếu theo người đánh giá, không thấy cặp ai–ai. |
 | US21 | PASS | PASS | PASS | PASS | PASS | PASS | Ngưỡng tối thiểu 3 phiếu mỗi nhóm. |
-| US22 | PASS | PASS | PASS | PASS | **REVIEW** | PASS | Story lớn nhất; có thể tách "tính điểm" và "công bố". Tỷ trọng mặc định 60/40 đã chốt (BR-072). |
-| US23 | PASS | PASS | PASS | PASS | **REVIEW** | PASS | Ba loại dashboard; nên tách thành 3 story khi lập kế hoạch sprint. |
+| US22 | PASS | PASS | PASS | PASS | **REVIEW** | PASS | Story lớn nhất; có thể tách "tính điểm" và "công bố". Tỷ trọng mặc định 60/40 đã chốt (BR-072). Đã tách ở [kế hoạch triển khai](09-implementation-plan.md#3-tách-story-quá-lớn). |
+| US23 | PASS | PASS | PASS | PASS | **REVIEW** | PASS | Ba loại dashboard; nên tách thành 3 story khi lập kế hoạch sprint. Đã tách ở [kế hoạch triển khai](09-implementation-plan.md#3-tách-story-quá-lớn). |
 | US24 | PASS | PASS | PASS | PASS | PASS | PASS | Báo cáo 360 tuân thủ ngưỡng ẩn danh. |
 | US25 | PASS | PASS | PASS | PASS | PASS | PASS | Lịch nhắc mô tả ở UC25. |
 | US26 | PASS | PASS | PASS | PASS | PASS | PASS | Nhật ký không chứa cặp người đánh giá–người được đánh giá ẩn danh. |
@@ -104,7 +104,7 @@ US27–US34   Tự động hóa bằng AI             (F13)
 | US29 | PASS | PASS | PASS | PASS | PASS | PASS | Có nút "Không liên quan phòng tôi" để đo độ chính xác. |
 | US30 | PASS | PASS | PASS | PASS | PASS | PASS | Con số lấy từ database, AI chỉ viết phần tóm tắt. |
 | US31 | PASS | PASS | PASS | PASS | PASS | PASS | Chỉ gửi được sau khi đợt `PUBLISHED`; chỉ dùng nhóm đủ ngưỡng ẩn danh. |
-| US32 | PASS | PASS | PASS | PASS | **REVIEW** | PASS | Nền tảng của F13; nên tách thành "ghi sự kiện và hàng đợi", "gọi AI và kiểm tra kết quả", "thử lại và chống chạy trùng". Dịch vụ AI được chọn khi làm backend, qua AI Gateway (ADR-005). |
+| US32 | PASS | PASS | PASS | PASS | **REVIEW** | PASS | Nền tảng của F13; nên tách thành "ghi sự kiện và hàng đợi", "gọi AI và kiểm tra kết quả", "thử lại và chống chạy trùng". Dịch vụ AI được chọn khi làm backend, qua AI Gateway (ADR-005). Đã tách ở [kế hoạch triển khai](09-implementation-plan.md#3-tách-story-quá-lớn). |
 | US33 | PASS | PASS | PASS | PASS | PASS | PASS | Gộp hai luồng nhỏ cùng kiểu "nhắc người viết". |
 | US34 | PASS | PASS | PASS | PASS | PASS | PASS | Chạy đồng bộ, tối đa 5 giây; AI lỗi thì vẫn cho nộp. |
 

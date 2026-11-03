@@ -39,7 +39,7 @@ US23–US26   Dashboard, báo cáo, thông báo, nhật ký
 US27–US34   Tự động hóa bằng AI
 ```
 
-31 story đạt đủ 6 tiêu chí. Ba story US22 (kết quả cuối kỳ), US23 (dashboard) và US32 (nền tảng chạy luồng AI) đạt mọi tiêu chí trừ **Small**, nên sẽ được tách nhỏ khi lập kế hoạch sprint. Chi tiết từng story nằm ở [INVEST Requirements](docs/08-invest-requirements.md); tiêu chí chấp nhận của từng use case nằm ở [Acceptance Criteria](docs/06-acceptance-criteria.md). [Bảng truy vết](docs/traceability.md) nối mỗi story tới màn hình, quy tắc, API, database và sơ đồ sequence.
+31 story đạt đủ 6 tiêu chí. Ba story US22 (kết quả cuối kỳ), US23 (dashboard) và US32 (nền tảng chạy luồng AI) đạt mọi tiêu chí trừ **Small**, nên sẽ được tách nhỏ khi lập kế hoạch sprint. Chi tiết từng story nằm ở [INVEST Requirements](docs/08-invest-requirements.md); tiêu chí chấp nhận của từng use case nằm ở [Acceptance Criteria](docs/06-acceptance-criteria.md). [Bảng truy vết](docs/traceability.md) nối mỗi story tới màn hình, quy tắc, API, database, sơ đồ sequence và mã test. Thứ tự triển khai, cách tách story lớn và tiêu chí hoàn thành nằm ở [kế hoạch triển khai](docs/09-implementation-plan.md); danh sách 156 test nằm ở [danh mục test](docs/test-cases.md).
 
 ### 1.3 Use cases
 
@@ -461,3 +461,46 @@ sequenceDiagram
 ```
 
 Check-in không chờ AI: AI chậm hay lỗi cũng không làm hỏng thao tác của người dùng.
+
+## Documentation
+
+| Nhóm | Tài liệu | Nội dung |
+|---|---|---|
+| Yêu cầu | [Phạm vi](docs/01-scope.md) | Vấn đề, mục tiêu, phạm vi V1, ngoài phạm vi |
+| | [Tính năng](docs/02-features.md) | Phân rã chức năng, sơ đồ tư duy |
+| | [Use case](docs/03-use-cases.md) | Vai trò, ma trận quyền, đặc tả 32 use case, phân định Người, Tự động và AI |
+| | [Tiêu chí chấp nhận](docs/06-acceptance-criteria.md) | Tiêu chí kiểm thử được của từng use case |
+| | [User stories](docs/08-invest-requirements.md) | 34 story và đánh giá INVEST |
+| | [Quy tắc nghiệp vụ](docs/requirements/business-rules.md) | 73 quy tắc có mã |
+| | [Yêu cầu phi chức năng](docs/requirements/non-functional-requirements.md) | 39 yêu cầu về hiệu năng, bảo mật, ẩn danh, AI |
+| | [Thuật ngữ](docs/glossary.md) | Nghĩa của các thuật ngữ và tên tương ứng trong code |
+| Giao diện | [Kiến trúc thông tin](docs/04-information-architecture.md) | 29 màn hình, quyền vào trang, trạng thái giao diện |
+| | [Giao diện mẫu](src/frontend/README.md) | Cách chạy bản mẫu React |
+| Dữ liệu | [Thiết kế dữ liệu](docs/05-data-model.md) | Quyết định thiết kế, ẩn danh, transaction, tự động hóa |
+| | [Database](docs/DATABASE.md) | Bảng, enum, view, sơ đồ ER |
+| Kiến trúc | [Kiến trúc C4](docs/architecture/c4.md) | Bối cảnh, container, component, triển khai |
+| | [Quyết định kiến trúc](docs/architecture/decisions.md) | 7 quyết định kèm lý do và cái giá |
+| | [Đặc tả luồng AI](docs/architecture/ai-flows.md) | Dữ liệu gửi AI, khuôn JSON, cách kiểm tra của 6 luồng |
+| | [Sơ đồ class](docs/architecture/class-diagrams.md) | C4 cấp 4: class của từng module |
+| | [Sơ đồ sequence](docs/architecture/sequence-diagrams.md) | Một sơ đồ cho mỗi use case |
+| | [Rủi ro và nợ kỹ thuật](docs/architecture/risks.md) | Rủi ro, cách giảm, nợ kỹ thuật cần trả |
+| API | [Tài liệu API](docs/api/README.md) | Quy ước, lỗi, phần AI trong API |
+| | [OpenAPI](docs/api/openapi.yaml) | Hợp đồng 89 thao tác |
+| Triển khai | [Cấu trúc thư mục](docs/07-folder-structure.md) | Thư mục React và NestJS, chiều phụ thuộc |
+| | [Kế hoạch triển khai](docs/09-implementation-plan.md) | 11 đợt, tách story, chiến lược kiểm thử, tiêu chí hoàn thành |
+| | [Danh mục test](docs/test-cases.md) | 156 test sinh từ tiêu chí chấp nhận và yêu cầu phi chức năng |
+| | [Bảng truy vết](docs/traceability.md) | Story → use case → màn hình → API → database → sequence → test |
+
+## Project Progress
+
+| Phần | Trạng thái |
+|---|---|
+| Yêu cầu, use case, tiêu chí chấp nhận, quy tắc, yêu cầu phi chức năng | Xong |
+| Kiến trúc thông tin và giao diện mẫu | Xong; giao diện chạy bằng dữ liệu giả |
+| Database | Xong; 67 kiểm thử schema qua trên PostgreSQL 15 |
+| Kiến trúc C4, quyết định kiến trúc, đặc tả luồng AI | Xong |
+| OpenAPI | Xong; 89 thao tác, hợp lệ theo Redocly |
+| Cấu trúc thư mục, sơ đồ class, sơ đồ sequence | Xong |
+| Bảng truy vết, kế hoạch triển khai, danh mục test | Xong |
+| Backend NestJS (đợt I1–I10) | Chưa bắt đầu |
+| Nối frontend với API (đợt I11) | Chưa bắt đầu |
