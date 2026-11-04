@@ -4,12 +4,12 @@
 >
 > Implementation status: NOT STARTED; no backend yet
 
-This is level 4 (code) of the [C4 architecture](c4.md): the main classes of the NestJS backend, grouped by module as in [C3](c4.md#c3--component) and by folder as in the [folder structure](../07-folder-structure.md). How the classes cooperate in each operation is shown in the [sequence diagrams](sequence-diagrams.md).
+This is level 4 (code) of the [C4 architecture](../c4/README.md): the main classes of the NestJS backend, grouped by module as in [C3](../c4/03-component.md) and by folder as in the [folder structure](../../07-folder-structure.md). How the classes cooperate in each operation is shown in the [sequence diagrams](sequence-diagrams.md).
 
 ## Conventions
 
 - Each module is split into three layers: **Controller** (API layer), **Service** (business layer), **Repository** (interface in the business layer, implemented with Kysely in the infrastructure layer).
-- Each controller method corresponds to exactly one `operationId` in the [OpenAPI](../api/openapi.yaml); its parameters and return type are the schemas of the same name.
+- Each controller method corresponds to exactly one `operationId` in the [OpenAPI](../../api/openapi.yaml); its parameters and return type are the schemas of the same name.
 - The diagrams show only the main service and repository methods; helper methods, constructors and DTOs are not drawn.
 - Every controller except `AuthController.login` goes through `JwtAuthGuard` and `RolesGuard`. The links to these two guards are not redrawn in each module.
 - Relationships: `..>` is a dependency, `..|>` is an interface implementation.
@@ -572,7 +572,7 @@ classDiagram
     OneOnOneDraftFlow ..|> AutomationFlowHandler
 ```
 
-- The five background flows differ only in their `AutomationFlowHandler`: what data is fetched, which JSON schema, which action, exactly as in the [AI flow specification](ai-flows.md). `FlowRunner` handles the shared parts: enable/disable, quota, deduplication, retry, history logging.
+- The five background flows differ only in their `AutomationFlowHandler`: what data is fetched, which JSON schema, which action, exactly as in the [AI flow specification](../arc42/ai-flows.md). `FlowRunner` handles the shared parts: enable/disable, quota, deduplication, retry, history logging.
 - `AiGateway` is the only path to the AI service (ADR-005). `FakeAiProvider` records the content sent out to test NFR-PRIV-004.
 - `ReminderJob` and `EmailSender` do not use AI.
 
@@ -602,4 +602,4 @@ classDiagram
 | Weekly digests | `WeeklyDigestsController` | `automation` |
 | 1-on-1 drafts | `OneOnOneDraftsController` | `automation` |
 
-**Related:** [Sequence diagrams](sequence-diagrams.md) · [C4 architecture](c4.md) · [Folder structure](../07-folder-structure.md) · [OpenAPI](../api/openapi.yaml)
+**Related:** [Sequence diagrams](sequence-diagrams.md) · [C4 architecture](../c4/README.md) · [Folder structure](../../07-folder-structure.md) · [OpenAPI](../../api/openapi.yaml)

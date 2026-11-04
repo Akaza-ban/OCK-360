@@ -72,4 +72,4 @@ When writing the contract, the following 6 operations were added because the scr
 - After a campaign is closed, `getReviewForm` returns `404` because the answers have been separated from the reviewer. `listMyReviewForms` still shows the form status (BR-057).
 - V1 stores the avatar as a path in `avatarUrl`; there is no file upload API yet.
 
-**Related:** [C4 Architecture](../architecture/c4.md) · [Business Rules](../requirements/business-rules.md) · [Acceptance Criteria](../06-acceptance-criteria.md)
+**Related:** [C4 Architecture](../architecture/c4/README.md) · [Business Rules](../requirements/business-rules.md) · [Acceptance Criteria](../06-acceptance-criteria.md)

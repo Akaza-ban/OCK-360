@@ -4,14 +4,14 @@
 >
 > Implementation status: the frontend has a working prototype running on mock data; the backend has NOT STARTED
 
-This document defines where code goes, so that each module in the [C3 architecture](architecture/c4.md#c3--component) and each API group in [OpenAPI](api/openapi.yaml) has exactly one place in the source code.
+This document defines where code goes, so that each module in the [C3 architecture](architecture/c4/03-component.md) and each API group in [OpenAPI](api/openapi.yaml) has exactly one place in the source code.
 
 ## 1. General principles
 
 - A business feature lives entirely in one folder, in both the frontend and the backend. Reading one folder shows the whole feature.
 - Names in code follow the contract: `operationId` is the function name, and the OpenAPI schema name is the DTO name.
 - Authorization and business rules live in the backend. The frontend only hides buttons to keep the UI tidy.
-- `src/database/okr360.sql` is the source of truth for the schema (ADR-003). The backend does not generate migrations itself.
+- The SQL schema, written in increment I1 from [DATABASE.md](DATABASE.md) and the [data model](05-data-model.md), is the source of truth for the database (ADR-003). The backend does not generate migrations itself.
 
 ## 2. Whole repo
 
@@ -19,7 +19,7 @@ This document defines where code goes, so that each module in the [C3 architectu
 OCK-360/
 ├── docs/                      # Requirements, architecture, API documents
 ├── src/
-│   ├── database/              # Schema, demo data, schema tests (exists)
+│   ├── database/              # SQL schema and schema tests (written in I1)
 │   ├── frontend/              # React + Vite (prototype exists)
 │   └── backend/               # NestJS (not yet created)
 ├── compose.yaml               # Runs postgres, api, worker, proxy (not yet created)
@@ -194,4 +194,4 @@ Secrets live only in the environment variables of `api` and `worker`, and never 
 | `OUTBOX_POLL_SECONDS` | worker | Interval for reading the event outbox, default 30 |
 | `VITE_API_BASE_URL`, `VITE_USE_MOCK` | frontend | API address; enables mock data. Not secrets |
 
-**Related:** [C4 architecture](architecture/c4.md) · [Architecture decisions](architecture/decisions.md) · [API](api/README.md)
+**Related:** [C4 architecture](architecture/c4/README.md) · [Architecture decisions](architecture/arc42/09-architecture-decisions.md) · [API](api/README.md)

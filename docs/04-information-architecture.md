@@ -15,7 +15,7 @@ How to read the diagram:
 - Rounded boxes are tabs or content blocks inside a page; double-layered boxes are pages repeated per object (each Objective and each evaluation campaign has a detail page).
 - Yellow boxes are forms or tools, usually opened as a modal. A red label means only that role may enter; a label on a gateway page applies to the whole column.
 
-Routes (hash routes): `#/login` `#/dashboard` `#/okr/my` `#/okr/tree` `#/okr/:objectiveId` `#/reviews/todo` `#/reviews/forms/:formId` `#/reviews/nominate` `#/reviews/approvals` `#/reviews/results` `#/reviews/results/:userId` `#/final-results` `#/reports` `#/admin/cycles` `#/admin/departments` `#/admin/users` `#/admin/campaigns` `#/admin/campaigns/:campaignId` `#/admin/templates` `#/audit` `#/ai/blockers` `#/ai/digest` `#/ai/drafts` `#/ai/automation` `#/notifications` `#/profile` `#/403`.
+Routes (hash routes): `#/login` `#/dashboard` `#/okr/my` `#/okr/tree` `#/okr/:objectiveId` `#/reviews/todo` `#/reviews/forms/:formId` `#/reviews/nominate` `#/reviews/approvals` `#/reviews/results` `#/reviews/results/:userId` `#/final-results` `#/reports` `#/admin/cycles` `#/admin/departments` `#/admin/users` `#/admin/campaigns` `#/admin/campaigns/:campaignId` `#/admin/templates` `#/audit` `#/okr/blockers` `#/okr/digest` `#/reviews/drafts` `#/admin/automation` `#/notifications` `#/profile` `#/403`.
 
 Creating/editing an Objective and Check-in open as a **modal** right on the current page (My OKRs, OKR Tree, Objective Detail, Dashboard), so the user is not taken out of context.
 
@@ -117,6 +117,22 @@ Items without permission are **not shown** in the sidebar. Edit, delete and chec
 | US33       | Notification → `SCR-12` view mismatch label, review suggestions                                       |
 | US34       | `SCR-21` warning when clicking submit                                                                 |
 
+## Where AI appears
+
+AI is not a separate feature, so it has no menu group of its own. Each screen that shows AI results sits in the group of the work it supports:
+
+| Screen | Menu group | Why there |
+|---|---|---|
+| `SCR-80` Routed Blockers | OKR | Handling blockers raised in check-ins is part of following OKRs |
+| `SCR-81` Weekly Digest | OKR | A summary of the team's OKR week |
+| `SCR-82` 1-1 Drafts | 360 Evaluation | Prepared from the 360 results it sits next to |
+| `SCR-83` Automation Flows | Administration | System configuration, like cycles and users |
+| `SCR-84` "What did the AI do?" panel | No menu entry | Opened from the "AI-generated" label wherever that label appears |
+
+Everywhere else AI shows up inside existing screens: labels on check-ins in `SCR-12`, review notes on a new Objective, the comment warning when submitting a form in `SCR-21`.
+
+The UI prototype in `src/frontend` and the information architecture image above still show these four screens under a separate "Tự động hóa AI" sidebar group with `#/ai/...` routes. They will follow this grouping when the frontend is connected to the API in increment I11 of the [implementation plan](09-implementation-plan.md).
+
 ## Screen hierarchy diagram
 
 ```mermaid
@@ -132,6 +148,10 @@ flowchart LR
     MyOkr --> Detail["SCR-12 Objective Detail"]
     Tree --> Detail
     Detail --> ObjForm["SCR-13 Create/edit Objective modal"]
+    GroupOkr --> Blockers["SCR-80 Routed Blockers"]
+    GroupOkr --> Digest["SCR-81 Weekly Digest"]
+    Blockers --> Detail
+    Digest --> Detail
 
     Shell --> GroupReview["360 Evaluation group"]
     GroupReview --> Todo["SCR-20 Forms to Fill"]
@@ -139,6 +159,7 @@ flowchart LR
     GroupReview --> Nominate["SCR-22 Nominate Peers"]
     GroupReview --> Approve["SCR-23 Approve Reviewers"]
     GroupReview --> Result360["SCR-24 360 Results"]
+    GroupReview --> Drafts["SCR-82 1-1 Drafts"]
 
     Shell --> GroupResult["Results and reports group"]
     GroupResult --> Final["SCR-30 Final Results"]
@@ -152,14 +173,7 @@ flowchart LR
     Campaigns --> Campaign["SCR-54 Campaign Detail"]
     GroupAdmin --> Templates["SCR-55 Criteria Templates"]
     GroupAdmin --> Audit["SCR-56 Audit Log"]
-
-    Shell --> GroupAi["AI Automation group"]
-    GroupAi --> Blockers["SCR-80 Routed Blockers"]
-    GroupAi --> Digest["SCR-81 Weekly Digest"]
-    GroupAi --> Drafts["SCR-82 1-1 Drafts"]
-    GroupAi --> Flows["SCR-83 Automation Flows"]
-    Blockers --> Detail
-    Digest --> Detail
+    GroupAdmin --> Flows["SCR-83 Automation Flows"]
 
     Shell --> GroupPersonal["Personal and system group"]
     GroupPersonal --> Notify["SCR-60 Notifications"]
@@ -167,7 +181,7 @@ flowchart LR
     GroupPersonal --> Forbidden["SCR-90 403"]
 
     classDef group fill:#e8f1fc,color:#123,stroke:#3a7bd5
-    class GroupOkr,GroupReview,GroupResult,GroupAdmin,GroupAi,GroupPersonal group
+    class GroupOkr,GroupReview,GroupResult,GroupAdmin,GroupPersonal group
 ```
 
 ## Main interaction flows

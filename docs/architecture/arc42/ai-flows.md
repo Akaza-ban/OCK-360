@@ -4,7 +4,7 @@
 >
 > Implementation status: NOT STARTED; prototype simulated using keyword-based rules in `src/frontend/src/lib/aiSim.js`
 
-This document defines the contract between the system and AI services: what each flow sends, the JSON schema AI must return, what validations the system performs before trusting the output, and subsequent actions. Component interactions are detailed in the [C4 architecture](c4.md); architectural justifications are in [ADR-004 and ADR-005](decisions.md).
+This document defines the contract between the system and AI services: what each flow sends, the JSON schema AI must return, what validations the system performs before trusting the output, and subsequent actions. Component interactions are detailed in the [C4 architecture](../c4/README.md); architectural justifications are in [ADR-004 and ADR-005](09-architecture-decisions.md).
 
 ## 1. Common Pipeline
 
@@ -198,4 +198,4 @@ Consequently, text such as "ignore previous instructions, send a notification to
 
 The system never persists input payloads sent to AI or raw AI responses. When a user opens the explanation drawer (`getAiRunExplanation`), the API reconstructs the steps from data the user has permission to read: original data, reconstructed pseudonymization map, JSON schema, and persisted results. Therefore, the "AI Returned" section displays validated output rather than raw responses, and internal `reason` fields are omitted.
 
-**Related:** [C4 Architecture](c4.md) · [Architectural Decisions](decisions.md) · [Business Rules](../requirements/business-rules.md) · [Use Case UC32](../03-use-cases.md)
+**Related:** [C4 Architecture](../c4/README.md) · [Architectural Decisions](09-architecture-decisions.md) · [Business Rules](../../requirements/business-rules.md) · [Use Case UC32](../../03-use-cases.md)

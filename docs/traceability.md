@@ -14,9 +14,9 @@ This table traces each user story across the entire design, ensuring no requirem
 | Screen | [Information architecture](04-information-architecture.md) |
 | Rules | [Business rules](requirements/business-rules.md) |
 | API | `operationId` in [OpenAPI](api/openapi.yaml), grouped by `x-use-case` |
-| Module | Backend module in [class diagrams](architecture/class-diagrams.md) |
-| Database | Table in [okr360.sql](../src/database/okr360.sql) read or written by the use case |
-| Sequence | [Sequence diagrams](architecture/sequence-diagrams.md), matching the use case number |
+| Module | Backend module in [class diagrams](architecture/uml/class-diagrams.md) |
+| Database | Table in [DATABASE.md](DATABASE.md) read or written by the use case |
+| Sequence | [Sequence diagrams](architecture/uml/sequence-diagrams.md), matching the use case number |
 | Test | Test case ID in [test cases](test-cases.md), derived from acceptance criteria |
 
 ## Traceability by User Story
@@ -58,7 +58,7 @@ This table traces each user story across the entire design, ensuring no requirem
 | US33 | Should | UC08, UC12, UC32 | AC-UC32 | SCR-12 | BR-001, BR-002, BR-091, BR-104 | `listObjectiveReviewNotes`, `dismissObjectiveReviewNote`, `listCheckins` | `okr` | `objectives`, `key_results`, `domain_events`, `audit_logs`, `checkins`, `notifications`, `automation_runs`, `automation_daily_usage`, `checkin_insights`, `objective_review_notes`, `weekly_digests`, `one_on_one_drafts` | SD-08, SD-12, SD-32 | TC-UC08-01 … TC-UC08-04, TC-UC12-01 … TC-UC12-05, TC-UC32-01 … TC-UC32-09 |
 | US34 | Should | UC19 | AC-UC19 | SCR-21 | BR-001, BR-002, BR-091, BR-094, BR-101 | `checkReviewComment` | `reviews` | `review_assignments`, `review_answers`, `automation_daily_usage`, `audit_logs` | SD-19 | TC-UC19-01 … TC-UC19-05 |
 
-US32–US34 specify API operations dedicated to the AI subsystem. Background AI automation flows have no direct client API; they run inside `worker` as defined in [AI flows specification](architecture/ai-flows.md).
+US32–US34 specify API operations dedicated to the AI subsystem. Background AI automation flows have no direct client API; they run inside `worker` as defined in [AI flows specification](architecture/arc42/ai-flows.md).
 
 ## Coverage Check
 

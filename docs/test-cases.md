@@ -2,7 +2,7 @@
 
 > Status: no tests have been written yet
 
-The catalog is generated from the [acceptance criteria](06-acceptance-criteria.md) and the [non-functional requirements](requirements/non-functional-requirements.md): each criterion bullet is one test, and each non-functional requirement is one test.
+The catalog is derived from the [acceptance criteria](06-acceptance-criteria.md) and the [non-functional requirements](requirements/non-functional-requirements.md): each criterion bullet is one test, and each non-functional requirement is one test. It is maintained by hand; see [Updating the Documentation](../README.md#updating-the-documentation).
 
 - In total, 117 functional tests and 39 non-functional tests.
 - Test level and delivery iteration follow the [implementation plan](09-implementation-plan.md); the Level column is a proposal and can be changed when writing the tests.

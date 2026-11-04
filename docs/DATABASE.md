@@ -1,6 +1,6 @@
 # OKR360 — Database Diagrams
 
-The diagrams below are drawn from [`src/database/okr360.sql`](../src/database/okr360.sql) (PostgreSQL 15+, schema `okr360`). Design rationale and details are documented in [05-data-model.md](05-data-model.md). For an interactive diagram, paste [`okr360.dbml`](../src/database/okr360.dbml) into [dbdiagram.io](https://dbdiagram.io).
+This is the target database design (PostgreSQL 15+, schema `okr360`). Design rationale and details are documented in [05-data-model.md](05-data-model.md). The SQL schema itself is written in increment I1 of the [implementation plan](09-implementation-plan.md), following this document.
 
 ## Entity Relationship Overview
 

@@ -88,4 +88,4 @@ Terms used in the documents, the UI and the code. The **In code** column gives t
 | `operationId` | The unique name of an operation in OpenAPI, identical to the controller function name | `openapi.yaml` |
 | ADR | A record of an architecture decision with its reason and cost | `decisions.md` |
 
-**Related:** [Use cases](03-use-cases.md) · [Business rules](requirements/business-rules.md) · [AI flow specification](architecture/ai-flows.md)
+**Related:** [Use cases](../../03-use-cases.md) · [Business rules](../../requirements/business-rules.md) · [AI flow specification](ai-flows.md)

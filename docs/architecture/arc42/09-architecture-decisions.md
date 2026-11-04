@@ -30,8 +30,8 @@ Each decision records the reason and the price to pay, so that later it is clear
 
 ## ADR-003 — Database keeps the rules and queries with Kysely
 
-- **Context:** `okr360.sql` already has triggers, views, recursive CTEs, conditional unique indexes and 67 tests.
-- **Decision:** `okr360.sql` is the source of truth for the schema. The backend queries with Kysely, with TypeScript types generated from the database. No ORM that auto-creates migrations.
+- **Context:** the [database design](../../DATABASE.md) relies on triggers, views, recursive CTEs and conditional unique indexes to enforce the rules.
+- **Decision:** a hand-written SQL schema, built in increment I1 from the database design, is the source of truth. The backend queries with Kysely, with TypeScript types generated from the database. No ORM that auto-creates migrations.
 - **Reason:** Kysely can express full SQL (`FOR UPDATE SKIP LOCKED`, CTEs, views) while still type-checking. An ORM easily generates a schema that drifts from the tested triggers.
 - **Cost:** more queries to write than with an ORM; an additional tool is needed to run SQL migrations.
 
@@ -63,4 +63,4 @@ Each decision records the reason and the price to pay, so that later it is clear
 - **Reason:** enough for the V1 scale, easy to recreate on a development machine.
 - **Cost:** there is a single point of failure, so backups are needed (NFR-REL-005). No auto-scaling or zero-downtime updates yet.
 
-**Related:** [C4 Architecture](c4.md) · [Non-functional Requirements](../requirements/non-functional-requirements.md)
+**Related:** [C4 Architecture](../c4/README.md) · [Non-functional Requirements](../../requirements/non-functional-requirements.md)

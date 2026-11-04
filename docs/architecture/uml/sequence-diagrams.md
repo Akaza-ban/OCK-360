@@ -1197,4 +1197,4 @@ sequenceDiagram
 - Masking mappings reside strictly in memory for the duration of the run; `automation_runs` contains neither the outgoing payload nor the AI response (BR-093, BR-100).
 - Runs pending retry are retrieved by `FlowRunner.retryDue()` once `next_attempt_at` is reached.
 
-**Related:** [Class Diagrams](class-diagrams.md) · [AI Flow Specification](ai-flows.md) · [C4 Architecture](c4.md) · [Use Cases](../03-use-cases.md)
+**Related:** [Class Diagrams](class-diagrams.md) · [AI Flow Specification](../arc42/ai-flows.md) · [C4 Architecture](../c4/README.md) · [Use Cases](../../03-use-cases.md)

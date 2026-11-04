@@ -120,7 +120,7 @@ AI worker (runs in background, reads events from the queue)
 
 User actions (check-in, submitting a form, closing a campaign) write an event to the database in the same transaction. The AI worker processes the event afterwards, so a slow or failing AI does not slow down or break the user's action.
 
-The backend uses NestJS. Detailed technology choices are in [C4 Architecture](architecture/c4.md) and [Architecture Decisions](architecture/decisions.md).
+The backend uses NestJS. Detailed technology choices are in [C4 Architecture](architecture/c4/README.md) and [Architecture Decisions](architecture/arc42/09-architecture-decisions.md).
 
 ## 7. Post-V1 extensions
 

@@ -12,7 +12,7 @@ The requirements define what OKR360 must achieve, target user personas, delivere
 
 ![OKR360 mind map](docs/mindmap.png)
 
-Features marked with **bold text and thick borders** in the diagram represent the core (Must) capabilities of the project. Detailed functional scopes and catalog are provided in [Scope](docs/01-scope.md) and [Feature Catalog](docs/02-features.md).
+Features marked with **bold text and thick borders** in the diagram are the core value of the project. Story priority (Must, Should, Could) is set in the [INVEST requirements](docs/08-invest-requirements.md); some Must stories, such as login or managing departments, are drawn as supporting features because they are needed but are not the core value. The mind map image is in Vietnamese. Detailed functional scopes and catalog are provided in [Scope](docs/01-scope.md) and [Feature Catalog](docs/02-features.md).
 
 ### 1.2 INVEST Requirements
 
@@ -111,7 +111,7 @@ The backend enforces authorization checks on every request based on role, report
 
 ## 2. Information Architecture, Screen Hierarchy, and UI/UX
 
-Information architecture organizes post-login modules into logical business groups: OKRs, 360 Reviews, Results & Reports, AI Automation, and Administration. Page and navigation permissions follow the matrix in Section 1.4; loading, empty, validation error, API error, saving, success, and closed cycle states follow consistent conventions across all screens.
+Information architecture organizes post-login modules into logical business groups: OKRs, 360 Reviews, Results & Reports, and Administration. AI has no menu group of its own: routed blockers and the weekly digest sit in the OKR group, 1-on-1 drafts in 360 Reviews, and automation flow settings in Administration, next to the work each one supports. Page and navigation permissions follow the matrix in Section 1.4; loading, empty, validation error, API error, saving, success, and closed cycle states follow consistent conventions across all screens.
 
 ### 2.1 Information Architecture
 
@@ -123,7 +123,7 @@ The diagram details all application screens, menu placements, primary contents d
 
 The login screen transitions into the main authenticated application shell (sidebar + topbar). Navigation moves between grouped sections; Objective creation/editing and check-ins open as contextual modals to maintain workflow continuity. The topbar cycle selector determines active data context across all OKR, dashboard, and report views. Unauthorized navigation attempts redirect to a dedicated 403 Forbidden screen.
 
-The application contains 29 screens, including 5 in the AI Automation suite (incoming blockers, weekly digests, 1-on-1 drafts, automation flows, and the "What did AI do?" explanation drawer accessible from all AI-generated tags). Screen codes, detailed layouts, route guards, primary workflows, UI state conventions, accessibility standards, and screen-to-API mappings are documented in [Information Architecture](docs/04-information-architecture.md).
+The application contains 29 screens, 5 of which show AI results (incoming blockers, weekly digests, 1-on-1 drafts, automation flows, and the "What did AI do?" explanation drawer accessible from all AI-generated tags). Screen codes, detailed layouts, route guards, primary workflows, UI state conventions, accessibility standards, and screen-to-API mappings are documented in [Information Architecture](docs/04-information-architecture.md).
 
 ### 2.3 UI Prototype
 
@@ -256,7 +256,7 @@ Admins can enable/disable flows, configure cron schedules, and set daily token c
 
 ## 3. C4 Architecture
 
-The backend is built with NestJS, separated into two processes sharing a single codebase: the client-facing API process and the background Worker process. Slow or failing AI requests never block user interactions. Component level architecture, deployment topologies, and Architectural Decision Records are documented in [C4 Architecture](docs/architecture/c4.md) and [Architecture Decisions](docs/architecture/decisions.md). Anonymized payload structures, JSON schemas, and validation guards are detailed in [AI Flows Specification](docs/architecture/ai-flows.md).
+The backend is built with NestJS, separated into two processes sharing a single codebase: the client-facing API process and the background Worker process. Slow or failing AI requests never block user interactions. Component level architecture, deployment topologies, and Architectural Decision Records are documented in [C4 Architecture](docs/architecture/c4/README.md) and [Architecture Decisions](docs/architecture/arc42/09-architecture-decisions.md). Anonymized payload structures, JSON schemas, and validation guards are detailed in [AI Flows Specification](docs/architecture/arc42/ai-flows.md).
 
 ### C1 — System Context
 
@@ -315,6 +315,42 @@ flowchart TB
     class worker background
     class ai,smtp external
     style system fill:#f8fbff,stroke:#1168bd,stroke-dasharray:5 5
+```
+
+### C3 — Component
+
+The API is split into NestJS modules, each with three layers (API, Application, Infrastructure). The Worker pipeline and the module responsibilities are in [C3 Component](docs/architecture/c4/03-component.md).
+
+```mermaid
+flowchart TB
+    spa["Web App"]
+
+    subgraph api["API (NestJS)"]
+        guard["<b>Auth and authorization</b><br/>JWT, roles,<br/>reporting relationship"]
+        org["<b>Organization</b><br/>Departments, teams,<br/>users, profiles"]
+        okr["<b>OKR</b><br/>Cycles, Objectives, KRs,<br/>check-ins, roll-up"]
+        review["<b>360 Review</b><br/>Form templates, campaigns, nominations,<br/>forms, anonymous results"]
+        result["<b>Results and reports</b><br/>Final scores, dashboards,<br/>XLSX, PDF export"]
+        system["<b>System</b><br/>Notifications, logs"]
+        automation["<b>Automation</b><br/>Flow configuration, run history,<br/>blockers, digests, drafts"]
+        gateway["<b>AI Gateway</b><br/>Replace names with codes,<br/>call AI service"]
+    end
+
+    db[("Database")]
+    ai["AI Service"]
+
+    spa --> guard
+    guard --> org & okr & review & result & system & automation
+    review -->|"360 comment check"| gateway
+    org & okr & review & result & system & automation --> db
+    gateway --> ai
+
+    classDef ext fill:#8a8a8a,color:#fff,stroke:#5e5e5e
+    classDef comp fill:#1168bd,color:#fff,stroke:#0b4f9e
+    classDef aiComp fill:#8a6d3b,color:#fff,stroke:#6b532c
+    class spa,db,ai ext
+    class guard,org,okr,review,result,system comp
+    class automation,gateway aiComp
 ```
 
 ## 4. Database Diagrams and OpenAPI 3.0 Contract
@@ -421,8 +457,8 @@ Key design decisions:
 Reference documentation:
 
 - [Relational Schema, Enums, Views, and Full ER](docs/DATABASE.md)
-- [Design Decisions, Transactions, Mock Seeds, Testing](docs/05-data-model.md)
-- [PostgreSQL Schema](src/database/okr360.sql) · [DBML for dbdiagram.io](src/database/okr360.dbml) · [Demo Seed Data](src/database/seed_demo.sql) · [Schema Test Suite (67 tests)](src/database/tests/schema_checks.sql)
+- [Design Decisions, Transactions, Anonymity, Schema Tests to Write](docs/05-data-model.md)
+- The SQL schema and its tests are written in increment I1 of the [Implementation Plan](docs/09-implementation-plan.md), following the two documents above.
 
 ### 4.2 OpenAPI 3.0 Contract
 
@@ -436,11 +472,11 @@ Features are packaged as modular directories on both sides. The frontend organiz
 
 ### 6.1 Class Diagrams (C4 Level 4)
 
-[Class Diagrams](docs/architecture/class-diagrams.md) outline primary backend classes across 7 modules: controllers, services, repositories, AI Gateway, and Worker consumers. Every controller method corresponds directly to an OpenAPI `operationId`, ensuring full coverage across all 89 operations.
+[Class Diagrams](docs/architecture/uml/class-diagrams.md) outline primary backend classes across 7 modules: controllers, services, repositories, AI Gateway, and Worker consumers. Every controller method corresponds directly to an OpenAPI `operationId`, ensuring full coverage across all 89 operations.
 
 ### 6.2 Sequence Diagrams
 
-[Sequence Diagrams](docs/architecture/sequence-diagrams.md) provide a dedicated diagram for each use case (SD-12 corresponds to UC12), including primary error alternative paths. The diagram below illustrates transactional check-in decoupling from asynchronous AI execution.
+[Sequence Diagrams](docs/architecture/uml/sequence-diagrams.md) provide a dedicated diagram for each use case (SD-12 corresponds to UC12), including primary error alternative paths. The diagram below illustrates transactional check-in decoupling from asynchronous AI execution.
 
 ```mermaid
 sequenceDiagram
@@ -473,17 +509,17 @@ Check-ins never wait on AI: downstream AI latency or failures will never disrupt
 | | [User Stories](docs/08-invest-requirements.md) | 34 user stories with INVEST evaluations |
 | | [Business Rules](docs/requirements/business-rules.md) | 73 indexed business rules |
 | | [Non-Functional Requirements](docs/requirements/non-functional-requirements.md) | 39 performance, security, anonymity, and AI requirements |
-| | [Glossary](docs/glossary.md) | Terminology definitions and codebase mappings |
+| | [Glossary](docs/architecture/arc42/12-glossary.md) | Terminology definitions and codebase mappings |
 | Interface | [Information Architecture](docs/04-information-architecture.md) | 29 screens, route permissions, UI states |
 | | [Frontend Prototype](src/frontend/README.md) | Instructions for running the React demo |
 | Data | [Data Model](docs/05-data-model.md) | Architecture decisions, anonymity model, transactions, automation |
 | | [Database](docs/DATABASE.md) | Tables, enums, views, full ER diagram |
-| Architecture | [C4 Architecture](docs/architecture/c4.md) | Context, Container, Component, Deployment |
-| | [Architecture Decisions](docs/architecture/decisions.md) | 7 ADRs detailing rationale and trade-offs |
-| | [AI Flows Specification](docs/architecture/ai-flows.md) | Prompts, JSON schemas, guards for 6 AI pipelines |
-| | [Class Diagrams](docs/architecture/class-diagrams.md) | C4 Level 4 class diagrams for all modules |
-| | [Sequence Diagrams](docs/architecture/sequence-diagrams.md) | Sequence diagram for each use case |
-| | [Risks and Technical Debt](docs/architecture/risks.md) | Architecture risks, mitigations, technical debt |
+| Architecture | [arc42](docs/architecture/arc42/README.md) | 12 sections: goals, constraints, context, strategy, building blocks, runtime, deployment, cross-cutting concepts, decisions, quality, risks, glossary |
+| | [C4 Model](docs/architecture/c4/README.md) | System context, container, component, code |
+| | [UML](docs/architecture/uml/README.md) | Class diagrams, one sequence diagram per use case, API to UML traceability |
+| | [Architecture Decisions](docs/architecture/arc42/09-architecture-decisions.md) | 7 ADRs detailing rationale and trade-offs |
+| | [AI Flows Specification](docs/architecture/arc42/ai-flows.md) | Prompts, JSON schemas, guards for 6 AI pipelines |
+| | [Risks and Technical Debt](docs/architecture/arc42/11-risks-and-technical-debt.md) | Architecture risks, mitigations, technical debt |
 | API | [API Documentation](docs/api/README.md) | Conventions, error formats, AI API specs |
 | | [OpenAPI Contract](docs/api/openapi.yaml) | 89-operation OpenAPI 3.0 specification |
 | Implementation | [Folder Structure](docs/07-folder-structure.md) | React and NestJS module structures, dependency rules |
@@ -497,10 +533,28 @@ Check-ins never wait on AI: downstream AI latency or failures will never disrupt
 |---|---|
 | Requirements, Use Cases, Acceptance Criteria, Business Rules, NFRs | Completed |
 | Information Architecture and UI Prototype | Completed; prototype runs against mock data |
-| Database | Completed; 67 schema tests passed on PostgreSQL 15 |
+| Database | Design completed ([DATABASE.md](docs/DATABASE.md), [Data Model](docs/05-data-model.md)); SQL schema and tests to be written in I1 |
 | C4 Architecture, ADRs, AI Flows Specification | Completed |
 | OpenAPI Contract | Completed; 89 operations, validated with Redocly |
 | Folder Structure, Class Diagrams, Sequence Diagrams | Completed |
 | Traceability Matrix, Implementation Plan, Test Cases | Completed |
 | Backend NestJS (Iterations I1–I10) | Not started |
 | Frontend API Integration (Iteration I11) | Not started |
+
+## Updating the Documentation
+
+The documents depend on each other. When one thing changes, update every document in its row, in the same commit.
+
+| When you change | Also update |
+|---|---|
+| A user story | [INVEST requirements](docs/08-invest-requirements.md), story-to-screen table in [Information Architecture](docs/04-information-architecture.md), its row in the [traceability matrix](docs/traceability.md) |
+| A use case | Its table in [Use Cases](docs/03-use-cases.md), its section in [Acceptance Criteria](docs/06-acceptance-criteria.md), its SD diagram in the [sequence diagrams](docs/architecture/uml/sequence-diagrams.md) |
+| An acceptance criterion | Its test in the [test cases](docs/test-cases.md); add new criteria at the end of the section and never reuse a test ID |
+| A business rule | [Business rules](docs/requirements/business-rules.md), `x-business-rules` in [OpenAPI](docs/api/openapi.yaml), the tests that cover it |
+| An API operation | [OpenAPI](docs/api/openapi.yaml), the controller in the [class diagrams](docs/architecture/uml/class-diagrams.md), [API to UML traceability](docs/architecture/uml/api-traceability.md), the screen-to-API table in [Information Architecture](docs/04-information-architecture.md) |
+| A table or column | [DATABASE.md](docs/DATABASE.md), [Data Model](docs/05-data-model.md), the Database column of the [traceability matrix](docs/traceability.md) |
+| An AI flow | [AI flow specification](docs/architecture/arc42/ai-flows.md), the flow table in UC32 of [Use Cases](docs/03-use-cases.md), rules BR-090 to BR-106 |
+| A non-functional requirement | [Non-functional requirements](docs/requirements/non-functional-requirements.md), its `TC-NFR` test, the [quality requirements](docs/architecture/arc42/10-quality-requirements.md) if its group changes |
+| An architecture decision | Add a new ADR to [Architecture Decisions](docs/architecture/arc42/09-architecture-decisions.md) instead of rewriting an old one; update the C4 diagrams and [risks](docs/architecture/arc42/11-risks-and-technical-debt.md) if affected |
+
+The test cases and the traceability matrix are maintained by hand. Before committing, check that every link still resolves.

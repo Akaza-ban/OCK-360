@@ -10,11 +10,11 @@ This document turns the design into a working order: what to do first, what coun
 
 When two documents disagree, follow the priority order below, then fix the lower-priority document before writing code:
 
-1. [Architecture decisions](architecture/decisions.md).
+1. [Architecture decisions](architecture/arc42/09-architecture-decisions.md).
 2. [Business rules](requirements/business-rules.md) and [acceptance criteria](06-acceptance-criteria.md).
-3. [C4 architecture](architecture/c4.md) and [AI flow specification](architecture/ai-flows.md).
-4. [OpenAPI](api/openapi.yaml) and [database schema](../src/database/okr360.sql).
-5. [Class diagrams](architecture/class-diagrams.md), [sequence diagrams](architecture/sequence-diagrams.md), [folder structure](07-folder-structure.md).
+3. [C4 architecture](architecture/c4/README.md) and [AI flow specification](architecture/arc42/ai-flows.md).
+4. [OpenAPI](api/openapi.yaml) and the database design in [DATABASE.md](DATABASE.md) and the [data model](05-data-model.md).
+5. [Class diagrams](architecture/uml/class-diagrams.md), [sequence diagrams](architecture/uml/sequence-diagrams.md), [folder structure](07-folder-structure.md).
 
 Do not write code that works around a conflict; fix the documents and OpenAPI at the same time.
 
@@ -24,7 +24,7 @@ The OKR and 360 core is built first and the AI part afterwards, because the AI o
 
 | Phase | Scope | Stories | Done when |
 |---|---|---|---|
-| I1 Foundation | NestJS project with `main.api.ts` and `main.worker.ts`; read and validate configuration; Kysely with types generated from the database; `ProblemDetailsFilter`; `compose.yaml` for PostgreSQL; CI running lint, `dependency-cruiser` and `schema_checks.sql` | — | API and Worker start; a missing environment variable stops startup with a clear message; the 67 schema tests pass in CI |
+| I1 Foundation | NestJS project with `main.api.ts` and `main.worker.ts`; read and validate configuration; Kysely with types generated from the database; `ProblemDetailsFilter`; `compose.yaml` for PostgreSQL; write the SQL schema and schema tests from [DATABASE.md](DATABASE.md) and the [data model](05-data-model.md); CI running lint, `dependency-cruiser` and the schema tests | — | API and Worker start; a missing environment variable stops startup with a clear message; the schema tests pass in CI |
 | I2 Login, authorization | `AuthController`, `TokenService`, Argon2id, failed-login limiting; `JwtAuthGuard`, `RolesGuard`, `AccessPolicy`; profile | US01, US02, US03 | UC01–UC03 tests pass; every operation except `login` returns `401` when the token is missing |
 | I3 Organization | Departments, teams, users, directory | US04, US05 | UC04–UC05 tests pass |
 | I4 Cycles and OKR | Cycles, Objectives, Key Results, links, soft delete, `ProgressRollup` | US06–US11 | UC06–UC11 tests pass; progress matches `okr.js` on the demo data |
@@ -58,7 +58,7 @@ The three stories that do not meet the Small criterion in the [INVEST assessment
 | Level | What is tested | Suggested tools | Runs at |
 |---|---|---|---|
 | UNIT | Pure code needing no database: `ScoreCalculator`, `ProgressRollup`, `AnonymityAggregator`, `Masker`, `OutputValidator` | Jest | Every commit |
-| INT | Repositories against a real PostgreSQL: constraints, triggers, views, transactions, `schema_checks.sql` | Jest, PostgreSQL in Docker | Every commit |
+| INT | Repositories against a real PostgreSQL: constraints, triggers, views, transactions, schema tests | Jest, PostgreSQL in Docker | Every commit |
 | API | Each operation over HTTP: permissions (`401`, `403`, allowed), invalid data (`400`), state (`409`), responses matching OpenAPI | Jest, Supertest, an OpenAPI response validator | Every commit |
 | AI | AI flows with `FakeAiProvider`: errors, timeouts, wrong schema, "ignore the instructions"-style sentences, outgoing content containing no real names | Jest | Every commit |
 | SEC, PRIV | No leakage of passwords, tokens, or anonymous reviewers through the API, logs, or export files | Jest, review | Every phase |
@@ -70,7 +70,7 @@ Test code conventions:
 - `TC-UCxx-nn`: one bullet in the acceptance criteria AC-UCxx, in the same order as in the document.
 - `TC-NFR-...`: one non-functional requirement, with the same code as the requirement.
 
-When acceptance criteria change, regenerate the test catalog so that test codes always match.
+When acceptance criteria change, update the test catalog in the same commit: add new criteria at the end of their section and never reuse a test ID ([Updating the Documentation](../README.md#updating-the-documentation)).
 
 ## 5. Definition of done
 
@@ -86,7 +86,7 @@ When acceptance criteria change, regenerate the test catalog so that test codes 
 ### 5.2 Each phase
 
 - All tests in the [test catalog](test-cases.md) for the phase's use cases pass.
-- CI is green: lint, `dependency-cruiser`, unit, integration, API, `schema_checks.sql`.
+- CI is green: lint, `dependency-cruiser`, unit, integration, API, schema tests.
 - No rule is worked around in code; conflicts have been fixed in the documents.
 - The [traceability matrix](traceability.md) and the README are updated if the design changes.
 
@@ -101,7 +101,7 @@ When acceptance criteria change, regenerate the test catalog so that test codes 
 | Environment | Includes | Used for |
 |---|---|---|
 | Development machine | `compose.yaml`: PostgreSQL; API and Worker run with `npm run start:dev`; `FakeAiProvider` | Writing code, running tests |
-| CI | GitHub Actions with PostgreSQL as a service container; loads `okr360.sql` and `seed_demo.sql` before tests | Every push and pull request |
+| CI | GitHub Actions with PostgreSQL as a service container; loads the SQL schema and test data before tests | Every push and pull request |
 | Production | Docker Compose behind an HTTPS reverse proxy (ADR-007); real AI service | After I10 |
 
-**Related:** [Test catalog](test-cases.md) · [Traceability matrix](traceability.md) · [Folder structure](07-folder-structure.md) · [Architecture decisions](architecture/decisions.md)
+**Related:** [Test catalog](test-cases.md) · [Traceability matrix](traceability.md) · [Folder structure](07-folder-structure.md) · [Architecture decisions](architecture/arc42/09-architecture-decisions.md)
