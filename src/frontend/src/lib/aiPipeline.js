@@ -118,7 +118,7 @@ Mức tự tin: ${c.confidence}
     if (targetUnit) {
       actions.push(`Đổi mã ${target.code} → ${targetUnit.name}; người phụ trách: ${head.name}`);
       actions.push(`Gửi thông báo cho ${head.name}; vướng mắc hiện ở trang "Vướng mắc chuyển đến" của ${head.name}`);
-      notifications.push({ type: 'BLOCKER_ROUTED', userId: head.id, text: `${unit.name} đang chờ ${targetUnit.name}: ${author.name} báo vướng mắc ở KR "${kr.title}".`, link: '#/ai/blockers' });
+      notifications.push({ type: 'BLOCKER_ROUTED', userId: head.id, text: `${unit.name} đang chờ ${targetUnit.name}: ${author.name} báo vướng mắc ở KR "${kr.title}".`, link: '#/okr/blockers' });
       summary = `Đã chuyển tới ${targetUnit.name} (${head.name}).`;
     } else {
       actions.push('Không phụ thuộc đơn vị khác → không chuyển cho ai, chỉ gắn nhãn để quản lý thấy trong bản tin tuần');
@@ -162,7 +162,7 @@ export function planDigestRun(managerId, st, { fail = false, stored } = {}) {
   const digestBase = { managerId, weekStart: weekKey, from: dg.from, to: dg.to, stats, read: false };
 
   if (!notes.length) {
-    return { flow: 'WEEKLY_DIGEST', subject, status: 'done', summary: 'Đội không có ghi chú check-in nào trong tuần; bản tin chỉ có số liệu, không gọi AI.', steps: [...steps, ...later.map(([k, l]) => (k === 'action' ? S(k, 'Tạo bản tin chỉ có số liệu, gửi thông báo', { kind: 'list', items: ['Không có văn bản để AI đọc nên không gọi AI', `Tạo bản tin cho ${manager.name}`] }) : skipped(k, l)))], digest: { ...digestBase, highlights: [] }, notifications: [{ type: 'WEEKLY_DIGEST', userId: managerId, text: 'Bản tin tuần của đội bạn đã sẵn sàng.', link: '#/ai/digest' }], run: { flow: 'WEEKLY_DIGEST', event: null, ref, status: 'SUCCEEDED', attempts: 1, inTokens: null, outTokens: null, error: null } };
+    return { flow: 'WEEKLY_DIGEST', subject, status: 'done', summary: 'Đội không có ghi chú check-in nào trong tuần; bản tin chỉ có số liệu, không gọi AI.', steps: [...steps, ...later.map(([k, l]) => (k === 'action' ? S(k, 'Tạo bản tin chỉ có số liệu, gửi thông báo', { kind: 'list', items: ['Không có văn bản để AI đọc nên không gọi AI', `Tạo bản tin cho ${manager.name}`] }) : skipped(k, l)))], digest: { ...digestBase, highlights: [] }, notifications: [{ type: 'WEEKLY_DIGEST', userId: managerId, text: 'Bản tin tuần của đội bạn đã sẵn sàng.', link: '#/okr/digest' }], run: { flow: 'WEEKLY_DIGEST', event: null, ref, status: 'SUCCEEDED', attempts: 1, inTokens: null, outTokens: null, error: null } };
   }
   const masking = buildMasking(st.users, st.departments);
   const maskedNotes = notes.map((n) => maskText(n, masking));
@@ -184,7 +184,7 @@ Chưa check-in: ${stats.notCheckedIn.map((id) => maskText(name(id), masking)).jo
   steps.push(S('action', 'Đổi mã về tên, tạo bản tin, gửi thông báo', { kind: 'list', items: ['Đổi mã NV-xx về tên thật trong từng mục', `Tạo bản tin, gửi thông báo cho ${manager.name}`, 'Không thay đổi: giá trị check-in, tiến độ, điểm'] }));
   const tokens = tokensOf(prompt, raw);
   steps.push(S('log', 'Ghi lịch sử chạy', { kind: 'json', title: 'Dòng lịch sử chạy (automation_runs)', text: JSON.stringify({ flow: 'WEEKLY_DIGEST', run_key: `user:${managerId}:week:${weekKey}`, status: 'SUCCEEDED', input_tokens: tokens.inTokens, output_tokens: tokens.outTokens }, null, 2), note: LOG_NOTE }));
-  return { flow: 'WEEKLY_DIGEST', subject, status: 'done', summary: `Đã tạo bản tin ${hl.length} mục cho ${manager.name}.`, steps, digest: { ...digestBase, highlights: hl }, notifications: [{ type: 'WEEKLY_DIGEST', userId: managerId, text: 'Bản tin tuần của đội bạn đã sẵn sàng.', link: '#/ai/digest' }], run: { flow: 'WEEKLY_DIGEST', event: null, ref, status: 'SUCCEEDED', attempts: 1, ...tokens, error: null } };
+  return { flow: 'WEEKLY_DIGEST', subject, status: 'done', summary: `Đã tạo bản tin ${hl.length} mục cho ${manager.name}.`, steps, digest: { ...digestBase, highlights: hl }, notifications: [{ type: 'WEEKLY_DIGEST', userId: managerId, text: 'Bản tin tuần của đội bạn đã sẵn sàng.', link: '#/okr/digest' }], run: { flow: 'WEEKLY_DIGEST', event: null, ref, status: 'SUCCEEDED', attempts: 1, ...tokens, error: null } };
 }
 
 // ---------- Bản nháp 1-1 (giải thích bản nháp đã có) ----------

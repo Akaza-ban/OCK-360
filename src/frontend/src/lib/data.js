@@ -229,13 +229,13 @@ export const notifications = [
   { id: 'nt5', type: 'CHECKIN_REMINDER', userId: 'u3', text: 'Đỗ Minh An chưa check-in 18 ngày.', link: '#/dashboard', at: '2026-10-30T09:00', read: false },
   { id: 'nt6', type: 'REVIEW_REMINDER', userId: 'u2', text: 'Đợt Đánh giá 360 – Q4/2026 đang có 41% phiếu đã nộp.', link: '#/admin/campaigns/cp-q4', at: '2026-10-30T08:00', read: false },
   { id: 'nt7', type: 'REVIEW_REMINDER', userId: 'u6', text: 'Bạn có 1 phiếu đánh giá 360 đã nộp, không còn phiếu nào cần điền.', link: '#/reviews/todo', at: '2026-10-29T08:00', read: true },
-  { id: 'nt8', type: 'BLOCKER_ROUTED', userId: 'u6', text: 'Phòng Dev đang chờ Phòng QA: Nguyễn Thị Lan cần danh sách test smoke để đưa vào CI.', link: '#/ai/blockers', at: '2026-10-28T09:32', read: false },
-  { id: 'nt9', type: 'WEEKLY_DIGEST', userId: 'u3', text: 'Bản tin tuần 19/10–25/10 của đội bạn đã sẵn sàng.', link: '#/ai/digest', at: '2026-10-26T08:01', read: true },
+  { id: 'nt8', type: 'BLOCKER_ROUTED', userId: 'u6', text: 'Phòng Dev đang chờ Phòng QA: Nguyễn Thị Lan cần danh sách test smoke để đưa vào CI.', link: '#/okr/blockers', at: '2026-10-28T09:32', read: false },
+  { id: 'nt9', type: 'WEEKLY_DIGEST', userId: 'u3', text: 'Bản tin tuần 19/10–25/10 của đội bạn đã sẵn sàng.', link: '#/okr/digest', at: '2026-10-26T08:01', read: true },
   { id: 'nt10', type: 'CHECKIN_MISMATCH', userId: 'u7', text: 'Check-in ngày 28/10 của bạn chọn "Đúng hướng" nhưng ghi chú cho biết đang trễ. Bạn xem lại nhé.', link: '#/okr/o8', at: '2026-10-28T16:01', read: false },
-  { id: 'nt11', type: 'AI_DRAFT_READY', userId: 'u2', text: 'Có 2 bản nháp tóm tắt 1-1 đang chờ bạn duyệt.', link: '#/ai/drafts', at: '2026-09-30T18:12', read: false },
+  { id: 'nt11', type: 'AI_DRAFT_READY', userId: 'u2', text: 'Có 2 bản nháp tóm tắt 1-1 đang chờ bạn duyệt.', link: '#/reviews/drafts', at: '2026-09-30T18:12', read: false },
   { id: 'nt12', type: 'BLOCKER_UPDATED', userId: 'u9', text: 'Team Thanh toán đã nhận xử lý vướng mắc của bạn: "Tú sẽ demo cho khách vào thứ Ba tuần sau."', link: '#/okr/o10', at: '2026-10-29T10:15', read: false },
   { id: 'nt13', type: 'ONE_ON_ONE_SENT', userId: 'u4', text: 'Anh Trần Hoài Nam đã gửi tóm tắt nhận xét 360 Q3/2026 cho bạn.', link: '#/reviews/results', at: '2026-10-06T10:00', read: true },
-  { id: 'nt14', type: 'AUTOMATION_ALERT', userId: 'u1', text: 'Luồng "Bản tin tuần" lỗi 1 lần ngày 26/10 (dịch vụ AI quá thời gian chờ).', link: '#/ai/automation', at: '2026-10-26T08:46', read: false },
+  { id: 'nt14', type: 'AUTOMATION_ALERT', userId: 'u1', text: 'Luồng "Bản tin tuần" lỗi 1 lần ngày 26/10 (dịch vụ AI quá thời gian chờ).', link: '#/admin/automation', at: '2026-10-26T08:46', read: false },
 ];
 
 export const auditLogs = [

@@ -16,7 +16,14 @@ const NAV = [
       { to: '/okr/my', label: 'OKR của tôi', icon: I.IconTarget },
     ],
   },
-  { group: 'OKR', items: [{ to: '/okr/tree', label: 'Cây OKR công ty', icon: I.IconTree }] },
+  {
+    group: 'OKR',
+    items: [
+      { to: '/okr/tree', label: 'Cây OKR công ty', icon: I.IconTree },
+      { to: '/okr/blockers', label: 'Vướng mắc chuyển đến', icon: I.IconRoute, count: 'blockers' },
+      { to: '/okr/digest', label: 'Bản tin tuần', icon: I.IconNews },
+    ],
+  },
   {
     group: 'Đánh giá 360',
     items: [
@@ -24,6 +31,7 @@ const NAV = [
       { to: '/reviews/nominate', label: 'Đề cử đồng nghiệp', icon: I.IconUserPlus },
       { to: '/reviews/approvals', label: 'Duyệt người đánh giá', icon: I.IconCheckList, count: 'approvals' },
       { to: '/reviews/results', label: 'Kết quả 360', icon: I.IconRadar },
+      { to: '/reviews/drafts', label: 'Bản nháp 1-1', icon: I.IconDraft, count: 'drafts' },
     ],
   },
   {
@@ -31,15 +39,6 @@ const NAV = [
     items: [
       { to: '/final-results', label: 'Kết quả cuối kỳ', icon: I.IconTrophy },
       { to: '/reports', label: 'Báo cáo', icon: I.IconChart },
-    ],
-  },
-  {
-    group: 'Tự động hóa AI',
-    items: [
-      { to: '/ai/blockers', label: 'Vướng mắc chuyển đến', icon: I.IconRoute, count: 'blockers' },
-      { to: '/ai/digest', label: 'Bản tin tuần', icon: I.IconNews },
-      { to: '/ai/drafts', label: 'Bản nháp 1-1', icon: I.IconDraft, count: 'drafts' },
-      { to: '/ai/automation', label: 'Luồng tự động', icon: I.IconBolt },
     ],
   },
   {
@@ -51,6 +50,7 @@ const NAV = [
       { to: '/admin/campaigns', label: 'Đợt đánh giá 360', icon: I.IconSpark },
       { to: '/admin/templates', label: 'Bộ tiêu chí', icon: I.IconList },
       { to: '/audit', label: 'Nhật ký hoạt động', icon: I.IconHistory },
+      { to: '/admin/automation', label: 'Luồng tự động', icon: I.IconBolt },
     ],
   },
 ];

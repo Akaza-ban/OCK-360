@@ -36,6 +36,5 @@ Severity levels:
 | D-05 | Level column in test catalog is inferred by script; Database column in traceability matrix is manually assembled | Potential discrepancies with implementation reality during coding | Review and align when authoring tests for each iteration   | I2–I10    |
 | D-06 | AI service provider not yet selected                                                       | Actual accuracy and costs cannot be measured                | Select and configure via `AiGateway`                        | I10       |
 | D-07 | Profile avatars stored as URLs only, no file upload                                        | Users must provide existing image URLs                      | Add file storage service if needed                          | Post-V1   |
-| D-08 | The UI prototype groups four AI screens under a separate "Tự động hóa AI" sidebar group with `#/ai/...` routes | Makes AI look like a separate feature, unlike the [information architecture](../../04-information-architecture.md#where-ai-appears) | Move the screens into the OKR, 360 Evaluation and Administration groups | I11 |
 
 **Related:** [Architectural Decisions](09-architecture-decisions.md) · [Non-Functional Requirements](../../requirements/non-functional-requirements.md) · [Implementation Plan](../../09-implementation-plan.md)

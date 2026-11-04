@@ -52,6 +52,8 @@ function page(route, user) {
     case 'okr':
       if (p[1] === 'my') return <MyOkr user={user} />;
       if (p[1] === 'tree') return <OkrTree user={user} />;
+      if (p[1] === 'blockers') return <Blockers user={user} />;
+      if (p[1] === 'digest') return <Digest user={user} />;
       return <ObjectiveDetail user={user} id={p[1]} />;
     case 'reviews':
       if (p[1] === 'todo') return <ReviewTodo user={user} />;
@@ -59,6 +61,7 @@ function page(route, user) {
       if (p[1] === 'nominate') return <Nominate user={user} />;
       if (p[1] === 'approvals') return <Approvals user={user} />;
       if (p[1] === 'results') return <ReviewResult user={user} revieweeId={p[2]} />;
+      if (p[1] === 'drafts') return <Drafts user={user} />;
       break;
     case 'final-results':
       return <FinalResults user={user} />;
@@ -70,15 +73,10 @@ function page(route, user) {
       if (p[1] === 'users') return <Users user={user} />;
       if (p[1] === 'campaigns') return p[2] ? <CampaignDetail id={p[2]} /> : <Campaigns />;
       if (p[1] === 'templates') return <Templates />;
+      if (p[1] === 'automation') return <Automation user={user} />;
       break;
     case 'audit':
       return <Audit />;
-    case 'ai':
-      if (p[1] === 'blockers') return <Blockers user={user} />;
-      if (p[1] === 'digest') return <Digest user={user} />;
-      if (p[1] === 'drafts') return <Drafts user={user} />;
-      if (p[1] === 'automation') return <Automation user={user} />;
-      break;
     case 'notifications':
       return <Notifications user={user} />;
     case 'profile':

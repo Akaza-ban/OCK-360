@@ -131,7 +131,7 @@ AI is not a separate feature, so it has no menu group of its own. Each screen th
 
 Everywhere else AI shows up inside existing screens: labels on check-ins in `SCR-12`, review notes on a new Objective, the comment warning when submitting a form in `SCR-21`.
 
-The UI prototype in `src/frontend` and the information architecture image above still show these four screens under a separate "Tự động hóa AI" sidebar group with `#/ai/...` routes. They will follow this grouping when the frontend is connected to the API in increment I11 of the [implementation plan](09-implementation-plan.md).
+The UI prototype in `src/frontend` follows this grouping. The information architecture image above and some screenshots in `docs/images` were taken earlier and still show a separate "Tự động hóa AI" sidebar group.
 
 ## Screen hierarchy diagram
 

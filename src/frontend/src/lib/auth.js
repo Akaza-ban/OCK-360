@@ -63,19 +63,17 @@ export function canAccess(route, u) {
   if (['admin'].includes(r)) {
     const sub = route.split('/')[2];
     if (['campaigns', 'templates'].includes(sub)) return isHR(u);
+    // Luồng tự động: Admin cấu hình, HR chỉ xem lịch sử chạy.
     return isAdmin(u) || isHR(u);
   }
   if (r === 'audit') return isAdmin(u) || isHR(u);
   if (r === 'final-results') return isHR(u);
   if (r === 'reports') return isAdmin(u) || isHR(u) || isManager(u);
   if (route.startsWith('/reviews/approvals')) return isManager(u) || isHR(u);
-  if (r === 'ai') {
-    const sub = route.split('/')[2];
-    if (sub === 'blockers') return isDeptHead(u);
-    if (sub === 'digest') return isManager(u);
-    if (sub === 'drafts') return isManager(u) || isHR(u);
-    if (sub === 'automation') return isAdmin(u) || isHR(u);
-  }
+  // Màn hình kết quả AI nằm trong nhóm nghiệp vụ của nó, không có nhóm AI riêng.
+  if (route.startsWith('/okr/blockers')) return isDeptHead(u);
+  if (route.startsWith('/okr/digest')) return isManager(u);
+  if (route.startsWith('/reviews/drafts')) return isManager(u) || isHR(u);
   return true;
 }
 
