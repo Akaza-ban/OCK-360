@@ -113,13 +113,13 @@ Mức tự tin: ${c.confidence}
     const target = masking.units.find((u) => u.code === v.data.target_unit);
     const targetUnit = target && st.departments.find((d) => d.id === target.id);
     const head = targetUnit && st.users.find((u) => u.id === targetUnit.headId);
-    insight = { checkinId: c.id, category: v.data.category, severity: v.data.severity, targetDeptId: targetUnit?.id || null, routing: targetUnit ? 'OPEN' : null };
+    insight = { checkinId: c.id, category: v.data.category, severity: v.data.severity, targetDeptId: targetUnit?.id || null, routing: targetUnit ? 'SUGGESTED' : null };
     actions.push(`Gắn nhãn vào check-in: ${CATEGORY[v.data.category]} · mức ${SEVERITY[v.data.severity][0]}`);
     if (targetUnit) {
       actions.push(`Đổi mã ${target.code} → ${targetUnit.name}; người phụ trách: ${head.name}`);
-      actions.push(`Gửi thông báo cho ${head.name}; vướng mắc hiện ở trang "Vướng mắc chuyển đến" của ${head.name}`);
-      notifications.push({ type: 'BLOCKER_ROUTED', userId: head.id, text: `${unit.name} đang chờ ${targetUnit.name}: ${author.name} báo vướng mắc ở KR "${kr.title}".`, link: '#/okr/blockers' });
-      summary = `Đã chuyển tới ${targetUnit.name} (${head.name}).`;
+      actions.push(`Gợi ý cho ${author.name}: gửi vướng mắc tới ${targetUnit.name}. Chưa gửi cho ${head.name} cho tới khi ${author.name} bấm Gửi`);
+      notifications.push({ type: 'BLOCKER_SUGGESTED', userId: author.id, text: `AI gợi ý gửi vướng mắc ở KR "${kr.title}" tới ${targetUnit.name}. Mở check-in để gửi, đổi đơn vị hoặc bỏ qua.`, link: `#/okr/${kr.objectiveId}` });
+      summary = `Đã gợi ý gửi tới ${targetUnit.name}; chờ ${author.name} xác nhận.`;
     } else {
       actions.push('Không phụ thuộc đơn vị khác → không chuyển cho ai, chỉ gắn nhãn để quản lý thấy trong bản tin tuần');
       summary = `Đã gắn nhãn ${CATEGORY[v.data.category]}, không chuyển cho ai.`;

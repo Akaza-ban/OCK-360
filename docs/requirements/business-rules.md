@@ -123,5 +123,6 @@ This document consolidates rules previously scattered across use cases, acceptan
 | BR-104 | Inconsistencies between confidence level and check-in notes trigger a prompt to the check-in author; 3 consecutive occurrences alert their direct manager. | F13.4, AC-UC32 | US33 |
 | BR-105 | Metrics in the weekly digest originate from the database; AI only drafts the summary, up to 3 items. Each manager receives one digest per week. | UC30, AC-UC30 | US30 |
 | BR-106 | 1-on-1 drafts can only be sent when the campaign is `PUBLISHED`, and contain no verbatim quotes or individual ratings. If no groups meet the threshold, or eligible groups lack open-ended comments, no draft is generated. | UC31, AC-UC31 | US31 |
+| BR-107 | A blocker reaches another unit only after the person who checked in confirms it: they send it to the unit AI suggested, pick another unit, or choose not to send. Without a confirmation nothing is sent; the blocker keeps its label and appears in the manager's weekly digest. | UC12, AC-UC29 | US12, US29 |
 
 **Related:** [Non-Functional Requirements](non-functional-requirements.md) · [Use Cases](../03-use-cases.md) · [Acceptance Criteria](../06-acceptance-criteria.md) · [Data Model](../05-data-model.md)

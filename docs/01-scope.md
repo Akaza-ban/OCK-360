@@ -30,7 +30,7 @@ OKR360 is a web system that helps a company **set goals using the OKR method**, 
 | G4  | 360-degree evaluation from manager, peers, subordinates and self-assessment | P4  | Each employee receives the minimum number of forms required         |
 | G5  | Guarantee anonymity for peers and subordinates, even from Admin/HR | P5           | No screen, report, API or log reveals who evaluated whom            |
 | G6  | Combine OKR + 360 into end-of-period results                     | P6             | HR can export a company-wide results table in 1 action              |
-| G7  | Use AI to read the free-text portions, route blockers to the right person and prepare summaries; humans always make the decisions | P7 | Cross-department blockers are routed to the relevant department head within 15 minutes; managers get a 1-1 draft within 1 hour after the 360 campaign closes; AI never changes any score |
+| G7  | Use AI to read the free-text portions, route blockers to the right person and prepare summaries; humans always make the decisions | P7 | AI suggests the right unit for a cross-department blocker within 15 minutes and the blocker reaches that unit's head as soon as the reporter confirms; managers get a 1-1 draft within 1 hour after the 360 campaign closes; AI never changes any score |
 
 ## 3. Overall business process (one quarterly cycle)
 

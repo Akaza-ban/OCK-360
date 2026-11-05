@@ -74,6 +74,7 @@ Terms used in the documents, the UI and the code. The **In code** column gives t
 | JSON schema | The structure the AI's answer must follow; if it does not match, no action is taken | `OutputValidator` |
 | AI-generated | A mandatory label on all AI-generated content | — |
 | AI label | The result of classifying blockers and detecting mismatched check-ins | `checkin_insights` |
+| Blocker send suggestion | The unit AI suggests for a cross-department blocker; the person who checked in sends it, changes the unit or drops it | `routing_status` `SUGGESTED`, `sendBlocker` |
 | Review note | AI suggestions on the quality of a newly created Objective | `objective_review_notes` |
 | Weekly digest | Team metrics and up to 3 items needing attention, sent to the Manager at 8 AM on Monday | `weekly_digests` |
 | 1-1 draft | A summary of 360 comments drafted by the AI, awaiting a person to review, edit and send | `one_on_one_drafts` |

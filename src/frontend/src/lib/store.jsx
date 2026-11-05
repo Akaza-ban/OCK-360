@@ -147,7 +147,7 @@ function reducer(state, a) {
       const ins = state.checkinInsights.find((i) => i.checkinId === a.checkinId);
       const c = state.checkins.find((x) => x.id === a.checkinId);
       const reporter = state.users.find((u) => u.id === c.userId);
-      const unit = state.departments.find((d) => d.id === ins.targetDeptId);
+      const unit = state.departments.find((d) => d.id === (ins.routedDeptId ?? ins.targetDeptId));
       const kr = state.keyResults.find((k) => k.id === c.krId);
       const note = a.note?.trim() ? `: "${a.note.trim()}"` : '.';
       const n = a.routing === 'ACKNOWLEDGED'
@@ -162,6 +162,32 @@ function reducer(state, a) {
         toast: a.routing === 'ACKNOWLEDGED' ? 'Đã nhận xử lý. Người báo vướng mắc đã nhận thông báo.' : 'Đã chuyển vướng mắc về quản lý trực tiếp của người báo.',
       };
     }
+    case 'sendBlocker': {
+      // Người báo xác nhận gửi vướng mắc (BR-107): tới đơn vị AI gợi ý hoặc đơn vị tự chọn.
+      const c = state.checkins.find((x) => x.id === a.checkinId);
+      const reporter = state.users.find((u) => u.id === c.userId);
+      const kr = state.keyResults.find((k) => k.id === c.krId);
+      const unit = state.departments.find((d) => d.id === a.deptId);
+      const from = state.departments.find((d) => d.id === reporter.deptId);
+      const sent = { routing: 'OPEN', routedDeptId: a.deptId, confirmedAt: now() };
+      const exists = state.checkinInsights.some((i) => i.checkinId === a.checkinId);
+      return {
+        ...state,
+        checkinInsights: exists
+          ? state.checkinInsights.map((i) => (i.checkinId === a.checkinId ? { ...i, ...sent } : i))
+          : [...state.checkinInsights, { checkinId: a.checkinId, category: null, severity: null, targetDeptId: null, mismatch: null, ...sent }],
+        notifications: unit.headId
+          ? [{ id: nextId('nt'), at: now(), read: false, type: 'BLOCKER_ROUTED', userId: unit.headId, text: `${from.name} đang chờ ${unit.name}: ${reporter.name} báo vướng mắc ở KR "${kr.title}".`, link: '#/okr/blockers' }, ...state.notifications]
+          : state.notifications,
+        toast: `Đã gửi vướng mắc tới ${unit.name}.`,
+      };
+    }
+    case 'dismissBlocker':
+      return {
+        ...state,
+        checkinInsights: state.checkinInsights.map((i) => (i.checkinId === a.checkinId ? { ...i, routing: 'DISMISSED', confirmedAt: now() } : i)),
+        toast: 'Không gửi vướng mắc. Quản lý của bạn vẫn thấy nó trong check-in và bản tin tuần.',
+      };
     case 'readDigest':
       return { ...state, weeklyDigests: state.weeklyDigests.map((d) => (d.id === a.id ? { ...d, read: true } : d)) };
     case 'dismissNote':

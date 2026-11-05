@@ -998,6 +998,44 @@ sequenceDiagram
 
 ## SD-29 — Handle Routed Blockers
 
+### Sending the blocker
+
+The Worker has already written the AI suggestion (SD-32). Nothing reaches the unit head until the person who checked in confirms (BR-107).
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor A as Person who checked in
+    participant W as Web App
+    participant C as BlockersController
+    participant S as BlockerService
+    participant R as AutomationRepository
+    participant N as NotificationService
+
+    A->>W: Click Send, or pick another unit and send
+    W->>C: POST /checkins/{checkinId}/blocker/send
+    C->>S: send(actor, checkinId, unitId)
+    alt Not the person who checked in
+        C-->>W: 403
+    else Already sent or dismissed
+        C-->>W: 409
+    else Own unit or the department containing their team
+        C-->>W: 400
+    else Valid
+        S->>R: Save chosen unit and confirmation time, routing OPEN
+        S->>N: notify(head of chosen unit, BLOCKER_ROUTED)
+        C-->>W: 200 CheckinInsight
+    end
+    opt Click Do not send instead
+        W->>C: POST /checkins/{checkinId}/blocker/dismiss
+        C->>S: dismiss(actor, checkinId)
+        S->>R: routing DISMISSED, nobody is notified
+        C-->>W: 200 CheckinInsight
+    end
+```
+
+### Handling the blocker
+
 ```mermaid
 sequenceDiagram
     autonumber
@@ -1182,7 +1220,7 @@ sequenceDiagram
                             Note over F,DB: New transaction
                             F->>H: apply(result)
                             H->>DB: Write checkin_insights
-                            H->>DB: Write notifications to target department head
+                            H->>DB: Write the send suggestion for the person who checked in (BLOCKER_SUGGESTED)
                             F->>RR: markFinished(SUCCEEDED, token count)
                             F->>DB: Mark event processed_at
                             Note over F,DB: Commit

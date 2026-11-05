@@ -11,7 +11,13 @@ export const CATEGORY = {
 
 export const SEVERITY = { LOW: ['Thấp', 'none'], MEDIUM: ['Trung bình', 'warn'], HIGH: ['Cao', 'bad'] };
 
-export const ROUTING = { OPEN: ['Chờ nhận', 'warn'], ACKNOWLEDGED: ['Đã nhận xử lý', 'ok'], REJECTED: ['Không liên quan', 'none'] };
+export const ROUTING = { SUGGESTED: ['Chờ người báo xác nhận', 'warn'], OPEN: ['Chờ nhận', 'warn'], ACKNOWLEDGED: ['Đã nhận xử lý', 'ok'], REJECTED: ['Không liên quan', 'none'], DISMISSED: ['Không gửi', 'none'] };
+
+// Đơn vị nhận vướng mắc: đơn vị người báo đã xác nhận, nếu chưa có thì là đơn vị AI gợi ý.
+export const routedUnitId = (insight) => insight?.routedDeptId ?? insight?.targetDeptId ?? null;
+
+// Vướng mắc đã được người báo gửi đi (BR-107): chỉ khi đó người phụ trách đơn vị mới thấy.
+export const isSent = (insight) => ['OPEN', 'ACKNOWLEDGED', 'REJECTED'].includes(insight?.routing);
 
 export const RUN_STATUS = {
   PENDING: ['Đang chờ', 'warn'],

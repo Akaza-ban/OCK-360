@@ -46,7 +46,7 @@ All performance requirements are measured against the following dataset. This is
 
 | ID | Requirement | Verification Method | Source | Status |
 |---|---|---|---|---|
-| NFR-AI-001 | Cross-department blockers routed to the assignee within 15 minutes of check-in. | End-to-end testing | 01 G7, AC-UC29 | Baseline |
+| NFR-AI-001 | The AI routing suggestion for a cross-department blocker reaches the person who checked in within 15 minutes of check-in; after they confirm, the unit head is notified immediately. | End-to-end testing | 01 G7, AC-UC29 | Baseline |
 | NFR-AI-002 | 1-on-1 draft ready within 1 hour after campaign closure. | End-to-end testing with a 300-user campaign | 01 G7, AC-UC31 | Baseline |
 | NFR-AI-003 | 360 review comment guard returns results within 5 seconds; allow submission upon timeout. | Testing with slow mock AI service | UC19, AC-UC19 | Baseline |
 | NFR-AI-004 | Background AI service calls time out at 30 seconds per invocation. | Testing with slow mock AI service | `aiPipeline.js` | Proposed |

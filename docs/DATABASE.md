@@ -85,7 +85,7 @@ Thick arrows originating from the Organization group consolidate multiple foreig
 | `assignment_status` | NOT_STARTED, DRAFT, SUBMITTED, CANCELLED | Not Started, Draft, Submitted, Cancelled |
 | `nomination_status` | DRAFT, PENDING, APPROVED | Draft, Pending, Approved |
 | `result_grade` | EXCELLENT, GOOD, MEETS, NEEDS_IMPROVEMENT, INSUFFICIENT_DATA | Excellent, Good, Meets Expectations, Needs Improvement, Insufficient Data |
-| `notification_type` | CHECKIN_REMINDER, CHECKIN_OFF_TRACK, CHECKIN_COMMENT, PLANNING_REMINDER, NOMINATION_REMINDER, NOMINATION_PENDING, REVIEW_REMINDER, RESULT_PUBLISHED, BLOCKER_ROUTED, BLOCKER_UPDATED, WEEKLY_DIGEST, CHECKIN_MISMATCH, AI_DRAFT_READY, ONE_ON_ONE_SENT, AUTOMATION_ALERT | Check-in reminder, KR off track, New comment, OKR planning reminder, Nomination reminder, Pending nomination approval, Review form reminder, Results published, Blocker routed, Blocker acknowledged, Weekly digest, Check-in mismatch, AI draft ready for review, 1-on-1 summary received, Automation alert |
+| `notification_type` | CHECKIN_REMINDER, CHECKIN_OFF_TRACK, CHECKIN_COMMENT, PLANNING_REMINDER, NOMINATION_REMINDER, NOMINATION_PENDING, REVIEW_REMINDER, RESULT_PUBLISHED, BLOCKER_ROUTED, BLOCKER_SUGGESTED, BLOCKER_UPDATED, WEEKLY_DIGEST, CHECKIN_MISMATCH, AI_DRAFT_READY, ONE_ON_ONE_SENT, AUTOMATION_ALERT | Check-in reminder, KR off track, New comment, OKR planning reminder, Nomination reminder, Pending nomination approval, Review form reminder, Results published, Blocker routed, Blocker send suggestion, Blocker acknowledged, Weekly digest, Check-in mismatch, AI draft ready for review, 1-on-1 summary received, Automation alert |
 | `audit_action` | CREATE, UPDATE, SOFT_DELETE, RESTORE, STATUS_CHANGE, CHECKIN, SUBMIT, PUBLISH, LOGIN, LOGIN_FAILED, EXPORT | Create, Update, Delete (Soft Delete), Restore, Status Change, Check-in, Submit, Publish, Login, Login Failed, Export |
 | `automation_flow` | BLOCKER_ROUTING, WEEKLY_DIGEST, ONE_ON_ONE_DRAFT, CHECKIN_MISMATCH, OKR_REVIEW, REVIEW_COMMENT_GUARD | Blocker routing, Weekly digest, 1-on-1 draft, Check-in mismatch, OKR review, Review comment guard |
 | `trigger_kind` | EVENT, SCHEDULE, ON_SUBMIT | Event-based, Scheduled, On submit |
@@ -93,7 +93,7 @@ Thick arrows originating from the Organization group consolidate multiple foreig
 | `run_status` | PENDING, RUNNING, SUCCEEDED, FAILED, SKIPPED | Pending, Running, Succeeded, Failed, Skipped |
 | `blocker_category` | DEPENDENCY, RESOURCE, TECHNICAL, PRIORITY_CHANGE, OTHER | Cross-department dependency, Resource constraint, Technical issue, Priority change, Other |
 | `severity_level` | LOW, MEDIUM, HIGH | Low, Medium, High |
-| `routing_status` | OPEN, ACKNOWLEDGED, REJECTED | Open, Acknowledged, Rejected |
+| `routing_status` | SUGGESTED, OPEN, ACKNOWLEDGED, REJECTED, DISMISSED | Suggested to the reporter, Open, Acknowledged, Rejected, Not sent |
 | `review_issue` | NOT_MEASURABLE, OUTPUT_ONLY, DUPLICATE, NOT_ALIGNED | Difficult to measure, Output-only activity, Duplicate KR, Not aligned with parent |
 | `draft_status` | PENDING_REVIEW, SENT, DISCARDED | Pending review, Sent, Discarded |
 
@@ -386,7 +386,9 @@ erDiagram
         bigint checkin_id PK,FK
         blocker_category blocker_category
         severity_level severity
-        bigint target_department_id FK
+        bigint target_department_id FK "suggested by AI"
+        bigint routed_department_id FK "confirmed by the reporter"
+        timestamptz confirmed_at
         boolean is_mismatch
         routing_status routing
         bigint handled_by FK

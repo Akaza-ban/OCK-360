@@ -1,25 +1,26 @@
 import { useState } from 'react';
 import { useStore } from '../../../lib/store.jsx';
 import { PageHeader, Avatar, Empty, Pill } from '../../../components/ui.jsx';
-import { CATEGORY, SEVERITY, ROUTING } from '../../../lib/ai.js';
+import { CATEGORY, SEVERITY, ROUTING, routedUnitId, isSent } from '../../../lib/ai.js';
 import { AiExplainBadge } from '../../../components/AiExplain.jsx';
 import { dateTime } from '../../../lib/format.js';
 
-// SCR-80 Vướng mắc chuyển đến (UC29): vướng mắc mà AI xác định là phòng khác đang chờ phòng mình.
+// SCR-80 Vướng mắc chuyển đến (UC29): vướng mắc người báo đã gửi tới phòng mình, theo gợi ý của AI hoặc tự chọn.
+// Gợi ý chưa được người báo xác nhận không hiện ở đây (BR-107).
 export default function Blockers({ user }) {
   const { state, dispatch } = useStore();
   const dept = state.departments.find((d) => d.headId === user.id);
   const [tab, setTab] = useState('OPEN');
   const [notes, setNotes] = useState({});
 
-  const all = state.checkinInsights.filter((i) => i.targetDeptId === dept?.id);
+  const all = state.checkinInsights.filter((i) => isSent(i) && routedUnitId(i) === dept?.id);
   const list = all.filter((i) => (tab === 'OPEN' ? i.routing === 'OPEN' : i.routing !== 'OPEN'));
 
   return (
     <>
       <PageHeader
         title="Vướng mắc chuyển đến"
-        sub={`Những việc phòng khác đang chờ ${dept?.name}. AI đọc phần vướng mắc trong check-in và chuyển tới đây; bạn quyết định nhận hay trả lại.`}
+        sub={`Những việc phòng khác đang chờ ${dept?.name}. AI đọc vướng mắc và gợi ý đơn vị; người báo bấm Gửi thì vướng mắc tới đây, và bạn quyết định nhận hay trả lại.`}
       />
       <div className="segmented" role="group" aria-label="Lọc theo trạng thái" style={{ marginBottom: 14 }}>
         <button aria-pressed={tab === 'OPEN'} onClick={() => setTab('OPEN')}>Đang chờ ({all.filter((i) => i.routing === 'OPEN').length})</button>
@@ -83,7 +84,7 @@ export default function Blockers({ user }) {
         })}
       </div>
       <p className="muted small" style={{ marginTop: 14 }}>
-        Bạn không sửa được check-in của người khác. Chọn "Không liên quan phòng tôi" khi AI chuyển nhầm: vướng mắc được chuyển về quản lý trực tiếp của người báo, và lần chuyển nhầm được ghi lại để đo độ chính xác của luồng.
+        Bạn không sửa được check-in của người khác. Chọn "Không liên quan phòng tôi" khi vướng mắc gửi nhầm đơn vị: vướng mắc được chuyển về quản lý trực tiếp của người báo, và lần gửi nhầm được ghi lại để đo độ chính xác của luồng.
       </p>
     </>
   );

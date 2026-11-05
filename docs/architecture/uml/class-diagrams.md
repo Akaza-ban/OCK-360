@@ -423,6 +423,8 @@ classDiagram
         +listRoutedBlockers(filter) RoutedBlockerPage
         +acknowledgeBlocker(checkinId, BlockerAcknowledge) RoutedBlocker
         +rejectBlocker(checkinId, BlockerReject) RoutedBlocker
+        +sendBlocker(checkinId, BlockerSend) CheckinInsight
+        +dismissBlockerSuggestion(checkinId) CheckinInsight
     }
     class WeeklyDigestsController {
         +listWeeklyDigests() WeeklyDigestSummary[]
@@ -447,6 +449,8 @@ classDiagram
     class BlockerService {
         +acknowledge(actor, checkinId, note)
         +reject(actor, checkinId, note)
+        +send(actor, checkinId, unitId)
+        +dismiss(actor, checkinId)
     }
     class DigestService {
         +get(actor, id) WeeklyDigest

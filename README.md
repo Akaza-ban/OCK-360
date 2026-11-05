@@ -39,7 +39,7 @@ US23–US26   Dashboards, reports, notifications, audit logs
 US27–US34   AI-powered automation
 ```
 
-31 stories fully satisfy all 6 criteria. Three large stories — US22 (final evaluation results), US23 (dashboards), and US32 (AI workflow execution platform) — satisfy all criteria except **Small**, and will be decomposed during sprint planning. Story details are documented in [INVEST Requirements](docs/08-invest-requirements.md); use case acceptance criteria are specified in [Acceptance Criteria](docs/06-acceptance-criteria.md). The [Traceability Matrix](docs/traceability.md) links each story to screens, business rules, APIs, database tables, sequence diagrams, and test cases. Phased implementation order, story splitting strategies, and Definition of Done are detailed in the [Implementation Plan](docs/09-implementation-plan.md); the full test suite of 156 test cases is detailed in [Test Cases](docs/test-cases.md).
+31 stories fully satisfy all 6 criteria. Three large stories — US22 (final evaluation results), US23 (dashboards), and US32 (AI workflow execution platform) — satisfy all criteria except **Small**, and will be decomposed during sprint planning. Story details are documented in [INVEST Requirements](docs/08-invest-requirements.md); use case acceptance criteria are specified in [Acceptance Criteria](docs/06-acceptance-criteria.md). The [Traceability Matrix](docs/traceability.md) links each story to screens, business rules, APIs, database tables, sequence diagrams, and test cases. Phased implementation order, story splitting strategies, and Definition of Done are detailed in the [Implementation Plan](docs/09-implementation-plan.md); the full test suite of 159 test cases is detailed in [Test Cases](docs/test-cases.md).
 
 ### 1.3 Use Cases
 
@@ -221,7 +221,7 @@ In the prototype, "AI" uses keyword heuristics; production connects to backend L
 
    ![AI reading blocker](docs/images/tu-dong-hoa/11-ai-dang-doc-vuong-mac.png)
 
-2. Seconds later, badge updates: external department dependency detected, routed to QA Department (Hoàng Thu Hà).
+2. Seconds later, badge updates: external department dependency detected, AI suggests "Send to QA Department?". Lan clicks **Gửi** (or changes the unit, or chooses not to send); only then does Hoàng Thu Hà get the blocker (BR-107).
 
    ![AI badge post check-in](docs/images/tu-dong-hoa/12-nhan-ai-sau-check-in.png)
 
@@ -462,7 +462,7 @@ Reference documentation:
 
 ### 4.2 OpenAPI 3.0 Contract
 
-[`openapi.yaml`](docs/api/openapi.yaml) defines the contract between frontend and backend, specifying 89 operations under `/api/v1`. Each operation explicitly documents mapped use cases, required role permissions, and governing business rules. Errors conform to RFC 7807 Problem Details. Conventions and integration guides are documented in [API Documentation](docs/api/README.md).
+[`openapi.yaml`](docs/api/openapi.yaml) defines the contract between frontend and backend, specifying 91 operations under `/api/v1`. Each operation explicitly documents mapped use cases, required role permissions, and governing business rules. Errors conform to RFC 7807 Problem Details. Conventions and integration guides are documented in [API Documentation](docs/api/README.md).
 
 ## 5. Frontend and Backend Folder Structures
 
@@ -472,7 +472,7 @@ Features are packaged as modular directories on both sides. The frontend organiz
 
 ### 6.1 Class Diagrams (C4 Level 4)
 
-[Class Diagrams](docs/architecture/uml/class-diagrams.md) outline primary backend classes across 7 modules: controllers, services, repositories, AI Gateway, and Worker consumers. Every controller method corresponds directly to an OpenAPI `operationId`, ensuring full coverage across all 89 operations.
+[Class Diagrams](docs/architecture/uml/class-diagrams.md) outline primary backend classes across 7 modules: controllers, services, repositories, AI Gateway, and Worker consumers. Every controller method corresponds directly to an OpenAPI `operationId`, ensuring full coverage across all 91 operations.
 
 ### 6.2 Sequence Diagrams
 
@@ -521,10 +521,10 @@ Check-ins never wait on AI: downstream AI latency or failures will never disrupt
 | | [AI Flows Specification](docs/architecture/arc42/ai-flows.md) | Prompts, JSON schemas, guards for 6 AI pipelines |
 | | [Risks and Technical Debt](docs/architecture/arc42/11-risks-and-technical-debt.md) | Architecture risks, mitigations, technical debt |
 | API | [API Documentation](docs/api/README.md) | Conventions, error formats, AI API specs |
-| | [OpenAPI Contract](docs/api/openapi.yaml) | 89-operation OpenAPI 3.0 specification |
+| | [OpenAPI Contract](docs/api/openapi.yaml) | 91-operation OpenAPI 3.0 specification |
 | Implementation | [Folder Structure](docs/07-folder-structure.md) | React and NestJS module structures, dependency rules |
 | | [Implementation Plan](docs/09-implementation-plan.md) | 11 iterations, story splits, testing strategy, DoD |
-| | [Test Cases](docs/test-cases.md) | 156 test cases derived from ACs and NFRs |
+| | [Test Cases](docs/test-cases.md) | 159 test cases derived from ACs and NFRs |
 | | [Traceability Matrix](docs/traceability.md) | Story → Use Case → Screen → API → DB → Sequence → Test |
 
 ## Project Progress
@@ -535,7 +535,7 @@ Check-ins never wait on AI: downstream AI latency or failures will never disrupt
 | Information Architecture and UI Prototype | Completed; prototype runs against mock data |
 | Database | Design completed ([DATABASE.md](docs/DATABASE.md), [Data Model](docs/05-data-model.md)); SQL schema and tests to be written in I1 |
 | C4 Architecture, ADRs, AI Flows Specification | Completed |
-| OpenAPI Contract | Completed; 89 operations, validated with Redocly |
+| OpenAPI Contract | Completed; 91 operations, validated with Redocly |
 | Folder Structure, Class Diagrams, Sequence Diagrams | Completed |
 | Traceability Matrix, Implementation Plan, Test Cases | Completed |
 | Backend NestJS (Iterations I1–I10) | Not started |

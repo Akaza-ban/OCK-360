@@ -187,10 +187,13 @@ The criteria describe the target behavior of the product, written so they can be
 
 ## AC-UC29 — Blockers routed to the right place
 
-- A check-in with the blocker "Waiting for the QA team to set up the test environment, already 1 week late" → within 15 minutes, the QA department head receives a notification with a link to the KR; the check-in shows the label "Depends on another department · QA · High" together with an "AI-generated" mark.
+- A check-in with the blocker "Waiting for the QA team to set up the test environment, already 1 week late" → within 15 minutes, the person who checked in sees the suggestion "Send to QA Department?" and the check-in shows the label "Depends on another department · QA · High" together with an "AI-generated" mark. After they click Send, the QA department head receives a notification with a link to the KR.
 - The responsible person only sees blockers routed to the unit they are in charge of (department head or team lead); opening another unit's blocker → `403`. A blocker is not routed back to the reporter's own unit or the department containing their team.
 - "Accepted" → the person who checked in receives a notification. "Not relevant to my department" → the blocker is routed to the direct manager of the person who checked in and is counted as one AI misclassification.
 - No action here can modify the check-in's value, confidence, or note.
+- Until the person who checked in confirms, nobody else is notified. Only that person can send or dismiss the suggestion (`403` otherwise); a suggestion already sent or dismissed cannot be acted on again (`409`).
+- The person who checked in can pick another unit instead of the suggested one, or choose not to send. Not sending notifies nobody, and the blocker still appears in their manager's weekly digest.
+- When AI fails or suggests no unit, the person who checked in can still send the blocker by picking a unit.
 
 ## AC-UC30 — Weekly digest
 

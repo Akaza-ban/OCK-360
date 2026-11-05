@@ -4,7 +4,7 @@
 
 The catalog is derived from the [acceptance criteria](06-acceptance-criteria.md) and the [non-functional requirements](requirements/non-functional-requirements.md): each criterion bullet is one test, and each non-functional requirement is one test. It is maintained by hand; see [Updating the Documentation](../README.md#updating-the-documentation).
 
-- In total, 117 functional tests and 39 non-functional tests.
+- In total, 120 functional tests and 39 non-functional tests.
 - Test level and delivery iteration follow the [implementation plan](09-implementation-plan.md); the Level column is a proposal and can be changed when writing the tests.
 
 In addition to this catalog, every API operation also needs the common tests in the [definition of done](09-implementation-plan.md#51-each-api-operation): missing token, wrong role, invalid data, response matching OpenAPI.
@@ -250,10 +250,13 @@ In addition to this catalog, every API operation also needs the common tests in 
 
 | Test ID    | Check | Level | Iteration |
 | ---------- | ----- | ----- | --------- |
-| TC-UC29-01 | A check-in with the blocker "Waiting for the QA team to set up the test environment, already 1 week late" → within 15 minutes, the QA department head receives a notification with a link to the KR; the check-in shows the label "Depends on another department · QA · High" together with an "AI-generated" mark. | AI | I10 |
+| TC-UC29-01 | A check-in with the blocker "Waiting for the QA team to set up the test environment, already 1 week late" → within 15 minutes, the person who checked in sees the suggestion "Send to QA Department?" and the check-in shows the label "Depends on another department · QA · High" together with an "AI-generated" mark. After they click Send, the QA department head receives a notification with a link to the KR. | AI | I10 |
 | TC-UC29-02 | The responsible person only sees blockers routed to the unit they are in charge of (department head or team lead); opening another unit's blocker → `403`. A blocker is not routed back to the reporter's own unit or the department containing their team. | AI | I10 |
 | TC-UC29-03 | "Accepted" → the person who checked in receives a notification. "Not relevant to my department" → the blocker is routed to the direct manager of the person who checked in and is counted as one AI misclassification. | AI | I10 |
 | TC-UC29-04 | No action here can modify the check-in's value, confidence, or note. | API | I10 |
+| TC-UC29-05 | Until the person who checked in confirms, nobody else is notified. Only that person can send or dismiss the suggestion (`403` otherwise); a suggestion already sent or dismissed cannot be acted on again (`409`). | API | I10 |
+| TC-UC29-06 | The person who checked in can pick another unit instead of the suggested one, or choose not to send. Not sending notifies nobody, and the blocker still appears in their manager's weekly digest. | API | I10 |
+| TC-UC29-07 | When AI fails or suggests no unit, the person who checked in can still send the blocker by picking a unit. | API | I10 |
 
 ### UC30 Weekly digest
 
@@ -303,7 +306,7 @@ In addition to this catalog, every API operation also needs the common tests in 
 | TC-NFR-REL-003 | Re-running the reminder job does not send duplicate notifications. | Integration test |
 | TC-NFR-REL-004 | With the AI service turned off, all non-AI features keep working; AI blocks show "No analysis yet". | Test with a failing fake AI service |
 | TC-NFR-REL-005 | Daily database backup, keep the 7 most recent, and try a restore at least once before going live. | Restore drill |
-| TC-NFR-AI-001 | Cross-department blockers reach the responsible person within 15 minutes after check-in. | End-to-end test |
+| TC-NFR-AI-001 | The routing suggestion for a cross-department blocker reaches the person who checked in within 15 minutes; after they confirm, the unit head is notified immediately. | End-to-end test |
 | TC-NFR-AI-002 | The 1-1 draft is ready within 1 hour after the round closes. | End-to-end test with a 300-person round |
 | TC-NFR-AI-003 | The 360 comment warning returns a result within at most 5 seconds; past that, submission is allowed. | Test with a slow fake AI service |
 | TC-NFR-AI-004 | Each AI service call in a background flow waits at most 30 seconds. | Test with a slow fake AI service |

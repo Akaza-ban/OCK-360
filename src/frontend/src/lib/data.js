@@ -295,7 +295,8 @@ export const automationRuns = [
 ];
 
 // Kết quả AI trên check-in. category: DEPENDENCY | RESOURCE | TECHNICAL | PRIORITY_CHANGE | OTHER
-// routing: OPEN | ACKNOWLEDGED | REJECTED (chỉ có khi vướng mắc phụ thuộc một phòng ban khác)
+// routing: SUGGESTED (AI gợi ý, chờ người báo) | OPEN (đã gửi) | ACKNOWLEDGED | REJECTED | DISMISSED (người báo không gửi)
+// routedDeptId: đơn vị người báo đã xác nhận gửi; thiếu thì lấy targetDeptId (gợi ý của AI)
 export const checkinInsights = [
   { checkinId: 'c3', blockerRunId: 'r6', category: 'TECHNICAL', severity: 'MEDIUM', targetDeptId: null, mismatchRunId: null, mismatch: null, routing: null },
   { checkinId: 'c5', blockerRunId: 'r7', category: 'DEPENDENCY', severity: 'MEDIUM', targetDeptId: null, mismatchRunId: null, mismatch: null, routing: null, aiNote: 'Đội hạ tầng chưa có trong danh sách phòng ban nên không chuyển tự động.' },

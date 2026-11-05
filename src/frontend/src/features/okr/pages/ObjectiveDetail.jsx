@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { useStore } from '../../../lib/store.jsx';
 import { progressMap, expectedProgress, objectiveConfidence, ancestry, krProgress } from '../../../lib/okr.js';
 import { Progress, Confidence, PageHeader, LEVEL_LABEL, LevelTag, Modal, Avatar, Empty, Pill } from '../../../components/ui.jsx';
-import { CATEGORY, SEVERITY, ROUTING, ISSUE } from '../../../lib/ai.js';
+import { CATEGORY, SEVERITY, ROUTING, ISSUE, routedUnitId, isSent } from '../../../lib/ai.js';
 import { AiExplainBadge } from '../../../components/AiExplain.jsx';
 import { canEditObjective, canDeleteObjective } from '../../../lib/auth.js';
 import KrRow from '../components/KrRow.jsx';
@@ -160,7 +160,7 @@ function History({ kr, cycle, user, closed }) {
                 </div>
                 {c.note && <p style={{ marginTop: 4 }}>{c.note}</p>}
                 {c.blocker && <p className="small" style={{ marginTop: 4, color: 'var(--warn)' }}>Vướng mắc: {c.blocker}</p>}
-                <InsightLine checkinId={c.id} />
+                <InsightLine checkinId={c.id} user={user} closed={closed} />
                 {comments.map((m) => {
                   const a = state.users.find((u) => u.id === m.userId);
                   return (
@@ -187,17 +187,22 @@ function History({ kr, cycle, user, closed }) {
 
 // Nhãn AI trên một check-in. Trong lúc AI worker còn xử lý thì hiện "AI đang đọc…";
 // xong thì hiện nhãn, bấm nhãn để mở ngăn "AI đã làm gì?".
-function InsightLine({ checkinId }) {
+function InsightLine({ checkinId, user, closed }) {
   const { state } = useStore();
   const pending = state.aiQueue.filter((j) => j.checkinId === checkinId);
   const failed = state.automationRuns.filter((r) => r.ref?.checkinId === checkinId && r.status === 'FAILED');
   const i = state.checkinInsights.find((x) => x.checkinId === checkinId);
-  const dept = i && state.departments.find((d) => d.id === i.targetDeptId);
-  const head = dept && state.users.find((u) => u.id === dept.headId);
+  const checkin = state.checkins.find((c) => c.id === checkinId);
+  const isReporter = checkin?.userId === user.id;
+  const suggested = i && state.departments.find((d) => d.id === i.targetDeptId);
+  const routed = i && state.departments.find((d) => d.id === routedUnitId(i));
+  const head = routed && state.users.find((u) => u.id === routed.headId);
+  // Người báo chưa gửi đi và không còn gợi ý chờ xác nhận: vẫn tự báo được cho đơn vị khác khi AI lỗi hoặc không gợi ý.
+  const canReportManually = isReporter && !closed && checkin?.blocker?.trim() && !pending.length && !i?.routing;
   return (
     <>
       {pending.map((j) => (
-        <div key={j.id} className="ai-line"><span className="ai-pending">✦ {j.flow === 'BLOCKER_ROUTING' ? 'AI đang đọc vướng mắc để chuyển đến đúng người…' : 'AI đang so ghi chú với mức tự tin…'}</span></div>
+        <div key={j.id} className="ai-line"><span className="ai-pending">✦ {j.flow === 'BLOCKER_ROUTING' ? 'AI đang đọc vướng mắc để gợi ý đơn vị cần báo…' : 'AI đang so ghi chú với mức tự tin…'}</span></div>
       ))}
       {failed.map((r) => (
         <div key={r.id} className="ai-line">
@@ -210,11 +215,25 @@ function InsightLine({ checkinId }) {
           <AiExplainBadge target={{ kind: 'insight', checkinId, flow: 'BLOCKER_ROUTING' }} />
           <span>{CATEGORY[i.category]}</span>
           <Pill value={SEVERITY[i.severity]} />
-          {dept ? <span className="muted">Đã chuyển tới {dept.name} ({head?.name})</span> : <span className="muted">Không chuyển cho ai</span>}
+          {i.routing === 'SUGGESTED' && <span className="muted">AI gợi ý gửi tới {suggested?.name}</span>}
+          {isSent(i) && <span className="muted">Đã gửi tới {routed?.name} ({head?.name})</span>}
+          {i.routing === 'DISMISSED' && <span className="muted">Người báo chọn không gửi</span>}
+          {!i.routing && <span className="muted">Không phụ thuộc đơn vị khác</span>}
           {i.routing && <Pill value={ROUTING[i.routing]} />}
           {i.routing === 'ACKNOWLEDGED' && i.handlerNote && <span className="muted">"{i.handlerNote}"</span>}
         </div>
       )}
+      {i?.routing === 'SUGGESTED' && (isReporter && !closed
+        ? <SendBlocker checkin={checkin} suggestedId={i.targetDeptId} />
+        : <div className="ai-line"><span className="muted small">Chờ người báo xác nhận trước khi gửi.</span></div>)}
+      {isSent(i) && !i.category && (
+        <div className="ai-line">
+          <span>Người báo tự gửi tới {routed?.name} ({head?.name})</span>
+          <Pill value={ROUTING[i.routing]} />
+          {i.routing === 'ACKNOWLEDGED' && i.handlerNote && <span className="muted">"{i.handlerNote}"</span>}
+        </div>
+      )}
+      {canReportManually && <SendBlocker checkin={checkin} suggestedId={null} />}
       {i?.mismatch && (
         <div className="ai-line">
           <AiExplainBadge target={{ kind: 'insight', checkinId, flow: 'CHECKIN_MISMATCH' }} />
@@ -222,6 +241,44 @@ function InsightLine({ checkinId }) {
         </div>
       )}
     </>
+  );
+}
+
+// Gợi ý gửi vướng mắc (BR-107): chỉ người báo thấy. AI gợi ý đơn vị, người báo bấm Gửi, đổi đơn vị hoặc không gửi.
+// Khi AI lỗi hoặc không gợi ý, người báo vẫn tự chọn đơn vị để gửi.
+function SendBlocker({ checkin, suggestedId }) {
+  const { state, dispatch } = useStore();
+  const reporter = state.users.find((u) => u.id === checkin.userId);
+  const own = state.departments.find((d) => d.id === reporter.deptId);
+  // Không gửi về đơn vị của chính người báo hay phòng ban chứa team của họ (BR-102).
+  const blocked = [own?.id, own?.type === 'TEAM' ? own.parentId : null];
+  const options = state.departments.filter((d) => d.parentId && !blocked.includes(d.id));
+  const [choosing, setChoosing] = useState(!suggestedId ? false : null);
+  const [deptId, setDeptId] = useState(suggestedId || '');
+  const suggested = state.departments.find((d) => d.id === suggestedId);
+
+  if (!suggestedId && choosing === false) {
+    return (
+      <div className="ai-line">
+        <button className="btn small" onClick={() => setChoosing(true)}>Báo cho đơn vị khác</button>
+      </div>
+    );
+  }
+  return (
+    <div className="ai-line" style={{ flexWrap: 'wrap', gap: 8 }}>
+      {suggestedId && !choosing && <span>Gửi vướng mắc này cho <b>{suggested?.name}</b>?</span>}
+      {(choosing || !suggestedId) && (
+        <select aria-label="Chọn đơn vị nhận vướng mắc" value={deptId} onChange={(e) => setDeptId(e.target.value)}>
+          <option value="">Chọn đơn vị…</option>
+          {options.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
+        </select>
+      )}
+      <button className="btn small primary" disabled={!deptId} onClick={() => dispatch({ type: 'sendBlocker', checkinId: checkin.id, deptId })}>Gửi</button>
+      {suggestedId && !choosing && <button className="btn small" onClick={() => setChoosing(true)}>Đổi đơn vị</button>}
+      {suggestedId
+        ? <button className="btn small" onClick={() => dispatch({ type: 'dismissBlocker', checkinId: checkin.id })}>Không gửi</button>
+        : <button className="btn small" onClick={() => setChoosing(false)}>Hủy</button>}
+    </div>
   );
 }
 

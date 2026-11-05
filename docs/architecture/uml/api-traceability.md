@@ -2,7 +2,8 @@
 
 Every OpenAPI operation, the controller method that implements it in the [class diagrams](class-diagrams.md), and the [sequence diagram](sequence-diagrams.md) that shows it. The controller method has the same name as the `operationId`.
 
-Total: 89 operations, all with a controller method.
+Total: 91 operations, all with a controller method.
+
 
 ## Login
 
@@ -180,6 +181,8 @@ Total: 89 operations, all with a controller method.
 | `listRoutedBlockers` | `GET /blockers` | `BlockersController` | UC29 | SD-29 | ADMIN, HR, MANAGER |
 | `acknowledgeBlocker` | `POST /blockers/{checkinId}/acknowledge` | `BlockersController` | UC29 | SD-29 | ADMIN, HR, MANAGER |
 | `rejectBlocker` | `POST /blockers/{checkinId}/reject` | `BlockersController` | UC29 | SD-29 | ADMIN, HR, MANAGER |
+| `sendBlocker` | `POST /checkins/{checkinId}/blocker/send` | `BlockersController` | UC12 | SD-12 | ADMIN, HR, MANAGER, EMPLOYEE |
+| `dismissBlockerSuggestion` | `POST /checkins/{checkinId}/blocker/dismiss` | `BlockersController` | UC12 | SD-12 | ADMIN, HR, MANAGER, EMPLOYEE |
 
 ## Weekly Digests
 
@@ -197,5 +200,4 @@ Total: 89 operations, all with a controller method.
 | `updateOneOnOneDraft` | `PATCH /one-on-one-drafts/{draftId}` | `OneOnOneDraftsController` | UC31 | SD-31 | MANAGER, HR |
 | `sendOneOnOneDraft` | `POST /one-on-one-drafts/{draftId}/send` | `OneOnOneDraftsController` | UC31 | SD-31 | MANAGER, HR |
 | `discardOneOnOneDraft` | `POST /one-on-one-drafts/{draftId}/discard` | `OneOnOneDraftsController` | UC31 | SD-31 | MANAGER, HR |
-
 **Related:** [Class diagrams](class-diagrams.md) · [Sequence diagrams](sequence-diagrams.md) · [OpenAPI](../../api/openapi.yaml) · [Traceability matrix](../../traceability.md)

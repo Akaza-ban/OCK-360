@@ -95,7 +95,7 @@ export default function Shell({ user, route, onLogout, children }) {
     unread: state.notifications.filter((n) => n.userId === user.id && !n.read).length,
     todo: state.reviewForms.filter((f) => f.reviewerId === user.id && f.status !== 'SUBMITTED' && state.campaigns.find((c) => c.id === f.campaignId)?.status === 'COLLECTING').length,
     approvals: state.nominations.filter((n) => n.status === 'PENDING' && state.users.find((u) => u.id === n.revieweeId)?.managerId === user.id).length,
-    blockers: state.checkinInsights.filter((i) => i.routing === 'OPEN' && state.departments.find((d) => d.id === i.targetDeptId)?.headId === user.id).length,
+    blockers: state.checkinInsights.filter((i) => i.routing === 'OPEN' && state.departments.find((d) => d.id === (i.routedDeptId ?? i.targetDeptId))?.headId === user.id).length,
     drafts: state.oneOnOneDrafts.filter((d) => d.status === 'PENDING_REVIEW' && (d.reviewerId ? d.reviewerId === user.id : user.role === 'HR')).length,
   };
 

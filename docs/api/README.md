@@ -4,7 +4,7 @@
 >
 > Implementation status: NOT STARTED; no backend yet
 
-[`openapi.yaml`](openapi.yaml) is the contract between frontend and backend, with 89 operations. When the contract and the code differ, fix the contract first, then the code.
+[`openapi.yaml`](openapi.yaml) is the contract between frontend and backend, with 91 operations. When the contract and the code differ, fix the contract first, then the code.
 
 The easiest way to view it is to paste the file into [Swagger Editor](https://editor.swagger.io), or run:
 

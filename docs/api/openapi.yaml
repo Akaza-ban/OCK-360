@@ -3247,6 +3247,97 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/ProblemDetails'
+  /checkins/{checkinId}/blocker/send:
+    post:
+      tags:
+      - Blockers
+      summary: Send a blocker to another unit
+      operationId: sendBlocker
+      description: Only the person who checked in. Sends to the unit AI suggested or to another unit they pick; also works when AI suggested nothing. The unit head is notified at once.
+      x-use-case: UC12
+      x-roles:
+      - ADMIN
+      - HR
+      - MANAGER
+      - EMPLOYEE
+      x-business-rules:
+      - BR-102
+      - BR-107
+      parameters:
+      - name: checkinId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BlockerSend'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CheckinInsight'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: 'Conflict: The blocker has already been sent or dismissed.'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+  /checkins/{checkinId}/blocker/dismiss:
+    post:
+      tags:
+      - Blockers
+      summary: Do not send the suggested blocker
+      operationId: dismissBlockerSuggestion
+      description: Only the person who checked in. Nobody is notified; the blocker keeps its label for the direct manager and the weekly digest.
+      x-use-case: UC12
+      x-roles:
+      - ADMIN
+      - HR
+      - MANAGER
+      - EMPLOYEE
+      x-business-rules:
+      - BR-107
+      parameters:
+      - name: checkinId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CheckinInsight'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: 'Conflict: The blocker has already been sent or dismissed.'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
   /weekly-digests:
     get:
       tags:
@@ -3643,6 +3734,7 @@ components:
       - REVIEW_REMINDER
       - RESULT_PUBLISHED
       - BLOCKER_ROUTED
+      - BLOCKER_SUGGESTED
       - BLOCKER_UPDATED
       - WEEKLY_DIGEST
       - CHECKIN_MISMATCH
@@ -3702,10 +3794,13 @@ components:
       - HIGH
     RoutingStatus:
       type: string
+      description: SUGGESTED waits for the person who checked in; DISMISSED means they chose not to send.
       enum:
+      - SUGGESTED
       - OPEN
       - ACKNOWLEDGED
       - REJECTED
+      - DISMISSED
     ReviewIssue:
       type: string
       enum:
@@ -4558,10 +4653,21 @@ components:
           - $ref: '#/components/schemas/SeverityLevel'
           type: string
         targetUnit:
+          description: Unit suggested by AI.
           nullable: true
           allOf:
           - $ref: '#/components/schemas/UnitRef'
           type: object
+        routedUnit:
+          description: Unit the person who checked in sent the blocker to; may differ from the suggestion.
+          nullable: true
+          allOf:
+          - $ref: '#/components/schemas/UnitRef'
+          type: object
+        confirmedAt:
+          type: string
+          format: date-time
+          nullable: true
         routing:
           nullable: true
           allOf:
@@ -5849,6 +5955,15 @@ components:
           type: string
           nullable: true
           maxLength: 300
+    BlockerSend:
+      type: object
+      required:
+      - targetUnitId
+      properties:
+        targetUnitId:
+          type: integer
+          format: int64
+          description: The suggested unit, or another unit picked by the person who checked in.
     BlockerReject:
       type: object
       properties:
